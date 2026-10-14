@@ -21,4 +21,8 @@ export class EquipementService {
   getAll(): Observable<Equipement[]> {
     return this.http.get<Equipement[]>('/api/equipements');
   }
+
+  add(equipement: Equipement) {
+    return this.http.post<Equipement>('/api/equipements', equipement);
+  }
 }

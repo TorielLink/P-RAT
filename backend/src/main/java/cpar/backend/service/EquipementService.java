@@ -12,7 +12,7 @@ import cpar.backend.repository.EquipementRepository;
 @Service
 public class EquipementService implements IEquipementService {
 
-    private static final String FICHIER_LOGS = "src/main/java/cpar/backend/logs/files/EquipementLogs.txt";
+    private static final String FICHIER_LOGS = "backend/src/main/java/cpar/backend/logs/files/EquipementLogs.txt";
 
     private final EquipementRepository equipementRepository;
     private final GeneralLogger generalLogger;

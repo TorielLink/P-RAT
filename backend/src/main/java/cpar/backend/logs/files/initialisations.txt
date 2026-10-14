@@ -9,3 +9,6 @@
 2026-10-14 10:00:42 | profils actifs : [dev, manager]
 2026-10-14 10:01:53 | profils actifs : [dev, manager]
 2026-10-14 10:04:06 | profils actifs : [dev, manager]
+Profils actifs : [dev, manager]
+Profils actifs : [dev, manager]
+Profils actifs : [dev, manager]

@@ -1,13 +1,10 @@
-import { Component, inject } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { EquipementService } from './core/equipement.service';
+import { Equipements } from './equipements';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AsyncPipe],
-  templateUrl: './app.html'
+  imports: [RouterOutlet, Equipements],
+  templateUrl: './app.html',
 })
-export class App {
-  protected readonly equipements$ = inject(EquipementService).getAll();
-}
+export class App {}

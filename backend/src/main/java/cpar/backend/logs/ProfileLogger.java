@@ -31,6 +31,6 @@ public class ProfileLogger implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         String profils = Arrays.toString(env.getActiveProfiles());
         log.info("Profils actifs : {}", profils);
-        generalLogger.ecrire("logs/initialisations.txt", "Profils actifs : " + profils);
+        generalLogger.ecrire("backend/src/main/java/cpar/backend/logs/files/initialisations.txt", "Profils actifs : " + profils);
     }
 }

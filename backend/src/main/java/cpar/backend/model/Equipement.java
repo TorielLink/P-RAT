@@ -127,4 +127,10 @@ public class Equipement {
         this.dateCreation = dateCreation;
     }
 
+    @PrePersist
+    void avantCreation() {
+        if (this.dateCreation == null) {
+            this.dateCreation = LocalDateTime.now();
+        }
+    }
 }

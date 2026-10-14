@@ -1,14 +1,5 @@
 <h1>P-RAT</h1>
 
-<h2>Équipements (test liaison /api)</h2>
-@if (equipements$ | async; as equipements) {
-  <ul>
-    @for (e of equipements; track e.id) {
-      <li>{{ e.reference }} — {{ e.libelle }} ({{ e.station }}, {{ e.etat }})</li>
-    }
-  </ul>
-} @else {
-  <p>Chargement… (si ça reste bloqué, vérifie que le backend tourne sur le port 8080)</p>
-}
+<app-equipements />
 
 <router-outlet />
