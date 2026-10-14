@@ -1,0 +1,26 @@
+Instruction de création dans MySQL
+// Creation DB
+CREATE DATABASE IF NOT EXISTS P_Rat_DB
+ DEFAULT CHARACTER SET utf8mb4
+ DEFAULT COLLATE utf8mb4_general_ci;
+USE P_Rat_DB;
+
+//Creation Table equipement
+DROP TABLE IF EXISTS equipement;
+
+CREATE TABLE equipement (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    reference     VARCHAR(50)  NOT NULL UNIQUE,
+    libelle       VARCHAR(100) NOT NULL,
+    description   TEXT,
+    type          VARCHAR(50)  NOT NULL,
+    station       VARCHAR(100) NOT NULL,
+    etat          ENUM('ACTIF', 'INACTIF', 'EN_PANNE') NOT NULL DEFAULT 'ACTIF',
+    date_creation TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+//Peuplement test
+INSERT INTO equipement (reference, libelle, description, type, station, etat) VALUES
+('EQ-001', 'Routeur principal', 'Routeur cœur de réseau', 'RESEAU', 'Station Centrale', 'ACTIF'),
+('EQ-002', 'Caméra hall', 'Caméra de surveillance hall d''entrée', 'VIDEO', 'Station Nord', 'INACTIF'),
+('EQ-003', 'Capteur température', 'Sonde température salle serveurs', 'CAPTEUR', 'Station Centrale', 'EN_PANNE');
