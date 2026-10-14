@@ -12,3 +12,4 @@
 Profils actifs : [dev, manager]
 Profils actifs : [dev, manager]
 Profils actifs : [dev, manager]
+Profils actifs : [dev, manager]
