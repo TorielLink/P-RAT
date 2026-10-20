@@ -1,4 +1,4 @@
-package cpar.backend;
+package cpar.backend.scripts;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
