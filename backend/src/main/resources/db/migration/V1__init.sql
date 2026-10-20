@@ -1,10 +1,10 @@
-CREATE TABLE station (
+CREATE TABLE IF NOT EXISTS station (
                          id  BIGINT       NOT NULL AUTO_INCREMENT,
                          nom VARCHAR(100) NOT NULL,
                          PRIMARY KEY (id)
 );
 
-CREATE TABLE prestataire (
+CREATE TABLE IF NOT EXISTS prestataire (
                              id        BIGINT       NOT NULL AUTO_INCREMENT,
                              nom       VARCHAR(100) NOT NULL,
                              email     VARCHAR(255) NULL,
@@ -12,7 +12,7 @@ CREATE TABLE prestataire (
                              PRIMARY KEY (id)
 );
 
-CREATE TABLE utilisateur (
+CREATE TABLE IF NOT EXISTS utilisateur (
                              id         BIGINT       NOT NULL AUTO_INCREMENT,
                              login      VARCHAR(50)  NOT NULL,
                              motDePasse VARCHAR(255) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE utilisateur (
                              CONSTRAINT checkProfil CHECK (profil IN ('ADMIN', 'AGENT', 'PRESTATAIRE'))
 );
 
-CREATE TABLE equipement (
+CREATE TABLE IF NOT EXISTS equipement (
                             id           BIGINT       NOT NULL AUTO_INCREMENT,
                             reference    VARCHAR(8)   NULL,
                             description  VARCHAR(255) NULL,
@@ -41,7 +41,7 @@ CREATE TABLE equipement (
                             INDEX equipementStationId (stationId)
 );
 
-CREATE TABLE incident (
+CREATE TABLE IF NOT EXISTS incident (
                           id             BIGINT        NOT NULL AUTO_INCREMENT,
                           equipementId   BIGINT        NOT NULL,
                           description    VARCHAR(2000) NULL,
@@ -66,7 +66,7 @@ CREATE TABLE incident (
                           INDEX incidentUtilisateurId (utilisateurId)
 );
 
-CREATE TABLE evaluation (
+CREATE TABLE IF NOT EXISTS evaluation (
                             id             BIGINT        NOT NULL AUTO_INCREMENT,
                             incidentId     BIGINT        NOT NULL,
                             note           INT           NULL,
