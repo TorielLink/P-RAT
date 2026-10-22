@@ -1,4 +1,4 @@
-package cpar.backend.model.entitys;
+package cpar.backend.model.entities;
 
 import cpar.backend.model.enums.EtatsEquipement;
 import cpar.backend.model.enums.TypeEquipement;

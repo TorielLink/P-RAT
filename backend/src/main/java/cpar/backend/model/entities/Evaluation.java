@@ -1,4 +1,4 @@
-package cpar.backend.model.entitys;
+package cpar.backend.model.entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
