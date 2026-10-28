@@ -1,7 +1,7 @@
 package cpar.backend.model.enums;
 
 public enum ProfilUtilisateur {
-    SUPERVISEUR("Superviseur"),
+    ADMIN("Administrateur"),
     PRESTATAIRE("Prestataire"),
     AGENT("Agent");
 
