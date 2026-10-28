@@ -1,0 +1,13 @@
+.entete {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1.5rem;
+}
+.lien {
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
