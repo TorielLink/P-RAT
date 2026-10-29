@@ -14,6 +14,7 @@
 - Stratégie : …
 - Commande : `mvn verify`
 - Couvert : … | Non couvert : … (pourquoi)
+- Comptes de test : admin / demo123 ; prestataire / demo123 ; agent / demo123
 ## CHOIX TECHNIQUES
 ### Droits par profil : # Droits d'accès par profil
 
@@ -47,6 +48,20 @@ ISP parce que ...
 
 - Requête SQL native : où ? analyse critique
 - @Transactional : où ? pourquoi ?
+
+### Authentification
+- **Session + cookie (JSESSIONID) plutôt que JWT** : avec le proxy Angular, front et back
+  partagent la même origine ; le navigateur gère le cookie seul, la déconnexion invalide
+  la session côté serveur. Un JWT aurait demandé de gérer stockage, expiration et révocation.
+- **Hachage BCrypt** : algorithme lent et salé, recommandé par l'OWASP. Aucun mot de passe en clair
+  en base ni dans Git.
+- **API : 401 au lieu d'une redirection HTML** (`HttpStatusEntryPoint`) : le front Angular
+  décide lui-même de l'affichage.
+- **CSRF désactivé** : simplification assumée, atténuée par le cookie `SameSite=Lax`
+  par défaut des navigateurs. Amélioration possible : `csrf.spa()` (Spring Security 6.5+).
+- **Le guard Angular n'est qu'un confort d'affichage** : la restriction réelle est appliquée
+  par Spring Security (RG11).
+
 ## LOT ALPHA
 ### Fonctionnalité transverse 1 : …
 - Besoin · périmètre envisagé · choix et essais · ce qui fonctionne · difficultés · reste à faire

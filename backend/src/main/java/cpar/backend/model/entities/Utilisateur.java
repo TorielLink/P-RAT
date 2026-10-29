@@ -1,6 +1,5 @@
 package cpar.backend.model.entities;
 
-import cpar.backend.model.enums.EtatsEquipement;
 import cpar.backend.model.enums.ProfilUtilisateur;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

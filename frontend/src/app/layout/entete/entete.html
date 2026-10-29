@@ -1,0 +1,8 @@
+<header class="entete">
+  @if (authService.utilisateurCourant(); as utilisateur) {
+    <span>
+      Bonjour {{ utilisateur.prenom }} ({{ utilisateur.profilLibelle }}) |
+      <button type="button" class="lien" (click)="seDeconnecter()">Déconnectez-vous</button>
+    </span>
+  }
+</header>

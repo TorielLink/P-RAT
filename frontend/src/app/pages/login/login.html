@@ -1,0 +1,23 @@
+<main class="page-connexion">
+  <h1>Connexion</h1>
+
+  <form [formGroup]="formulaire" (ngSubmit)="seConnecter()">
+    <label for="login">Identifiant</label>
+    <input id="login" formControlName="login" autocomplete="username" />
+    @if (formulaire.controls.login.touched && formulaire.controls.login.invalid) {
+      <p class="erreur-champ">L'identifiant est obligatoire.</p>
+    }
+
+    <label for="motDePasse">Mot de passe</label>
+    <input id="motDePasse" type="password" formControlName="motDePasse" autocomplete="current-password" />
+    @if (formulaire.controls.motDePasse.touched && formulaire.controls.motDePasse.invalid) {
+      <p class="erreur-champ">Le mot de passe est obligatoire.</p>
+    }
+
+    @if (messageErreur()) {
+      <p class="erreur" role="alert">{{ messageErreur() }}</p>
+    }
+
+    <button type="submit">Se connecter</button>
+  </form>
+</main>
