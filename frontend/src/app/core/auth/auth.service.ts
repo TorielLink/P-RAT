@@ -2,6 +2,7 @@ import {inject, Injectable, signal} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {UtilisateurConnecte} from './utilisateur-connecte';
 import {finalize, Observable, switchMap, tap} from "rxjs";
+import {computed} from "@angular/core"
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -31,4 +32,7 @@ export class AuthService {
   oublierUtilisateur(): void {
     this.utilisateurCourant.set(null);
   }
+  readonly PeutGererEquipements = computed(() =>
+    ['ADMIN', 'AGENT'].includes(this.utilisateurCourant()?.profil ?? '')
+  );
 }
