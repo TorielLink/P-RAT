@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -24,6 +25,16 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(autorisations -> autorisations
                         .requestMatchers("/api/auth/login").permitAll()
+                        // Lecture des stations pour tt le monde
+                        .requestMatchers(HttpMethod.GET, "/api/stations/**").authenticated()
+                        // Restraint les autres droits
+                        .requestMatchers("/api/stations/**").hasRole("ADMIN")
+                        // Lecture des equipemts pour tt le monde
+                        .requestMatchers(HttpMethod.GET, "/api/equipements/**").authenticated()
+                        // Modification de l'etat par tt le monde
+                        .requestMatchers(HttpMethod.PATCH, "/api/equipements/*/etat").hasAnyRole("ADMIN", "AGENT", "PRESTATAIRE")
+                        // Restraint les autres droits
+                        .requestMatchers("/api/equipements/**").hasAnyRole("ADMIN", "AGENT")
                         .anyRequest().authenticated())
                 .formLogin(formulaire -> formulaire
                         .loginProcessingUrl("/api/auth/login")
@@ -38,7 +49,9 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID"))
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler((requete, reponse, exception) ->
+                                reponse.setStatus(HttpStatus.FORBIDDEN.value())));
 
         return http.build();
     }
