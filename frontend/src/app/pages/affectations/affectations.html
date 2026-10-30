@@ -1,0 +1,48 @@
+<h1>Affectation des prestataires</h1>
+
+@if (!authService.estAdmin()) {
+  <p>Votre profil ne permet pas d'affecter un prestataire.</p>
+} @else {
+  @if (message()) {
+    <p>{{ message() }}</p>
+  }
+
+  @if (incidentsNonResolus().length === 0) {
+    <p>Aucun incident à affecter.</p>
+  } @else {
+    <table>
+      <tr>
+        <th>Incident</th>
+        <th>Équipement</th>
+        <th>Station</th>
+        <th>Priorité</th>
+        <th>Statut</th>
+        <th>Prestataire</th>
+        <th></th>
+      </tr>
+      @for (inc of incidentsNonResolus(); track inc.id) {
+        <tr>
+          <td><a [routerLink]="['/incidents', inc.id]">n°{{ inc.id }}</a></td>
+          <td>{{ inc.equipementReference ?? 'n°' + inc.equipementId }}</td>
+          <td>{{ inc.stationNom ?? '—' }}</td>
+          <td>{{ inc.priorite ?? '—' }}</td>
+          <td>{{ inc.statut }}</td>
+          <td>
+            <!-- #choix : référence au menu, lue par le bouton de la même ligne -->
+            <select #choix [value]="inc.prestataireId ?? ''">
+              <option value="" disabled>Choisir…</option>
+              @for (prestataire of prestataires(); track prestataire.id) {
+                <option [value]="prestataire.id">{{ prestataire.nom }}</option>
+              }
+            </select>
+          </td>
+          <td>
+            <button type="button" (click)="affecter(inc, choix.value)">
+              {{ inc.prestataireId ? 'Réaffecter' : 'Affecter' }}
+            </button>
+          </td>
+        </tr>
+      }
+    </table>
+  }
+}

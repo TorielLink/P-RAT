@@ -1,0 +1,61 @@
+@if (incident(); as inc) {
+  <h1>Incident n°{{ inc.id }}</h1>
+
+  <p>
+    Équipement :
+    <a [routerLink]="['/equipements', inc.equipementId]">{{ inc.equipementReference ?? 'n°' + inc.equipementId }}</a>
+  </p>
+  <p>
+    Station :
+    @if (inc.stationId) {
+      <a [routerLink]="['/stations', inc.stationId]">{{ inc.stationNom }}</a>
+    } @else {
+      —
+    }
+  </p>
+  <p>Statut : {{ inc.statut }}</p>
+  <p>Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}</p>
+  <p>Déclaré par : {{ inc.declarantPrenom ?? '—' }}</p>
+  <p>Ouvert le : {{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</p>
+  @if (inc.dateResolution) {
+    <p>Résolu le : {{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}</p>
+  }
+
+  @if (enModification()) {
+    <form [formGroup]="formulaire" (ngSubmit)="enregistrer(inc)">
+      <p>
+        Priorité :
+        <select formControlName="priorite">
+          @for (priorite of priorites; track priorite) {
+            <option [ngValue]="priorite">{{ priorite }}</option>
+          }
+        </select>
+      </p>
+      <p>Description :</p>
+      <textarea formControlName="description" rows="4" cols="60" maxlength="2000"></textarea>
+      <p>
+        <button type="submit">Enregistrer</button>
+        <button type="button" (click)="annuler()">Annuler</button>
+      </p>
+    </form>
+  } @else {
+    <p>Priorité : {{ inc.priorite ?? '—' }}</p>
+    <p>Description : {{ inc.description ?? '—' }}</p>
+
+    @if (inc.statut !== 'RESOLU') {
+      @if (authService.peutModifierIncidents()) {
+        <button type="button" (click)="modifier(inc)">Modifier</button>
+      }
+      @if (authService.estAdmin()) {
+        <button type="button" (click)="resoudre(inc)">Résoudre</button>
+      }
+    }
+    @if (authService.estAdmin()) {
+      <button type="button" (click)="supprimer(inc)">Supprimer</button>
+    }
+  }
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}

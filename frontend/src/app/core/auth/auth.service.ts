@@ -36,4 +36,12 @@ export class AuthService {
     ['ADMIN', 'AGENT'].includes(this.utilisateurCourant()?.profil ?? '')
   );
   readonly peutGererStations = computed(() => this.utilisateurCourant()?.profil === 'ADMIN');
+  readonly estAdmin = computed(() => this.utilisateurCourant()?.profil === 'ADMIN');
+  // Le prestataire ne voit que ses incidents : s'il voit l'incident, il peut le modifier
+  readonly peutModifierIncidents = computed(() =>
+    ['ADMIN', 'PRESTATAIRE'].includes(this.utilisateurCourant()?.profil ?? '')
+  );
+  readonly peutDeclarerIncidents = computed(() =>
+    ['ADMIN', 'AGENT'].includes(this.utilisateurCourant()?.profil ?? '')
+  );
 }

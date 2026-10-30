@@ -1,0 +1,37 @@
+<h1>Déclarer un incident</h1>
+
+@if (!authService.peutDeclarerIncidents()) {
+  <p>Votre profil ne permet pas de déclarer un incident.</p>
+} @else {
+  <form [formGroup]="formulaire" (ngSubmit)="declarer()">
+    <p>
+      Équipement :
+      <select formControlName="equipementId">
+        <option [ngValue]="null" disabled>Choisir un équipement</option>
+        @for (eq of equipements(); track eq.id) {
+          <option [ngValue]="eq.id">
+            {{ eq.reference ?? 'n°' + eq.id }} — {{ eq.type }} ({{ eq.stationNom ?? 'sans station' }})
+          </option>
+        }
+      </select>
+    </p>
+    <p>
+      Priorité :
+      <select formControlName="priorite">
+        @for (priorite of priorites; track priorite) {
+          <option [ngValue]="priorite">{{ priorite }}</option>
+        }
+      </select>
+    </p>
+    <p>Description :</p>
+    <textarea formControlName="description" rows="4" cols="60" maxlength="2000"></textarea>
+    <p>
+      <button type="submit">Déclarer</button>
+      <a routerLink="/incidents">Annuler</a>
+    </p>
+  </form>
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}
