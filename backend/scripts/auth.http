@@ -91,3 +91,21 @@ GET http://localhost:8080/api/auth/me
         client.assert(response.body.profilLibelle === "Administrateur", "Libellé reçu : " + response.body.profilLibelle);
     });
 %}
+
+### Créer une station
+POST http://localhost:8080/api/stations
+Content-Type: application/json
+
+{"nom": "La Défense"}
+
+### Lister les stations
+GET http://localhost:8080/api/stations
+
+### Ajouter un équipement
+POST http://localhost:8080/api/equipements
+Content-Type: application/json
+
+{"reference": "CAM00001", "description": "Caméra quai 1", "type": "CAMERA", "stationId": 1}
+
+### Lister les équipements d'une station
+GET http://localhost:8080/api/equipements?stationId=1

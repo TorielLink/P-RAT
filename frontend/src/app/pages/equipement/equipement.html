@@ -1,0 +1,52 @@
+@if (equipement(); as eq) {
+  @if (enModification()) {
+    <h1>Modifier l'équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
+    <form [formGroup]="formulaire" (ngSubmit)="enregistrer(eq)">
+      @if (authService.peutGererEquipements()) {
+        <p>Référence : <input formControlName="reference" maxlength="8" /></p>
+        <p>Description : <input formControlName="description" maxlength="255" /></p>
+        <p>
+          Type :
+          <select formControlName="type">
+            @for (type of types; track type) {
+              <option [ngValue]="type">{{ type }}</option>
+            }
+          </select>
+        </p>
+      }
+      <p>
+        État :
+        <select formControlName="etat">
+          @for (etat of etats; track etat) {
+            <option [ngValue]="etat">{{ etat }}</option>
+          }
+        </select>
+      </p>
+      <button type="submit">Enregistrer</button>
+      <button type="button" (click)="annuler()">Annuler</button>
+    </form>
+  } @else {
+    <h1>Équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
+    <p>Type : {{ eq.type }}</p>
+    <p>Description : {{ eq.description ?? '—' }}</p>
+    <p>
+      Station :
+      @if (eq.stationId) {
+        <a [routerLink]="['/stations', eq.stationId]">{{ eq.stationNom }}</a>
+      } @else {
+        —
+      }
+    </p>
+    <p>Créé le : {{ eq.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</p>
+    <p>État : {{ eq.etat }}</p>
+
+    <button type="button" (click)="modifier(eq)">Modifier</button>
+    @if (authService.peutGererEquipements()) {
+      <button type="button" (click)="supprimer(eq)">Supprimer</button>
+    }
+  }
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}

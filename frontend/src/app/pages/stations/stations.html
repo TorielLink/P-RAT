@@ -1,1 +1,27 @@
-<p>stations works!</p>
+<h1>Stations</h1>
+
+@if (authService.peutGererStations()) {
+  <form [formGroup]="formulaire" (ngSubmit)="ajouter()">
+    <input formControlName="nom" placeholder="Nom de la station" maxlength="100" />
+    <button type="submit">Ajouter</button>
+  </form>
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}
+
+@if (stations().length === 0) {
+  <p>Aucune station.</p>
+} @else {
+  <ul>
+    @for (station of stations(); track station.id) {
+      <li>
+        <a [routerLink]="['/stations', station.id]">{{ station.nom }}</a>
+        @if (authService.peutGererStations()) {
+          <button type="button" (click)="supprimer(station)">Supprimer</button>
+        }
+      </li>
+    }
+  </ul>
+}
