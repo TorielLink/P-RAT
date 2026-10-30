@@ -20,7 +20,7 @@ public class StationService implements IStationService {
     }
 
     @Override
-    public List<Station> ObtenirStationParNom(String nom) {
+    public List<Station> obtenirStationParNom(String nom) {
         List<Station> stations = stationRepository.findByNomContainingIgnoreCaseOrderByNomAsc(nom.trim());
         if (stations.isEmpty()) {
             throw new StationIntrouvableException(nom);
@@ -29,18 +29,18 @@ public class StationService implements IStationService {
     }
 
     @Override
-    public Station ObtenirStationParId(Long id) {
+    public Station obtenirStationParId(Long id) {
         return stationRepository.findById(id).orElseThrow(() -> new StationIntrouvableException(id));
     }
 
     @Override
-    public List<Station> ObtenirToutesStations() {
+    public List<Station> obtenirToutesStations() {
         return stationRepository.findAll(Sort.by("nom"));
     }
 
     @Override
     @Transactional
-    public Station AjouterStation(String nom) {
+    public Station ajouterStation(String nom) {
         Station station = new Station();
         station.setNom(nom.trim());
         return stationRepository.save(station);
@@ -49,14 +49,14 @@ public class StationService implements IStationService {
     // Attention suprimme en cascade les equipements, incidents et leurs evaluations
     @Override
     @Transactional
-    public void SupprimerStation(Long id) {
-        stationRepository.delete(ObtenirStationParId(id));
+    public void supprimerStation(Long id) {
+        stationRepository.delete(obtenirStationParId(id));
     }
 
     @Override
     @Transactional
-    public Station ModifierStation(Long id, String nom) {
-        Station station = ObtenirStationParId(id);
+    public Station modifierStation(Long id, String nom) {
+        Station station = obtenirStationParId(id);
         station.setNom(nom.trim());
         return station;
     }

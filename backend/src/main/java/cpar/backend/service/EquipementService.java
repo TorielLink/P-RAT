@@ -33,31 +33,31 @@ public class EquipementService implements IEquipementService {
     }
 
     @Override
-    public Equipement ObtenirEquipementParId(Long id) {
+    public Equipement obtenirEquipementParId(Long id) {
         return equipementRepository.findWithStationById(id)
                 .orElseThrow(() -> new EquipementIntrouvableException(id));
     }
 
     @Override
-    public Equipement ObtenirEquipementParReference(String reference) {
+    public Equipement obtenirEquipementParReference(String reference) {
         return equipementRepository.findByReference(reference.trim())
                 .orElseThrow(() -> new EquipementIntrouvableException(reference));
     }
 
     @Override
-    public List<Equipement> ObtenirTousEquipements() {
-        return equipementRepository.findAllByOrderByIdAsc();
+    public List<Equipement> obtenirTousEquipements() {
+        return equipementRepository.findAllByOrderByTypeAscReferenceAscIdAsc();
     }
 
     @Override
-    public List<Equipement> ObtenirEquipementsParStation(Long stationId) {
-        stationService.ObtenirStationParId(stationId);
-        return equipementRepository.findByStationIdOrderByIdAsc(stationId);
+    public List<Equipement> obtenirEquipementsParStation(Long stationId) {
+        stationService.obtenirStationParId(stationId);
+        return equipementRepository.findByStationIdOrderByTypeAscReferenceAscIdAsc(stationId);
     }
 
     @Override
     @Transactional
-    public Equipement AjouterEquipement(EquipementFormulaire formulaire) {
+    public Equipement ajouterEquipement(EquipementFormulaire formulaire) {
         String reference = texteOuNull(formulaire.reference());
         if (reference != null && equipementRepository.existsByReference(reference)) {
             throw new ReferenceDejaUtiliseeException(reference);
@@ -73,8 +73,8 @@ public class EquipementService implements IEquipementService {
 
     @Override
     @Transactional
-    public Equipement ModifierEquipement(Long id, EquipementFormulaire formulaire) {
-        Equipement equipement = ObtenirEquipementParId(id);
+    public Equipement modifierEquipement(Long id, EquipementFormulaire formulaire) {
+        Equipement equipement = obtenirEquipementParId(id);
         String reference = texteOuNull(formulaire.reference());
         if (reference != null && equipementRepository.existsByReferenceAndIdNot(reference, id)) {
             throw new ReferenceDejaUtiliseeException(reference);
@@ -87,8 +87,8 @@ public class EquipementService implements IEquipementService {
     // Attention supprime en cascade les incidents et leurs evaluations
     @Override
     @Transactional
-    public void SupprimerEquipement(Long id) {
-        equipementRepository.delete(ObtenirEquipementParId(id));
+    public void supprimerEquipement(Long id) {
+        equipementRepository.delete(obtenirEquipementParId(id));
     }
 
     private void remplir(Equipement equipement, EquipementFormulaire formulaire, String reference) {
@@ -102,14 +102,14 @@ public class EquipementService implements IEquipementService {
     //Pour Prestataire
     @Override
     @Transactional
-    public Equipement ChangerEtatEquipement(Long id, EtatsEquipement etat) {
-        Equipement equipement = ObtenirEquipementParId(id);
+    public Equipement changerEtatEquipement(Long id, EtatsEquipement etat) {
+        Equipement equipement = obtenirEquipementParId(id);
         equipement.setEtat(etat);
         return equipement;
     }
 
     private Station stationOuNull(Long stationId) {
-        return stationId == null ? null : stationService.ObtenirStationParId(stationId);
+        return stationId == null ? null : stationService.obtenirStationParId(stationId);
     }
 
     // "" devient null : la contrainte UNIQUE accepte plusieurs NULL, mais pas plusieurs ""

@@ -8,19 +8,19 @@ import java.util.List;
 
 public interface IEquipementService {
 
-    Equipement ObtenirEquipementParId(Long id);
+    Equipement obtenirEquipementParId(Long id);
 
-    Equipement ObtenirEquipementParReference(String reference);
+    Equipement obtenirEquipementParReference(String reference);
 
-    List<Equipement> ObtenirTousEquipements();
+    List<Equipement> obtenirTousEquipements();
 
-    List<Equipement> ObtenirEquipementsParStation(Long stationId);
+    List<Equipement> obtenirEquipementsParStation(Long stationId);
 
-    Equipement AjouterEquipement(EquipementFormulaire formulaire);
+    Equipement ajouterEquipement(EquipementFormulaire formulaire);
 
-    Equipement ModifierEquipement(Long id, EquipementFormulaire formulaire);
+    Equipement modifierEquipement(Long id, EquipementFormulaire formulaire);
 
-    void SupprimerEquipement(Long id);
+    void supprimerEquipement(Long id);
 
-    Equipement ChangerEtatEquipement(Long id, EtatsEquipement etat);
+    Equipement changerEtatEquipement(Long id, EtatsEquipement etat);
 }

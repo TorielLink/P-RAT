@@ -32,7 +32,8 @@ export class AuthService {
   oublierUtilisateur(): void {
     this.utilisateurCourant.set(null);
   }
-  readonly PeutGererEquipements = computed(() =>
+  readonly peutGererEquipements = computed(() =>
     ['ADMIN', 'AGENT'].includes(this.utilisateurCourant()?.profil ?? '')
   );
+  readonly peutGererStations = computed(() => this.utilisateurCourant()?.profil === 'ADMIN');
 }

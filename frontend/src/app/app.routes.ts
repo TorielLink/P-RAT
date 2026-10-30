@@ -5,6 +5,7 @@ import {TableauDeBord} from './pages/tableau-de-bord/tableau-de-bord';
 import { Stations } from "./pages/stations/stations";
 import { EquipementPage } from './pages/equipement/equipement';
 import { StationPage } from './pages/station/station';
+import { Equipements } from './pages/equipements/equipements';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -17,6 +18,7 @@ export const routes: Routes = [
       { path: 'stations/:id', component: StationPage },
       { path: 'equipements/:id', component: EquipementPage },
       { path: '', pathMatch: 'full', redirectTo: 'stations' },
+      { path: 'equipements', component: Equipements }
     ],
   },
   { path: '**', redirectTo: 'login' },

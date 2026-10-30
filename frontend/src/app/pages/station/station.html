@@ -1,0 +1,65 @@
+@if (station(); as st) {
+  @if (enModification()) {
+    <h1>
+      <input [formControl]="nom" maxlength="100" />
+      <button type="button" (click)="enregistrer(st)">Enregistrer</button>
+      <button type="button" (click)="annuler()">Annuler</button>
+    </h1>
+  } @else {
+    <h1>{{ st.nom }}</h1>
+    @if (authService.peutGererStations()) {
+      <button type="button" (click)="modifier(st)">Modifier</button>
+    }
+  }
+
+  @if (authService.peutGererEquipements()) {
+    <h2>Ajouter un équipement</h2>
+    <form [formGroup]="formulaire" (ngSubmit)="ajouter(st)">
+      <input formControlName="reference" placeholder="Référence (ex. CAM00001)" maxlength="8" />
+      <input formControlName="description" placeholder="Description" maxlength="255" />
+      <select formControlName="type">
+        @for (type of types; track type) {
+          <option [ngValue]="type">{{ type }}</option>
+        }
+      </select>
+      <select formControlName="etat">
+        @for (etat of etats; track etat) {
+          <option [ngValue]="etat">{{ etat }}</option>
+        }
+      </select>
+      <button type="submit">Ajouter</button>
+    </form>
+  }
+
+  <h2>Équipements</h2>
+  @if (equipements().length === 0) {
+    <p>Aucun équipement dans cette station.</p>
+  } @else {
+    <table>
+      <tr>
+        <th>Référence</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>État</th>
+        <th></th>
+      </tr>
+      @for (eq of equipements(); track eq.id) {
+        <tr>
+          <td><a [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
+          <td>{{ eq.type }}</td>
+          <td>{{ eq.description }}</td>
+          <td>{{ eq.etat }}</td>
+          <td>
+            @if (authService.peutGererEquipements()) {
+              <button type="button" (click)="supprimer(eq)">Supprimer</button>
+            }
+          </td>
+        </tr>
+      }
+    </table>
+  }
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}

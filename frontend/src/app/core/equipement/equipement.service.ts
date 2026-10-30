@@ -32,27 +32,31 @@ export class EquipementService {
   private readonly http = inject(HttpClient);
   private readonly url = '/api/equipements';
 
-  ObtenirEquipementParId(id: number): Observable<Equipement> {
+  obtenirEquipementParId(id: number): Observable<Equipement> {
     return this.http.get<Equipement>(`${this.url}/${id}`);
   }
 
-  ChangerEtatEquipement(id: number, etat: EtatEquipement): Observable<Equipement> {
+  changerEtatEquipement(id: number, etat: EtatEquipement): Observable<Equipement> {
     return this.http.patch<Equipement>(`${this.url}/${id}/etat`, { etat });
   }
 
-  SupprimerEquipement(id: number): Observable<void> {
+  supprimerEquipement(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }
 
-  ModifierEquipement(id: number, formulaire: EquipementFormulaire): Observable<Equipement> {
+  modifierEquipement(id: number, formulaire: EquipementFormulaire): Observable<Equipement> {
     return this.http.put<Equipement>(`${this.url}/${id}`, formulaire);
   }
 
-  ObtenirEquipementsParStation(stationId: number): Observable<Equipement[]> {
+  obtenirEquipementsParStation(stationId: number): Observable<Equipement[]> {
     return this.http.get<Equipement[]>(this.url, { params: new HttpParams().set('stationId', stationId) });
   }
 
-  AjouterEquipement(formulaire: EquipementFormulaire): Observable<Equipement> {
+  ajouterEquipement(formulaire: EquipementFormulaire): Observable<Equipement> {
     return this.http.post<Equipement>(this.url, formulaire);
+  }
+  
+  obtenirTousEquipements(): Observable<Equipement[]> {
+    return this.http.get<Equipement[]>(this.url);
   }
 }

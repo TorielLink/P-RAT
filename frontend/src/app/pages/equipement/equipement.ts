@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink  } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import {
@@ -18,59 +18,7 @@ import {
 @Component({
   selector: 'app-equipement',
   imports: [DatePipe, ReactiveFormsModule, RouterLink],
-  template: `
-    @if (equipement(); as eq) {
-      @if (enModification()) {
-        <h1>Modifier l'équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
-        <form [formGroup]="formulaire" (ngSubmit)="enregistrer(eq)">
-          @if (authService.PeutGererEquipements()) {
-            <p>Référence : <input formControlName="reference" maxlength="8" /></p>
-            <p>Description : <input formControlName="description" maxlength="255" /></p>
-            <p>
-              Type :
-              <select formControlName="type">
-                @for (type of types; track type) {
-                  <option [ngValue]="type">{{ type }}</option>
-                }
-              </select>
-            </p>
-          }
-          <p>
-            État :
-            <select formControlName="etat">
-              @for (etat of etats; track etat) {
-                <option [ngValue]="etat">{{ etat }}</option>
-              }
-            </select>
-          </p>
-          <button type="submit">Enregistrer</button>
-          <button type="button" (click)="annuler()">Annuler</button>
-        </form>
-      } @else {
-        <h1>Équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
-        <p>Type : {{ eq.type }}</p>
-        <p>Description : {{ eq.description ?? '—' }}</p>
-        <p>Station :
-          @if (eq.stationId) {
-            <a [routerLink]="['/stations', eq.stationId]">{{ eq.stationNom }}</a>
-          } @else {
-            —
-          }
-        </p>
-        <p>Créé le : {{ eq.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</p>
-        <p>État : {{ eq.etat }}</p>
-
-        <button type="button" (click)="modifier(eq)">Modifier</button>
-        @if (authService.PeutGererEquipements()) {
-          <button type="button" (click)="supprimer(eq)">Supprimer</button>
-        }
-      }
-    }
-
-    @if (erreur()) {
-      <p>{{ erreur() }}</p>
-    }
-  `,
+  templateUrl: './equipement.html',
 })
 export class EquipementPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -95,7 +43,7 @@ export class EquipementPage implements OnInit {
     this.route.paramMap.subscribe(params => {
       this.erreur.set(null);
       this.enModification.set(false);
-      this.equipementService.ObtenirEquipementParId(Number(params.get('id'))).subscribe({
+      this.equipementService.obtenirEquipementParId(Number(params.get('id'))).subscribe({
         next: equipement => this.equipement.set(equipement),
         error: (erreur: HttpErrorResponse) => {
           this.equipement.set(null);
@@ -130,15 +78,15 @@ export class EquipementPage implements OnInit {
     const valeurs = this.formulaire.getRawValue();
 
     // Admin et agent : modification complète (PUT) ; prestataire : état seul (PATCH)
-    const requete: Observable<Equipement> = this.authService.PeutGererEquipements()
-      ? this.equipementService.ModifierEquipement(equipement.id, {
+    const requete: Observable<Equipement> = this.authService.peutGererEquipements()
+      ? this.equipementService.modifierEquipement(equipement.id, {
         reference: valeurs.reference.trim() || null,
         description: valeurs.description.trim() || null,
         type: valeurs.type,
         etat: valeurs.etat,
         stationId: equipement.stationId,
       })
-      : this.equipementService.ChangerEtatEquipement(equipement.id, valeurs.etat);
+      : this.equipementService.changerEtatEquipement(equipement.id, valeurs.etat);
 
     requete.subscribe({
       next: modifie => {
@@ -154,9 +102,8 @@ export class EquipementPage implements OnInit {
     if (!confirm(`Supprimer l'équipement ${equipement.reference ?? 'n°' + equipement.id} et ses incidents ?`)) {
       return;
     }
-    this.equipementService.SupprimerEquipement(equipement.id).subscribe({
-      // À remplacer par /equipements quand la page liste existera
-      next: () => this.router.navigate(['/stations']),
+    this.equipementService.supprimerEquipement(equipement.id).subscribe({
+      next: () => this.router.navigate(['/equipements']),
       error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la suppression.')),
     });
   }

@@ -13,80 +13,29 @@ import {
   TypeEquipement,
 } from '../../core/equipement/equipement.service';
 
-/** Page /stations/:id */
+/** Page /stations/:id  */
 @Component({
   selector: 'app-station',
   imports: [ReactiveFormsModule, RouterLink],
-  template: `
-    @if (station(); as st) {
-      <h1>{{ st.nom }}</h1>
-
-      @if (authService.PeutGererEquipements()) {
-        <h2>Ajouter un équipement</h2>
-        <form [formGroup]="formulaire" (ngSubmit)="ajouter(st)">
-          <input formControlName="reference" placeholder="Référence (ex. CAM00001)" maxlength="8" />
-          <input formControlName="description" placeholder="Description" maxlength="255" />
-          <select formControlName="type">
-            @for (type of types; track type) {
-              <option [ngValue]="type">{{ type }}</option>
-            }
-          </select>
-          <select formControlName="etat">
-            @for (etat of etats; track etat) {
-              <option [ngValue]="etat">{{ etat }}</option>
-            }
-          </select>
-          <button type="submit">Ajouter</button>
-        </form>
-      }
-
-      <h2>Équipements</h2>
-      @if (equipements().length === 0) {
-        <p>Aucun équipement dans cette station.</p>
-      } @else {
-        <table>
-          <tr>
-            <th>Référence</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>État</th>
-            <th></th>
-          </tr>
-          @for (eq of equipements(); track eq.id) {
-            <tr>
-              <td><a [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
-              <td>{{ eq.type }}</td>
-              <td>{{ eq.description }}</td>
-              <td>{{ eq.etat }}</td>
-              <td>
-                @if (authService.PeutGererEquipements()) {
-                  <button type="button" (click)="supprimer(eq)">Supprimer</button>
-                }
-              </td>
-            </tr>
-          }
-        </table>
-      }
-    }
-
-    @if (erreur()) {
-      <p>{{ erreur() }}</p>
-    }
-  `,
+  templateUrl: './station.html',
+  styleUrl: 'station.css'
 })
 export class StationPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly stationService = inject(StationService);
   private readonly equipementService = inject(EquipementService);
+  private readonly fb = inject(FormBuilder).nonNullable;
   protected readonly authService = inject(AuthService);
 
   protected readonly types = TYPES_EQUIPEMENT;
   protected readonly etats = ETATS_EQUIPEMENT;
   readonly station = signal<Station | null>(null);
   readonly equipements = signal<Equipement[]>([]);
+  readonly enModification = signal(false);
   readonly erreur = signal<string | null>(null);
 
-  readonly formulaire = inject(FormBuilder).nonNullable.group({
+  readonly nom = this.fb.control('', [Validators.required, Validators.maxLength(100)]);
+  readonly formulaire = this.fb.group({
     reference: ['', Validators.pattern(/^[A-Z0-9]{0,8}$/)],
     description: [''],
     type: ['CAMERA' as TypeEquipement, Validators.required],
@@ -96,6 +45,7 @@ export class StationPage implements OnInit {
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       this.erreur.set(null);
+      this.enModification.set(false);
       this.stationService.obtenirStationParId(Number(params.get('id'))).subscribe({
         next: station => {
           this.station.set(station);
@@ -110,10 +60,36 @@ export class StationPage implements OnInit {
   }
 
   chargerEquipements(stationId: number): void {
-    this.equipementService.ObtenirEquipementsParStation(stationId).subscribe({
+    this.equipementService.obtenirEquipementsParStation(stationId).subscribe({
       next: equipements => this.equipements.set(equipements),
       error: (erreur: HttpErrorResponse) =>
         this.erreur.set(this.message(erreur, 'Impossible de charger les équipements.')),
+    });
+  }
+
+  modifier(station: Station): void {
+    this.nom.setValue(station.nom);
+    this.erreur.set(null);
+    this.enModification.set(true);
+  }
+
+  annuler(): void {
+    this.enModification.set(false);
+    this.erreur.set(null);
+  }
+
+  enregistrer(station: Station): void {
+    if (this.nom.invalid) {
+      this.erreur.set('Le nom est obligatoire (100 caractères maximum).');
+      return;
+    }
+    this.stationService.modifierStation(station.id, this.nom.value.trim()).subscribe({
+      next: modifiee => {
+        this.station.set(modifiee);
+        this.enModification.set(false);
+        this.erreur.set(null);
+      },
+      error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la modification.')),
     });
   }
 
@@ -124,7 +100,7 @@ export class StationPage implements OnInit {
     }
     const valeurs = this.formulaire.getRawValue();
     this.equipementService
-      .AjouterEquipement({
+      .ajouterEquipement({
         reference: valeurs.reference.trim() || null,
         description: valeurs.description.trim() || null,
         type: valeurs.type,
@@ -145,7 +121,7 @@ export class StationPage implements OnInit {
     if (!confirm(`Supprimer l'équipement ${equipement.reference ?? 'n°' + equipement.id} et ses incidents ?`)) {
       return;
     }
-    this.equipementService.SupprimerEquipement(equipement.id).subscribe({
+    this.equipementService.supprimerEquipement(equipement.id).subscribe({
       next: () => this.chargerEquipements(this.station()!.id),
       error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la suppression.')),
     });

@@ -6,15 +6,15 @@ import java.util.List;
 
 public interface IStationService {
 
-    List<Station> ObtenirStationParNom(String nom);
+    List<Station> obtenirStationParNom(String nom);
 
-    Station ObtenirStationParId(Long id);
+    Station obtenirStationParId(Long id);
 
-    List<Station> ObtenirToutesStations();
+    List<Station> obtenirToutesStations();
 
-    Station AjouterStation(String nom);
+    Station ajouterStation(String nom);
 
-    void SupprimerStation(Long id);
+    void supprimerStation(Long id);
 
-    Station ModifierStation(Long id, String nom);
+    Station modifierStation(Long id, String nom);
 }

@@ -27,13 +27,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()
                         // Lecture des stations pour tt le monde
                         .requestMatchers(HttpMethod.GET, "/api/stations/**").authenticated()
-                        // Restraint les autres droits
+                        // Restraint les autres droits de station
                         .requestMatchers("/api/stations/**").hasRole("ADMIN")
                         // Lecture des equipemts pour tt le monde
                         .requestMatchers(HttpMethod.GET, "/api/equipements/**").authenticated()
-                        // Modification de l'etat par tt le monde
+                        // Modification de l'etat d'un equipement par tt le monde
                         .requestMatchers(HttpMethod.PATCH, "/api/equipements/*/etat").hasAnyRole("ADMIN", "AGENT", "PRESTATAIRE")
-                        // Restraint les autres droits
+                        // Restraint les autres droits d'equipement
                         .requestMatchers("/api/equipements/**").hasAnyRole("ADMIN", "AGENT")
                         .anyRequest().authenticated())
                 .formLogin(formulaire -> formulaire

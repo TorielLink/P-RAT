@@ -15,4 +15,20 @@ export class StationService {
   obtenirStationParId(id: number): Observable<Station> {
     return this.http.get<Station>(`${this.url}/${id}`);
   }
+
+  obtenirToutesStations(): Observable<Station[]> {
+    return this.http.get<Station[]>(this.url);
+  }
+
+  ajouterStation(nom: string): Observable<Station> {
+    return this.http.post<Station>(this.url, { nom });
+  }
+
+  modifierStation(id: number, nom: string): Observable<Station> {
+    return this.http.put<Station>(`${this.url}/${id}`, { nom });
+  }
+
+  supprimerStation(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.url}/${id}`);
+  }
 }

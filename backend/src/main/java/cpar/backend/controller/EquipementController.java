@@ -27,42 +27,42 @@ public class EquipementController {
     @GetMapping
     public List<EquipementDto> obtenirEquipements(@RequestParam(required = false) Long stationId) {
         List<Equipement> equipements = stationId == null
-                ? equipementService.ObtenirTousEquipements()
-                : equipementService.ObtenirEquipementsParStation(stationId);
+                ? equipementService.obtenirTousEquipements()
+                : equipementService.obtenirEquipementsParStation(stationId);
         return equipements.stream().map(EquipementDto::depuis).toList();
     }
 
     @GetMapping("/{id}")
     public EquipementDto obtenirEquipementParId(@PathVariable Long id) {
-        return EquipementDto.depuis(equipementService.ObtenirEquipementParId(id));
+        return EquipementDto.depuis(equipementService.obtenirEquipementParId(id));
     }
 
     @GetMapping("/reference/{reference}")
     public EquipementDto obtenirEquipementParReference(@PathVariable String reference) {
-        return EquipementDto.depuis(equipementService.ObtenirEquipementParReference(reference));
+        return EquipementDto.depuis(equipementService.obtenirEquipementParReference(reference));
     }
 
     @PostMapping
     public ResponseEntity<EquipementDto> ajouterEquipement(@Valid @RequestBody EquipementFormulaire formulaire) {
-        EquipementDto equipement = EquipementDto.depuis(equipementService.AjouterEquipement(formulaire));
+        EquipementDto equipement = EquipementDto.depuis(equipementService.ajouterEquipement(formulaire));
         return ResponseEntity.created(URI.create("/api/equipements/" + equipement.id())).body(equipement);
     }
 
     @PutMapping("/{id}")
     public EquipementDto modifierEquipement(@PathVariable Long id,
                                             @Valid @RequestBody EquipementFormulaire formulaire) {
-        return EquipementDto.depuis(equipementService.ModifierEquipement(id, formulaire));
+        return EquipementDto.depuis(equipementService.modifierEquipement(id, formulaire));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimerEquipement(@PathVariable Long id) {
-        equipementService.SupprimerEquipement(id);
+        equipementService.supprimerEquipement(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/etat")
     public EquipementDto changerEtatEquipement(@PathVariable Long id,
                                                @Valid @RequestBody EtatEquipementFormulaire formulaire) {
-        return EquipementDto.depuis(equipementService.ChangerEtatEquipement(id, formulaire.etat()));
+        return EquipementDto.depuis(equipementService.changerEtatEquipement(id, formulaire.etat()));
     }
 }
