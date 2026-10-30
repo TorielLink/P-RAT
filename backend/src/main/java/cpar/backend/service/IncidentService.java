@@ -1,17 +1,20 @@
 package cpar.backend.service;
 
-import cpar.backend.dto.DeclarationIncidentFormulaire;
+import cpar.backend.dto.DeclarationIncidentRequest;
+import cpar.backend.dto.IncidentDetailDto;
 import cpar.backend.dto.ModificationIncidentFormulaire;
 import cpar.backend.exception.IncidentIntrouvableException;
 import cpar.backend.exception.IncidentResoluException;
 import cpar.backend.exception.PrestataireIntrouvableException;
 import cpar.backend.exception.UtilisateurIntrouvableException;
+import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.entities.Prestataire;
 import cpar.backend.model.entities.Utilisateur;
 import cpar.backend.model.enums.PrioriteIncident;
 import cpar.backend.model.enums.ProfilUtilisateur;
 import cpar.backend.model.enums.StatutIncident;
+import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
 import cpar.backend.repository.UtilisateurRepository;
@@ -19,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -30,26 +34,39 @@ public class IncidentService implements IIncidentService {
     private final IncidentRepository incidentRepository;
     private final PrestataireRepository prestataireRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final EvaluationRepository evaluationRepository;
     private final IEquipementService equipementService;
+    private final Clock horloge;
 
     public IncidentService(IncidentRepository incidentRepository,
                            PrestataireRepository prestataireRepository,
                            UtilisateurRepository utilisateurRepository,
-                           IEquipementService equipementService) {
+                           EvaluationRepository evaluationRepository,
+                           IEquipementService equipementService,
+                           Clock horloge) {
         this.incidentRepository = incidentRepository;
         this.prestataireRepository = prestataireRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.evaluationRepository = evaluationRepository;
         this.equipementService = equipementService;
+        this.horloge = horloge;
     }
 
     // ---------- Lecture : un prestataire ne voit que les incidents qui lui sont affectés ----------
+
+    @Override
+    public IncidentDetailDto obtenirDetailIncident(Long id, String login) {
+        Incident incident = obtenirIncidentParId(id, login);
+        Evaluation evaluation = evaluationRepository.findByIncidentId(id).orElse(null);
+        return IncidentDetailDto.depuis(incident, evaluation, LocalDateTime.now(horloge));
+    }
 
     @Override
     public Incident obtenirIncidentParId(Long id, String login) {
         Incident incident = chargerIncident(id);
         Utilisateur utilisateur = chargerUtilisateur(login);
         // 404 plutôt que 403 : on ne révèle pas l'existence des incidents des autres prestataires
-        if (estPrestataire(utilisateur) && !estAffecteA(incident, utilisateur)) {
+        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
             throw new IncidentIntrouvableException(id);
         }
         return incident;
@@ -94,16 +111,16 @@ public class IncidentService implements IIncidentService {
 
     // ---------- Écriture ----------
 
-    /** Admin et agent (droit vérifié par SecurityConfig). Le déclarant est l'utilisateur connecté. */
+    /** Rattaché à un équipement, ouvert à l'instant du serveur, sans prestataire ni résolution. */
     @Override
     @Transactional
-    public Incident declarerIncident(DeclarationIncidentFormulaire formulaire, String login) {
+    public Incident declarerIncident(Long equipementId, DeclarationIncidentRequest demande, String login) {
         Incident incident = new Incident();
-        incident.setEquipement(equipementService.obtenirEquipementParId(formulaire.equipementId()));
-        incident.setDescription(texteOuNull(formulaire.description()));
-        incident.setPriorite(formulaire.priorite() != null ? formulaire.priorite() : PrioriteIncident.MOYENNE);
+        incident.setEquipement(equipementService.obtenirEquipementParId(equipementId));
+        incident.setDescription(demande.description().trim());
+        incident.setPriorite(demande.priorite() != null ? demande.priorite() : PrioriteIncident.MOYENNE);
         incident.setStatut(StatutIncident.OUVERT);
-        incident.setDateOuverture(LocalDateTime.now());
+        incident.setDateOuverture(LocalDateTime.now(horloge));
         incident.setUtilisateur(chargerUtilisateur(login));
         return incidentRepository.save(incident);
     }
@@ -114,7 +131,7 @@ public class IncidentService implements IIncidentService {
     public Incident modifierIncident(Long id, ModificationIncidentFormulaire formulaire, String login) {
         Incident incident = obtenirIncidentNonResolu(id);
         Utilisateur utilisateur = chargerUtilisateur(login);
-        if (estPrestataire(utilisateur) && !estAffecteA(incident, utilisateur)) {
+        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
             throw new AccessDeniedException("Cet incident n'est pas affecté à votre entreprise.");
         }
 
@@ -144,7 +161,7 @@ public class IncidentService implements IIncidentService {
     public Incident resoudreIncident(Long id) {
         Incident incident = obtenirIncidentNonResolu(id);
         incident.setStatut(StatutIncident.RESOLU);
-        incident.setDateResolution(LocalDateTime.now());
+        incident.setDateResolution(LocalDateTime.now(horloge));
         return incident;
     }
 
@@ -185,11 +202,11 @@ public class IncidentService implements IIncidentService {
     }
 
     // Comparaison par identifiant : évite de charger le prestataire lié au compte
-    private static boolean estAffecteA(Incident incident, Utilisateur utilisateur) {
+    private static boolean nEstPasAffecteA(Incident incident, Utilisateur utilisateur) {
         Long prestataireCompte = prestataireIdDe(utilisateur);
-        return prestataireCompte != null
-                && incident.getPrestataire() != null
-                && Objects.equals(incident.getPrestataire().getId(), prestataireCompte);
+        return prestataireCompte == null
+                || incident.getPrestataire() == null
+                || !Objects.equals(incident.getPrestataire().getId(), prestataireCompte);
     }
     // "" ou "   " devient null : on ne stocke pas de description vide
     private static String texteOuNull(String texte) {

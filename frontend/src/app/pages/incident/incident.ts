@@ -6,12 +6,16 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   Incident,
+  IncidentDetail,
   IncidentService,
+  LIBELLES_NIVEAU,
+  LIBELLES_STATUT,
   PRIORITES_INCIDENT,
   PrioriteIncident,
 } from '../../core/incident/incident.service';
+import { formaterDuree } from '../../shared/formater-duree';
 
-/** Page /incidents/:id : un incident seul. */
+/** Page /incidents/:id : détail d'un incident. */
 @Component({
   selector: 'app-incident',
   imports: [DatePipe, ReactiveFormsModule, RouterLink],
@@ -24,7 +28,11 @@ export class IncidentPage implements OnInit {
   protected readonly authService = inject(AuthService);
 
   protected readonly priorites = PRIORITES_INCIDENT;
-  readonly incident = signal<Incident | null>(null);
+  protected readonly libellesStatut = LIBELLES_STATUT;
+  protected readonly libellesNiveau = LIBELLES_NIVEAU;
+  protected readonly formaterDuree = formaterDuree;
+
+  readonly incident = signal<IncidentDetail | null>(null);
   readonly enModification = signal(false);
   readonly erreur = signal<string | null>(null);
 
@@ -34,17 +42,7 @@ export class IncidentPage implements OnInit {
   });
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      this.erreur.set(null);
-      this.enModification.set(false);
-      this.incidentService.obtenirIncidentParId(Number(params.get('id'))).subscribe({
-        next: incident => this.incident.set(incident),
-        error: (erreur: HttpErrorResponse) => {
-          this.incident.set(null);
-          this.erreur.set(this.message(erreur, 'Incident introuvable.'));
-        },
-      });
-    });
+    this.route.paramMap.subscribe(params => this.charger(Number(params.get('id'))));
   }
 
   modifier(incident: Incident): void {
@@ -69,11 +67,7 @@ export class IncidentPage implements OnInit {
         priorite: valeurs.priorite,
       })
       .subscribe({
-        next: modifie => {
-          this.incident.set(modifie);
-          this.enModification.set(false);
-          this.erreur.set(null);
-        },
+        next: () => this.charger(incident.id),
         error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la modification.')),
       });
   }
@@ -83,7 +77,7 @@ export class IncidentPage implements OnInit {
       return;
     }
     this.incidentService.resoudreIncident(incident.id).subscribe({
-      next: resolu => this.incident.set(resolu),
+      next: () => this.charger(incident.id),
       error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la résolution.')),
     });
   }
@@ -98,11 +92,24 @@ export class IncidentPage implements OnInit {
     });
   }
 
+  // Après une modification ou une résolution, on recharge le détail :
+  // seul GET /api/incidents/{id} renvoie la durée, le niveau d'attention et l'évaluation à jour.
+  private charger(id: number): void {
+    this.erreur.set(null);
+    this.enModification.set(false);
+    this.incidentService.obtenirIncidentParId(id).subscribe({
+      next: incident => this.incident.set(incident),
+      error: (erreur: HttpErrorResponse) => {
+        this.incident.set(null);
+        this.erreur.set(this.message(erreur, 'Incident introuvable.'));
+      },
+    });
+  }
+
   private message(erreur: HttpErrorResponse, parDefaut: string): string {
     if (erreur.status === 403) {
       return 'Votre profil ne permet pas cette action.';
     }
     return erreur.error?.detail ?? erreur.error?.message ?? parDefaut;
   }
-
 }

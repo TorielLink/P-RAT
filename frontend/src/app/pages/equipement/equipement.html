@@ -40,6 +40,10 @@
     <p>Créé le : {{ eq.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</p>
     <p>État : {{ eq.etat }}</p>
 
+    @if (authService.peutDeclarerIncidents()) {
+      <a [routerLink]="['/equipements', eq.id, 'declarer-incident']">Déclarer un incident</a>
+    }
+
     <button type="button" (click)="modifier(eq)">Modifier</button>
     @if (authService.peutGererEquipements()) {
       <button type="button" (click)="supprimer(eq)">Supprimer</button>

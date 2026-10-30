@@ -1,7 +1,5 @@
 <h1>Incidents</h1>
-@if (authService.peutDeclarerIncidents()) {
-  <a routerLink="/incidents/nouveau">Déclarer un incident</a>
-}
+
 @if (authService.estAdmin()) {
   <a routerLink="/affectations">Affecter les prestataires</a>
 }

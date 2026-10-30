@@ -25,7 +25,7 @@ export const routes: Routes = [
       { path: 'equipements', component: Equipements },
       { path: 'affectations', component: Affectations },
       { path: 'incidents', component: Incidents },
-      { path: 'incidents/nouveau', component: NouvelIncident },
+      { path: 'equipements/:id/declarer-incident', component: NouvelIncident },
       { path: 'incidents/:id', component: IncidentPage }
     ],
   },

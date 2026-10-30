@@ -38,7 +38,7 @@ public class SecurityConfig {
                         // Lecture pour tous (le service filtre pour le prestataire)
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").authenticated()
                         // Déclaration = Admin et Agent
-                        .requestMatchers(HttpMethod.POST, "/api/incidents").hasAnyRole("ADMIN", "AGENT")
+                        .requestMatchers(HttpMethod.POST, "/api/equipements/*/incidents").hasAnyRole("ADMIN", "AGENT")
                         // Modification = admin, et prestataire sur ses incidents
                         .requestMatchers(HttpMethod.PUT, "/api/incidents/*").hasAnyRole("ADMIN", "PRESTATAIRE")
                         // Restraint les autres droits d'incident

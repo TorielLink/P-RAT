@@ -2,36 +2,44 @@
 
 @if (!authService.peutDeclarerIncidents()) {
   <p>Votre profil ne permet pas de déclarer un incident.</p>
-} @else {
-  <form [formGroup]="formulaire" (ngSubmit)="declarer()">
+} @else if (equipement(); as eq) {
+  <form [formGroup]="formulaire" (ngSubmit)="declarer(eq)">
     <p>
-      Équipement :
-      <select formControlName="equipementId">
-        <option [ngValue]="null" disabled>Choisir un équipement</option>
-        @for (eq of equipements(); track eq.id) {
-          <option [ngValue]="eq.id">
-            {{ eq.reference ?? 'n°' + eq.id }} — {{ eq.type }} ({{ eq.stationNom ?? 'sans station' }})
-          </option>
-        }
-      </select>
+      Équipement : <strong>{{ eq.reference ?? 'n°' + eq.id }}</strong>
+      — {{ eq.type }} ({{ eq.stationNom ?? 'sans station' }})
     </p>
-    <p>
-      Priorité :
-      <select formControlName="priorite">
-        @for (priorite of priorites; track priorite) {
-          <option [ngValue]="priorite">{{ priorite }}</option>
-        }
-      </select>
-    </p>
-    <p>Description :</p>
-    <textarea formControlName="description" rows="4" cols="60" maxlength="2000"></textarea>
+
+    <label for="priorite">Priorité</label>
+    <select id="priorite" formControlName="priorite">
+      @for (priorite of priorites; track priorite) {
+        <option [ngValue]="priorite">{{ priorite }}</option>
+      }
+    </select>
+
+    <label for="description">Description</label>
+    <textarea id="description" formControlName="description" rows="5" cols="60" [attr.maxlength]="descriptionMax"></textarea>
+    <small>{{ formulaire.controls.description.value.length }} / {{ descriptionMax }}</small>
+
+    @if (formulaire.controls.description.touched && formulaire.controls.description.errors; as erreurs) {
+      @if (erreurs['required']) {
+        <p class="erreur-champ">La description est obligatoire.</p>
+      } @else if (erreurs['minlength']) {
+        <p class="erreur-champ">La description doit contenir au moins {{ descriptionMin }} caractères.</p>
+      } @else if (erreurs['maxlength']) {
+        <p class="erreur-champ">La description ne doit pas dépasser {{ descriptionMax }} caractères.</p>
+      }
+    }
+    @if (erreursServeur()['description']; as message) {
+      <p class="erreur-champ">{{ message }}</p>
+    }
+
     <p>
       <button type="submit">Déclarer</button>
-      <a routerLink="/incidents">Annuler</a>
+      <a [routerLink]="['/equipements', eq.id]">Annuler</a>
     </p>
   </form>
 }
 
 @if (erreur()) {
-  <p>{{ erreur() }}</p>
+  <p class="erreur" role="alert">{{ erreur() }}</p>
 }

@@ -13,12 +13,32 @@
       —
     }
   </p>
-  <p>Statut : {{ inc.statut }}</p>
+  <p>Statut : {{ libellesStatut[inc.statut] }}</p>
   <p>Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}</p>
   <p>Déclaré par : {{ inc.declarantPrenom ?? '—' }}</p>
   <p>Ouvert le : {{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</p>
+
+  @if (inc.niveauAttention !== 'RESOLU') {
+    <p>
+      Niveau d'attention :
+      <span [class]="'attention attention-' + inc.niveauAttention">{{ libellesNiveau[inc.niveauAttention] }}</span>
+    </p>
+  }
+
+  <p>
+    Durée d'ouverture : {{ formaterDuree(inc.dureeOuvertureMinutes) }}
+    @if (inc.statut === 'RESOLU') { (figée à la résolution) }
+  </p>
+
   @if (inc.dateResolution) {
     <p>Résolu le : {{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}</p>
+  }
+
+  @if (inc.evaluation; as evaluation) {
+    <p>Évaluation : {{ evaluation.note }} / 5</p>
+    <p>Commentaire : {{ evaluation.commentaire ?? '—' }}</p>
+  } @else if (inc.statut === 'RESOLU') {
+    <p>Évaluation : pas encore évalué</p>
   }
 
   @if (enModification()) {

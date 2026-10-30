@@ -1,12 +1,18 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Equipement, EquipementService } from '../../core/equipement/equipement.service';
-import { IncidentService, PRIORITES_INCIDENT, PrioriteIncident } from '../../core/incident/incident.service';
+import {
+  DESCRIPTION_MAX,
+  DESCRIPTION_MIN,
+  IncidentService,
+  PRIORITES_INCIDENT,
+  PrioriteIncident,
+} from '../../core/incident/incident.service';
 
-/** Page /incidents/nouveau (?equipement=ID pour présélectionner l'équipement). */
+/** Page /equipements/:id/declarer-incident */
 @Component({
   selector: 'app-nouvel-incident',
   imports: [ReactiveFormsModule, RouterLink],
@@ -20,48 +26,48 @@ export class NouvelIncident implements OnInit {
   protected readonly authService = inject(AuthService);
 
   protected readonly priorites = PRIORITES_INCIDENT;
-  readonly equipements = signal<Equipement[]>([]);
-  readonly erreur = signal<string | null>(null);
+  protected readonly descriptionMin = DESCRIPTION_MIN;
+  protected readonly descriptionMax = DESCRIPTION_MAX;
 
-  readonly formulaire = inject(FormBuilder).group({
-    equipementId: [null as number | null, Validators.required],
+  readonly equipement = signal<Equipement | null>(null);
+  readonly erreur = signal<string | null>(null);
+  readonly erreursServeur = signal<Record<string, string>>({});
+
+  readonly formulaire = inject(FormBuilder).nonNullable.group({
+    description: ['', [Validators.required, Validators.minLength(DESCRIPTION_MIN), Validators.maxLength(DESCRIPTION_MAX)]],
     priorite: ['MOYENNE' as PrioriteIncident, Validators.required],
-    description: ['', Validators.maxLength(2000)],
   });
 
   ngOnInit(): void {
-    this.equipementService.obtenirTousEquipements().subscribe({
-      next: equipements => this.equipements.set(equipements),
-      error: (erreur: HttpErrorResponse) =>
-        this.erreur.set(erreur.error?.message ?? 'Impossible de charger les équipements.'),
+    const equipementId = Number(this.route.snapshot.paramMap.get('id'));
+    this.equipementService.obtenirEquipementParId(equipementId).subscribe({
+      next: equipement => this.equipement.set(equipement),
+      error: (erreur: HttpErrorResponse) => this.erreur.set(erreur.error?.detail ?? 'Équipement introuvable.'),
     });
-
-    const equipementId = this.route.snapshot.queryParamMap.get('equipement');
-    if (equipementId) {
-      this.formulaire.controls.equipementId.setValue(Number(equipementId));
-    }
   }
 
-  declarer(): void {
+  declarer(equipement: Equipement): void {
+    this.erreursServeur.set({});
     if (this.formulaire.invalid) {
-      this.erreur.set("Choisissez l'équipement concerné.");
+      this.formulaire.markAllAsTouched();
       return;
     }
-    const valeurs = this.formulaire.getRawValue();
-    this.incidentService
-      .declarerIncident({
-        equipementId: valeurs.equipementId!,
-        priorite: valeurs.priorite!,
-        description: valeurs.description?.trim() || null,
-      })
-      .subscribe({
-        next: incident => this.router.navigate(['/incidents', incident.id]),
-        error: (erreur: HttpErrorResponse) =>
-          this.erreur.set(
-            erreur.status === 403
-              ? 'Votre profil ne permet pas de déclarer un incident.'
-              : (erreur.error?.detail ?? erreur.error?.message ?? 'Échec de la déclaration.')
-          ),
-      });
+    const { description, priorite } = this.formulaire.getRawValue();
+    this.incidentService.declarerIncident(equipement.id, { description: description.trim(), priorite }).subscribe({
+      next: incident => this.router.navigate(['/incidents', incident.id]),
+      error: (erreur: HttpErrorResponse) => this.afficherErreur(erreur),
+    });
+  }
+
+  private afficherErreur(erreur: HttpErrorResponse): void {
+    if (erreur.status === HttpStatusCode.BadRequest && erreur.error?.erreurs) {
+      this.erreursServeur.set(erreur.error.erreurs);
+      return;
+    }
+    this.erreur.set(
+      erreur.status === HttpStatusCode.Forbidden
+        ? 'Votre profil ne permet pas de déclarer un incident.'
+        : (erreur.error?.detail ?? 'Échec de la déclaration.')
+    );
   }
 }
