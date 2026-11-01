@@ -63,18 +63,50 @@ ISP parce que ...
   par Spring Security (RG11).
 
 ### Incidents
-- **Horloge injectée (`java.time.Clock`)** : la date d'ouverture et de résolution vient du serveur ;
-  en test, une `Clock.fixed` rend les seuils RG3 vérifiables (47 h / 48 h / 72 h).
-- **Statuts RG2** : OUVERT = non affecté, EN_COURS = affecté (« Pris en charge »), RESOLU = résolu.
+
+- **Horloge injectée (`java.time.Clock`)** : les dates d'ouverture et de résolution sont fixées par le
+  serveur (`LocalDateTime.now(horloge)`), jamais par le client. Bean `HorlogeConfig` en production,
+  `Clock.fixed(...)` en test : les seuils RG3 (47 h / 48 h / 72 h) deviennent vérifiables.
+- **Statuts RG2 sans migration** : OUVERT = non affecté, EN_COURS = affecté (affiché « Pris en charge »),
+  RESOLU = résolu.
 - **Durée et niveau d'attention calculés à chaque lecture, jamais stockés** : `Incident.dureeOuverture`
-  et `NiveauAttention.de` (seuils 48 h / 72 h en constantes nommées, réutilisés par F11).
-- **Gestion des exceptions : `@RestControllerAdvice` + `ProblemDetail`** plutôt que `ResponseStatusException` :
-  traduction centralisée, services indépendants de HTTP, erreurs de validation renvoyées champ par champ.
-- **`ResponseEntity`** uniquement pour la création (201 + en-tête `Location`).
-- **Prestataire sur l'incident d'un autre : 404 plutôt que 403**, pour ne pas révéler l'existence
-  des incidents des autres entreprises.
-- **Validation en double** : Bean Validation côté serveur (seule garantie réelle), reprise dans Angular
-  pour le confort (pas d'appel inutile, message immédiat).
+  (figée à la date de résolution) et `NiveauAttention.de` dans le modèle. Les seuils 48 h / 72 h sont des
+  constantes nommées définies une seule fois (`SEUIL_ORANGE`, `SEUIL_ROUGE`), réutilisées par F11.
+  Angular ne fait que mettre en forme (« 2 j 3 h »).
+- **URL de déclaration : `POST /api/equipements/{id}/incidents`** : l'incident est créé « pour un
+  équipement donné » (F4) ; l'équipement est dans l'URL, donc non modifiable par le formulaire.
+  L'endpoint reste dans `IncidentController` (`@RequestMapping("/api")`) pour regrouper toutes les
+  opérations sur les incidents, y compris dans la documentation Swagger (F12).
+- **DTO dédiés** : `DeclarationIncidentRequest` ne contient ni date, ni prestataire, ni équipement :
+  le client ne peut pas les imposer (RG1). `IncidentDetailDto` réutilise `IncidentDto` grâce à
+  `@JsonUnwrapped` (JSON plat, pas de duplication des champs).
+- **Validation en double** : Bean Validation côté serveur (`@NotBlank`, `@Size(10, 500)`), seule
+  garantie réelle ; reprise dans Angular pour le confort (pas d'appel inutile, message immédiat).
+  Les erreurs serveur sont renvoyées champ par champ et affichées sous le champ concerné.
+- **Ordre de traitement d'une requête** : Spring Security (401 / 403) → validation (400) → service (404).
+  Un prestataire est refusé avant même la lecture de ses données : il ne peut pas apprendre si un
+  équipement existe (RG11).
+
+### Gestion des exceptions
+
+- **`@RestControllerAdvice` + `ProblemDetail`** plutôt que `ResponseStatusException` : la traduction
+  exception → code HTTP est centralisée dans `GestionnaireExceptions` ; les services lèvent des
+  exceptions métier (`IncidentIntrouvableException`…) sans connaître HTTP ; toutes les erreurs ont le
+  même format JSON (`detail` en français, `erreurs` par champ pour les 400).
+- Correspondances : ressource introuvable → 404, conflit (référence en double, incident déjà résolu)
+  → 409, données invalides ou JSON illisible → 400.
+- Pas de gestionnaire générique pour `Exception` : il intercepterait les `AccessDeniedException`
+  et transformerait les 403 en 500.
+- **Prestataire sur l'incident d'un autre : 404 plutôt que 403**, pour ne pas révéler l'existence des
+  incidents des autres entreprises.
+- **`ResponseEntity`** uniquement quand le code ou les en-têtes diffèrent du cas standard :
+  201 + `Location` à la création, 204 à la suppression.
+
+### Transactions
+
+- `@Transactional(readOnly = true)` sur `IncidentService` : toutes les lectures sans écriture accidentelle.
+- `@Transactional` sur `declarerIncident` (RG10) : la vérification de l'équipement et l'insertion forment
+  un tout ; si l'une échoue, rien n'est enregistré.
 
 ## LOT ALPHA
 ### Fonctionnalité transverse 1 : …
@@ -82,6 +114,12 @@ ISP parce que ...
 ### Fonctionnalité transverse 2 : …
 ## BILAN
 - Contribution de chacun : …
-- Plus grande difficulté et comment elle a été surmontée : …
+- Plus grande difficulté et comment elle a été surmontée :
+  - **Flyway et les migrations modifiées** : une migration déjà appliquée ne doit plus jamais être
+      modifiée (checksum mismatch sur V1 après une réécriture). Tout changement passe par une nouvelle
+      migration `V<n>`.
+  - **Flyway et DevTools** : une V4 créée vide pendant que le back tournait a été appliquée vide par le
+    redémarrage automatique de DevTools (checksum 0). Règle du groupe : arrêter le back avant de créer
+    ou de modifier une migration.
 - Fonctionnalités non réalisées et pourquoi : …
 - Trois points à retenir du cours et du projet : …
