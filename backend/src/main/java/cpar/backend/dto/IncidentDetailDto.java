@@ -11,13 +11,16 @@ public record IncidentDetailDto(
         @JsonUnwrapped IncidentDto incident,
         long dureeOuvertureMinutes,
         NiveauAttentionIncident niveauAttention,
-        EvaluationDto evaluation) {
+        EvaluationDto evaluation,
+        boolean modifiable) {
 
-    public static IncidentDetailDto depuis(Incident incident, Evaluation evaluation, LocalDateTime maintenant) {
+    public static IncidentDetailDto depuis(Incident incident, Evaluation evaluation, LocalDateTime maintenant,
+                                           boolean modifiable) {
         return new IncidentDetailDto(
                 IncidentDto.depuis(incident),
                 incident.dureeOuverture(maintenant).toMinutes(),
                 NiveauAttentionIncident.de(incident, maintenant),
-                evaluation != null ? EvaluationDto.depuis(evaluation) : null);
+                evaluation != null ? EvaluationDto.depuis(evaluation) : null,
+                modifiable);
     }
 }

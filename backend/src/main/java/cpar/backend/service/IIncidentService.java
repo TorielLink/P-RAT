@@ -2,7 +2,7 @@ package cpar.backend.service;
 
 import cpar.backend.dto.DeclarationIncidentRequest;
 import cpar.backend.dto.IncidentDetailDto;
-import cpar.backend.dto.ModificationIncidentFormulaire;
+import cpar.backend.dto.ModificationIncidentRequest;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.enums.StatutIncident;
 
@@ -23,7 +23,7 @@ public interface IIncidentService {
 
     Incident declarerIncident(Long equipementId, DeclarationIncidentRequest demande, String login);
 
-    Incident modifierIncident(Long id, ModificationIncidentFormulaire formulaire, String login);
+    Incident modifierIncident(Long id, ModificationIncidentRequest demande, String login);
 
     Incident affecterPrestataire(Long id, Long prestataireId);
 
