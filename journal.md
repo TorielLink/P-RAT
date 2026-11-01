@@ -62,6 +62,20 @@ ISP parce que ...
 - **Le guard Angular n'est qu'un confort d'affichage** : la restriction réelle est appliquée
   par Spring Security (RG11).
 
+### Incidents
+- **Horloge injectée (`java.time.Clock`)** : la date d'ouverture et de résolution vient du serveur ;
+  en test, une `Clock.fixed` rend les seuils RG3 vérifiables (47 h / 48 h / 72 h).
+- **Statuts RG2** : OUVERT = non affecté, EN_COURS = affecté (« Pris en charge »), RESOLU = résolu.
+- **Durée et niveau d'attention calculés à chaque lecture, jamais stockés** : `Incident.dureeOuverture`
+  et `NiveauAttention.de` (seuils 48 h / 72 h en constantes nommées, réutilisés par F11).
+- **Gestion des exceptions : `@RestControllerAdvice` + `ProblemDetail`** plutôt que `ResponseStatusException` :
+  traduction centralisée, services indépendants de HTTP, erreurs de validation renvoyées champ par champ.
+- **`ResponseEntity`** uniquement pour la création (201 + en-tête `Location`).
+- **Prestataire sur l'incident d'un autre : 404 plutôt que 403**, pour ne pas révéler l'existence
+  des incidents des autres entreprises.
+- **Validation en double** : Bean Validation côté serveur (seule garantie réelle), reprise dans Angular
+  pour le confort (pas d'appel inutile, message immédiat).
+
 ## LOT ALPHA
 ### Fonctionnalité transverse 1 : …
 - Besoin · périmètre envisagé · choix et essais · ce qui fonctionne · difficultés · reste à faire
