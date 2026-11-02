@@ -40,4 +40,9 @@ public class GestionnaireExceptions {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, "La requête est mal formée (valeur inconnue ou format incorrect).");
     }
+
+    @ExceptionHandler(OperationInterditeException.class)
+    public ProblemDetail interdit(OperationInterditeException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
+    }
 }

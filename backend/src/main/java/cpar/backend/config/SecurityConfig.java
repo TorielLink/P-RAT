@@ -39,11 +39,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").authenticated()
                         // Déclaration = Admin et Agent
                         .requestMatchers(HttpMethod.POST, "/api/equipements/*/incidents").hasAnyRole("ADMIN", "AGENT")
-                        // Modification = admin, et prestataire sur ses incidents
-                        .requestMatchers(HttpMethod.PUT, "/api/incidents/*").hasAnyRole("ADMIN", "PRESTATAIRE")
+                        // Modification = admin, et agent sur ses incidents
+                        .requestMatchers(HttpMethod.PATCH, "/api/incidents/*").hasAnyRole("ADMIN", "AGENT")
                         // Restraint les autres droits d'incident
                         .requestMatchers("/api/incidents/**").hasRole("ADMIN")
-                        // Seul Admin peut acceder au prestataires
+                        // Seul Admin peut acceder aux prestataires
                         .requestMatchers("/api/prestataires/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(formulaire -> formulaire

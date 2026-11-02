@@ -2,14 +2,18 @@ package cpar.backend.service;
 
 import cpar.backend.dto.DeclarationIncidentRequest;
 import cpar.backend.dto.IncidentDetailDto;
+import cpar.backend.dto.ModificationIncidentRequest;
 import cpar.backend.exception.EquipementIntrouvableException;
 import cpar.backend.exception.IncidentIntrouvableException;
+import cpar.backend.exception.IncidentResoluException;
+import cpar.backend.exception.OperationInterditeException;
 import cpar.backend.model.entities.Equipement;
 import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.entities.Prestataire;
 import cpar.backend.model.entities.Utilisateur;
 import cpar.backend.model.enums.NiveauAttentionIncident;
+import cpar.backend.model.enums.PrioriteIncident;
 import cpar.backend.model.enums.ProfilUtilisateur;
 import cpar.backend.model.enums.StatutIncident;
 import cpar.backend.repository.EvaluationRepository;
@@ -28,9 +32,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -136,6 +138,77 @@ class IncidentServiceTest {
 
         assertEquals(StatutIncident.RESOLU, resolu.getStatut());
         assertEquals(MAINTENANT, resolu.getDateResolution());
+    }
+
+    // -------- MODIFICATION --------
+
+    @Test
+    void unIncidentResoluNePeutPlusEtreModifie() {
+        Incident resolu = incidentOuvertDepuis(Duration.ofDays(2));
+        resolu.setStatut(StatutIncident.RESOLU);
+        resolu.setDescription("Description d'origine");
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(resolu));
+
+        assertThrows(IncidentResoluException.class, () -> incidentService.modifierIncident(1L,
+                new ModificationIncidentRequest("Nouvelle description valide", null), "admin"));
+        assertEquals("Description d'origine", resolu.getDescription());
+    }
+
+    @Test
+    void unAgentNePeutPasModifierLIncidentDUnAutreAgent() {
+        Utilisateur auteur = compte(ProfilUtilisateur.AGENT, null);
+        auteur.setId(2L);
+        Utilisateur autreAgent = compte(ProfilUtilisateur.AGENT, null);
+        autreAgent.setId(3L);
+        Incident incident = incidentOuvertDepuis(Duration.ofHours(5));
+        incident.setUtilisateur(auteur);
+
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
+        when(utilisateurRepository.findByLogin("autreAgent")).thenReturn(Optional.of(autreAgent));
+
+        assertThrows(OperationInterditeException.class, () -> incidentService.modifierIncident(1L,
+                new ModificationIncidentRequest("Nouvelle description valide", null), "autreAgent"));
+    }
+
+    @Test
+    void unAgentModifieSonIncidentNonAffecte() {
+        Utilisateur agent = compte(ProfilUtilisateur.AGENT, null);
+        agent.setId(2L);
+        Incident incident = incidentOuvertDepuis(Duration.ofHours(5));
+        incident.setUtilisateur(agent);
+
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
+        when(utilisateurRepository.findByLogin("agent")).thenReturn(Optional.of(agent));
+
+        Incident modifie = incidentService.modifierIncident(1L,
+                new ModificationIncidentRequest("  Nouvelle description valide  ", PrioriteIncident.CRITIQUE), "agent");
+
+        assertEquals("Nouvelle description valide", modifie.getDescription());
+        assertEquals(PrioriteIncident.CRITIQUE, modifie.getPriorite());
+    }
+
+    @Test
+    void lesChampsNonModifiablesRestentInchanges() {
+        Equipement equipement = new Equipement();
+        Prestataire prestataire = entreprise(7L);
+        Incident incident = incidentOuvertDepuis(Duration.ofHours(30));
+        incident.setEquipement(equipement);
+        incident.setStatut(StatutIncident.EN_COURS);
+        incident.setPrestataire(prestataire);
+        LocalDateTime ouverture = incident.getDateOuverture();
+
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
+        when(utilisateurRepository.findByLogin("admin")).thenReturn(Optional.of(compte(ProfilUtilisateur.ADMIN, null)));
+
+        Incident modifie = incidentService.modifierIncident(1L,
+                new ModificationIncidentRequest("Nouvelle description valide", null), "admin");
+
+        assertSame(equipement, modifie.getEquipement());
+        assertSame(prestataire, modifie.getPrestataire());
+        assertEquals(StatutIncident.EN_COURS, modifie.getStatut());
+        assertEquals(ouverture, modifie.getDateOuverture());
+        assertNull(modifie.getDateResolution());
+        assertEquals(PrioriteIncident.MOYENNE, modifie.getPriorite());
     }
 
     private static Incident incidentOuvertDepuis(Duration duree) {

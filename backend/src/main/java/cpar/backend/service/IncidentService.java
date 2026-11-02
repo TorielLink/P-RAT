@@ -2,11 +2,12 @@ package cpar.backend.service;
 
 import cpar.backend.dto.DeclarationIncidentRequest;
 import cpar.backend.dto.IncidentDetailDto;
-import cpar.backend.dto.ModificationIncidentFormulaire;
+import cpar.backend.dto.ModificationIncidentRequest;
 import cpar.backend.exception.IncidentIntrouvableException;
 import cpar.backend.exception.IncidentResoluException;
 import cpar.backend.exception.PrestataireIntrouvableException;
 import cpar.backend.exception.UtilisateurIntrouvableException;
+import cpar.backend.exception.OperationInterditeException;
 import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.entities.Prestataire;
@@ -18,7 +19,6 @@ import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
 import cpar.backend.repository.UtilisateurRepository;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,16 +56,21 @@ public class IncidentService implements IIncidentService {
 
     @Override
     public IncidentDetailDto obtenirDetailIncident(Long id, String login) {
-        Incident incident = obtenirIncidentParId(id, login);
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        Incident incident = chargerIncidentVisiblePar(id, utilisateur);
         Evaluation evaluation = evaluationRepository.findByIncidentId(id).orElse(null);
-        return IncidentDetailDto.depuis(incident, evaluation, LocalDateTime.now(horloge));
+        return IncidentDetailDto.depuis(incident, evaluation, LocalDateTime.now(horloge),
+                incident.estModifiablePar(utilisateur));
     }
 
     @Override
     public Incident obtenirIncidentParId(Long id, String login) {
+        return chargerIncidentVisiblePar(id, chargerUtilisateur(login));
+    }
+
+    // 404 plutôt que 403 : on ne révèle pas l'existence des incidents des autres prestataires
+    private Incident chargerIncidentVisiblePar(Long id, Utilisateur utilisateur) {
         Incident incident = chargerIncident(id);
-        Utilisateur utilisateur = chargerUtilisateur(login);
-        // 404 plutôt que 403 : on ne révèle pas l'existence des incidents des autres prestataires
         if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
             throw new IncidentIntrouvableException(id);
         }
@@ -125,19 +130,18 @@ public class IncidentService implements IIncidentService {
         return incidentRepository.save(incident);
     }
 
-    /** Admin : tous les incidents. Prestataire : seulement ceux qui lui sont affectés. Agent : refusé par SecurityConfig. */
+    /** Admin : tous les incidents. Agent : seulement ceux qui lui sont affectés. Prestataire : refusé par SecurityConfig. */
     @Override
     @Transactional
-    public Incident modifierIncident(Long id, ModificationIncidentFormulaire formulaire, String login) {
+    public Incident modifierIncident(Long id, ModificationIncidentRequest demande, String login) {
         Incident incident = obtenirIncidentNonResolu(id);
-        Utilisateur utilisateur = chargerUtilisateur(login);
-        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
-            throw new AccessDeniedException("Cet incident n'est pas affecté à votre entreprise.");
+        if (!incident.estModifiablePar(chargerUtilisateur(login))) {
+            throw new OperationInterditeException(
+                    "Vous ne pouvez modifier que les incidents non affectés que vous avez déclarés.");
         }
-
-        incident.setDescription(texteOuNull(formulaire.description()));
-        if (formulaire.priorite() != null) {
-            incident.setPriorite(formulaire.priorite());
+        incident.setDescription(demande.description().trim());
+        if (demande.priorite() != null) {
+            incident.setPriorite(demande.priorite());
         }
         return incident;
     }
@@ -208,9 +212,4 @@ public class IncidentService implements IIncidentService {
                 || incident.getPrestataire() == null
                 || !Objects.equals(incident.getPrestataire().getId(), prestataireCompte);
     }
-    // "" ou "   " devient null : on ne stocke pas de description vide
-    private static String texteOuNull(String texte) {
-        return texte == null || texte.isBlank() ? null : texte.trim();
-    }
-
 }
