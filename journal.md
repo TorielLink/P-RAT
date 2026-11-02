@@ -139,6 +139,11 @@ ISP parce que ...
 - `@Transactional` sur `declarerIncident` (RG10) : la vérification de l'équipement et l'insertion forment
   un tout ; si l'une échoue, rien n'est enregistré.
 
+### Documentation de l'API
+- Swagger UI sur http://localhost:8080/swagger-ui.html
+  (JSON OpenAPI : /v3/api-docs), généré par springdoc-openapi 3.x. Accessible après connexion
+  sur l'application.
+
 ## LOT ALPHA
 ### Fonctionnalité transverse 1 : …
 - Besoin · périmètre envisagé · choix et essais · ce qui fonctionne · difficultés · reste à faire
