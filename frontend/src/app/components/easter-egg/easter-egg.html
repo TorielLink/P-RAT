@@ -1,0 +1,13 @@
+@if (konami.actif()) {
+  <div class="easter-egg" [style.--duree-traversee]="dureeTraversee" role="status" aria-live="polite">
+    <p class="annonce">
+      Prochain passage : maintenant !
+      <small>Le prestataire de maintenance est attendu en station Châtelet.</small>
+    </p>
+    <div class="rame" aria-hidden="true">
+      <div class="voiture"></div>
+      <div class="voiture"></div>
+      <div class="voiture"></div>
+    </div>
+  </div>
+}

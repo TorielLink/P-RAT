@@ -143,6 +143,15 @@ ISP parce que ...
 ### Fonctionnalité transverse 1 : …
 - Besoin · périmètre envisagé · choix et essais · ce qui fonctionne · difficultés · reste à faire
 ### Fonctionnalité transverse 2 : …
+
+### Easter egg (bonus)
+- Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l'écran au son d'un carillon.
+- Front uniquement : aucune donnée modifiée, aucun appel serveur.
+- `KonamiService` (logique pure : fenêtre glissante des 10 dernières touches) ;
+  composant `EasterEgg` pour les effets (clavier, son Web Audio, animation CSS).
+- Ignoré pendant la saisie dans un champ.
+
+
 ## BILAN
 - Contribution de chacun : …
 - Plus grande difficulté et comment elle a été surmontée :
