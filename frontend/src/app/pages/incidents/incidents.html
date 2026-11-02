@@ -1,0 +1,38 @@
+<h1>Incidents</h1>
+
+@if (authService.estAdmin()) {
+  <a routerLink="/affectations">Affecter les prestataires</a>
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}
+
+<div class="colonnes">
+  @for (colonne of colonnes(); track colonne.titre) {
+    <section>
+      <h2>{{ colonne.titre }} ({{ colonne.incidents.length }})</h2>
+      @if (colonne.incidents.length === 0) {
+        <p>Aucun incident.</p>
+      } @else {
+        <ul>
+          @for (inc of colonne.incidents; track inc.id) {
+            <li>
+              <a [routerLink]="['/incidents', inc.id]">n°{{ inc.id }}</a>
+              — {{ inc.equipementReference ?? 'équipement n°' + inc.equipementId }}
+              ({{ inc.stationNom ?? 'sans station' }})
+              <br />
+              Priorité : {{ inc.priorite ?? '—' }} · Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}
+              <br />
+              @if (inc.dateResolution) {
+                Résolu le {{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}
+              } @else {
+                Ouvert le {{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>

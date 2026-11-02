@@ -1,0 +1,216 @@
+package cpar.backend.service;
+
+import cpar.backend.dto.DeclarationIncidentRequest;
+import cpar.backend.dto.IncidentDetailDto;
+import cpar.backend.dto.ModificationIncidentFormulaire;
+import cpar.backend.exception.IncidentIntrouvableException;
+import cpar.backend.exception.IncidentResoluException;
+import cpar.backend.exception.PrestataireIntrouvableException;
+import cpar.backend.exception.UtilisateurIntrouvableException;
+import cpar.backend.model.entities.Evaluation;
+import cpar.backend.model.entities.Incident;
+import cpar.backend.model.entities.Prestataire;
+import cpar.backend.model.entities.Utilisateur;
+import cpar.backend.model.enums.PrioriteIncident;
+import cpar.backend.model.enums.ProfilUtilisateur;
+import cpar.backend.model.enums.StatutIncident;
+import cpar.backend.repository.EvaluationRepository;
+import cpar.backend.repository.IncidentRepository;
+import cpar.backend.repository.PrestataireRepository;
+import cpar.backend.repository.UtilisateurRepository;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
+@Service
+@Transactional(readOnly = true)
+public class IncidentService implements IIncidentService {
+
+    private final IncidentRepository incidentRepository;
+    private final PrestataireRepository prestataireRepository;
+    private final UtilisateurRepository utilisateurRepository;
+    private final EvaluationRepository evaluationRepository;
+    private final IEquipementService equipementService;
+    private final Clock horloge;
+
+    public IncidentService(IncidentRepository incidentRepository,
+                           PrestataireRepository prestataireRepository,
+                           UtilisateurRepository utilisateurRepository,
+                           EvaluationRepository evaluationRepository,
+                           IEquipementService equipementService,
+                           Clock horloge) {
+        this.incidentRepository = incidentRepository;
+        this.prestataireRepository = prestataireRepository;
+        this.utilisateurRepository = utilisateurRepository;
+        this.evaluationRepository = evaluationRepository;
+        this.equipementService = equipementService;
+        this.horloge = horloge;
+    }
+
+    // ---------- Lecture : un prestataire ne voit que les incidents qui lui sont affectés ----------
+
+    @Override
+    public IncidentDetailDto obtenirDetailIncident(Long id, String login) {
+        Incident incident = obtenirIncidentParId(id, login);
+        Evaluation evaluation = evaluationRepository.findByIncidentId(id).orElse(null);
+        return IncidentDetailDto.depuis(incident, evaluation, LocalDateTime.now(horloge));
+    }
+
+    @Override
+    public Incident obtenirIncidentParId(Long id, String login) {
+        Incident incident = chargerIncident(id);
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        // 404 plutôt que 403 : on ne révèle pas l'existence des incidents des autres prestataires
+        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
+            throw new IncidentIntrouvableException(id);
+        }
+        return incident;
+    }
+
+    @Override
+    public List<Incident> obtenirTousIncidents(String login) {
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        if (estPrestataire(utilisateur)) {
+            Long prestataireId = prestataireIdDe(utilisateur);
+            return prestataireId == null
+                    ? List.of()
+                    : incidentRepository.findByPrestataireIdOrderByDateOuvertureDescIdDesc(prestataireId);
+        }
+        return incidentRepository.findAllByOrderByDateOuvertureDescIdDesc();
+    }
+
+    @Override
+    public List<Incident> obtenirIncidentsParEquipement(Long equipementId, String login) {
+        equipementService.obtenirEquipementParId(equipementId);
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        if (estPrestataire(utilisateur)) {
+            Long prestataireId = prestataireIdDe(utilisateur);
+            return prestataireId == null
+                    ? List.of()
+                    : incidentRepository.findByEquipementIdAndPrestataireIdOrderByDateOuvertureDescIdDesc(equipementId, prestataireId);
+        }
+        return incidentRepository.findByEquipementIdOrderByDateOuvertureDescIdDesc(equipementId);
+    }
+
+    @Override
+    public List<Incident> obtenirIncidentsParStatut(StatutIncident statut, String login) {
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        if (estPrestataire(utilisateur)) {
+            Long prestataireId = prestataireIdDe(utilisateur);
+            return prestataireId == null
+                    ? List.of()
+                    : incidentRepository.findByStatutAndPrestataireIdOrderByDateOuvertureDescIdDesc(statut, prestataireId);
+        }
+        return incidentRepository.findByStatutOrderByDateOuvertureDescIdDesc(statut);
+    }
+
+    // ---------- Écriture ----------
+
+    /** Rattaché à un équipement, ouvert à l'instant du serveur, sans prestataire ni résolution. */
+    @Override
+    @Transactional
+    public Incident declarerIncident(Long equipementId, DeclarationIncidentRequest demande, String login) {
+        Incident incident = new Incident();
+        incident.setEquipement(equipementService.obtenirEquipementParId(equipementId));
+        incident.setDescription(demande.description().trim());
+        incident.setPriorite(demande.priorite() != null ? demande.priorite() : PrioriteIncident.MOYENNE);
+        incident.setStatut(StatutIncident.OUVERT);
+        incident.setDateOuverture(LocalDateTime.now(horloge));
+        incident.setUtilisateur(chargerUtilisateur(login));
+        return incidentRepository.save(incident);
+    }
+
+    /** Admin : tous les incidents. Prestataire : seulement ceux qui lui sont affectés. Agent : refusé par SecurityConfig. */
+    @Override
+    @Transactional
+    public Incident modifierIncident(Long id, ModificationIncidentFormulaire formulaire, String login) {
+        Incident incident = obtenirIncidentNonResolu(id);
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
+            throw new AccessDeniedException("Cet incident n'est pas affecté à votre entreprise.");
+        }
+
+        incident.setDescription(texteOuNull(formulaire.description()));
+        if (formulaire.priorite() != null) {
+            incident.setPriorite(formulaire.priorite());
+        }
+        return incident;
+    }
+
+    /** Admin seulement (SecurityConfig). Affecter ou réaffecter : l'incident passe EN_COURS. */
+    @Override
+    @Transactional
+    public Incident affecterPrestataire(Long id, Long prestataireId) {
+        Incident incident = obtenirIncidentNonResolu(id);
+        Prestataire prestataire = prestataireRepository.findById(prestataireId)
+                .orElseThrow(() -> new PrestataireIntrouvableException(prestataireId));
+
+        incident.setPrestataire(prestataire);
+        incident.setStatut(StatutIncident.EN_COURS);
+        return incident;
+    }
+
+    /** Admin seulement (SecurityConfig). */
+    @Override
+    @Transactional
+    public Incident resoudreIncident(Long id) {
+        Incident incident = obtenirIncidentNonResolu(id);
+        incident.setStatut(StatutIncident.RESOLU);
+        incident.setDateResolution(LocalDateTime.now(horloge));
+        return incident;
+    }
+
+    /** Admin seulement (SecurityConfig). Supprime aussi l'évaluation (ON DELETE CASCADE en base). */
+    @Override
+    @Transactional
+    public void supprimerIncident(Long id) {
+        incidentRepository.delete(chargerIncident(id));
+    }
+
+    // ---------- Outils ----------
+
+    private Incident chargerIncident(Long id) {
+        return incidentRepository.findWithDetailsById(id)
+                .orElseThrow(() -> new IncidentIntrouvableException(id));
+    }
+
+    // Un incident résolu est figé : toute modification est refusée
+    private Incident obtenirIncidentNonResolu(Long id) {
+        Incident incident = chargerIncident(id);
+        if (incident.getStatut() == StatutIncident.RESOLU) {
+            throw new IncidentResoluException(id);
+        }
+        return incident;
+    }
+
+    private Utilisateur chargerUtilisateur(String login) {
+        return utilisateurRepository.findByLogin(login)
+                .orElseThrow(() -> new UtilisateurIntrouvableException(login));
+    }
+
+    private static boolean estPrestataire(Utilisateur utilisateur) {
+        return utilisateur.getProfil() == ProfilUtilisateur.PRESTATAIRE;
+    }
+
+    private static Long prestataireIdDe(Utilisateur utilisateur) {
+        return utilisateur.getPrestataire() != null ? utilisateur.getPrestataire().getId() : null;
+    }
+
+    // Comparaison par identifiant : évite de charger le prestataire lié au compte
+    private static boolean nEstPasAffecteA(Incident incident, Utilisateur utilisateur) {
+        Long prestataireCompte = prestataireIdDe(utilisateur);
+        return prestataireCompte == null
+                || incident.getPrestataire() == null
+                || !Objects.equals(incident.getPrestataire().getId(), prestataireCompte);
+    }
+    // "" ou "   " devient null : on ne stocke pas de description vide
+    private static String texteOuNull(String texte) {
+        return texte == null || texte.isBlank() ? null : texte.trim();
+    }
+
+}

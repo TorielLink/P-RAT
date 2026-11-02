@@ -1,6 +1,5 @@
 package cpar.backend.model.entities;
 
-import cpar.backend.model.enums.EtatsEquipement;
 import cpar.backend.model.enums.PrioriteIncident;
 import cpar.backend.model.enums.StatutIncident;
 import jakarta.persistence.*;
@@ -11,6 +10,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,7 +33,7 @@ public class Incident {
 
     @NotNull
     @Column(name = "dateOuverture", nullable = false)
-    private LocalDateTime dateOuverture = LocalDateTime.now();
+    private LocalDateTime dateOuverture;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -58,6 +58,12 @@ public class Incident {
 
     @Column(name = "dateResolution")
     private LocalDateTime dateResolution;
+
+    /** La durée s'arrête à la résolution : un incident résolu a une durée figée. */
+    public Duration dureeOuverture(LocalDateTime maintenant) {
+        LocalDateTime fin = dateResolution != null ? dateResolution : maintenant;
+        return Duration.between(dateOuverture, fin);
+    }
 
     public Long getId() {
         return id;

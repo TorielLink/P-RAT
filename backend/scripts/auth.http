@@ -109,3 +109,42 @@ Content-Type: application/json
 
 ### Lister les équipements d'une station
 GET http://localhost:8080/api/equipements?stationId=1
+
+### 1. Agent : déclarer un incident
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=agent&motDePasse=demo123
+
+###
+POST http://localhost:8080/api/incidents
+Content-Type: application/json
+
+{"equipementId": 1, "description": "Écran noir", "priorite": "HAUTE"}
+
+### 2. Admin : affecter le prestataire de démonstration
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=admin&motDePasse=demo123
+
+###
+PATCH http://localhost:8080/api/incidents/1/prestataire
+Content-Type: application/json
+
+{"prestataireId": 1}
+
+### 3. Prestataire : il voit l'incident et peut le modifier
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=prestataire&motDePasse=demo123
+
+###
+GET http://localhost:8080/api/incidents
+
+###
+PUT http://localhost:8080/api/incidents/1
+Content-Type: application/json
+
+{"description": "Écran noir : carte vidéo remplacée", "priorite": "HAUTE"}
