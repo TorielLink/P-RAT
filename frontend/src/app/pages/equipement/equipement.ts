@@ -13,11 +13,12 @@ import {
   TYPES_EQUIPEMENT,
   TypeEquipement,
 } from '../../core/equipement/equipement.service';
+import { EtatEquipementComponent } from '../../shared/etat-equipement';
 
 /** Page /equipements/:id */
 @Component({
   selector: 'app-equipement',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, EtatEquipementComponent],
   templateUrl: './equipement.html',
 })
 export class EquipementPage implements OnInit {

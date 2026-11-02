@@ -48,7 +48,7 @@
           <td><a [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
           <td>{{ eq.type }}</td>
           <td>{{ eq.description }}</td>
-          <td>{{ eq.etat }}</td>
+          <td><app-etat-equipement [etat]="eq.etat" /></td>
           <td>
             @if (authService.peutGererEquipements()) {
               <button type="button" (click)="supprimer(eq)">Supprimer</button>
