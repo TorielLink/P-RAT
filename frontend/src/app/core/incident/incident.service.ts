@@ -32,9 +32,9 @@ export interface DeclarationIncidentRequest {
   priorite: PrioriteIncident;
 }
 
-/** Correspond à ModificationIncidentFormulaire côté backend. */
-export interface ModificationIncidentFormulaire {
-  description: string | null;
+/** Correspond à ModificationIncidentRequest côté backend. */
+export interface ModificationIncidentRequest {
+  description: string;
   priorite: PrioriteIncident;
 }
 
@@ -48,6 +48,7 @@ export interface IncidentDetail extends Incident {
   dureeOuvertureMinutes: number;
   niveauAttention: NiveauAttention;
   evaluation: EvaluationIncident | null;
+  modifiable: boolean;
 }
 
 export const LIBELLES_STATUT: Record<StatutIncident, string> = {
@@ -73,8 +74,8 @@ export class IncidentService {
     return this.http.get<IncidentDetail>(`${this.url}/${id}`);
   }
 
-  modifierIncident(id: number, formulaire: ModificationIncidentFormulaire): Observable<Incident> {
-    return this.http.put<Incident>(`${this.url}/${id}`, formulaire);
+  modifierIncident(id: number, demande: ModificationIncidentRequest): Observable<Incident> {
+    return this.http.patch<Incident>(`${this.url}/${id}`, demande);
   }
 
   resoudreIncident(id: number): Observable<Incident> {
