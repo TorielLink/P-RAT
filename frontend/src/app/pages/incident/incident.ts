@@ -1,10 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { DatePipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../core/auth/auth.service';
+import {Component, OnInit, inject, signal} from '@angular/core';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import {DatePipe} from '@angular/common';
+import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
+import {ActivatedRoute, Router, RouterLink} from '@angular/router';
+import {AuthService} from '../../core/auth/auth.service';
 import {
+  DESCRIPTION_MAX,
+  DESCRIPTION_MIN,
   Incident,
   IncidentDetail,
   IncidentService,
@@ -13,7 +15,7 @@ import {
   PRIORITES_INCIDENT,
   PrioriteIncident,
 } from '../../core/incident/incident.service';
-import { formaterDuree } from '../../shared/formater-duree';
+import {formaterDuree} from '../../shared/formater-duree';
 
 /** Page /incidents/:id : détail d'un incident. */
 @Component({
@@ -32,12 +34,16 @@ export class IncidentPage implements OnInit {
   protected readonly libellesNiveau = LIBELLES_NIVEAU;
   protected readonly formaterDuree = formaterDuree;
 
+  protected readonly descriptionMin = DESCRIPTION_MIN;
+  protected readonly descriptionMax = DESCRIPTION_MAX;
+  readonly erreursServeur = signal<Record<string, string>>({});
+
   readonly incident = signal<IncidentDetail | null>(null);
   readonly enModification = signal(false);
   readonly erreur = signal<string | null>(null);
 
   readonly formulaire = inject(FormBuilder).nonNullable.group({
-    description: ['', Validators.maxLength(2000)],
+    description: ['', [Validators.required, Validators.minLength(DESCRIPTION_MIN), Validators.maxLength(DESCRIPTION_MAX)]],
     priorite: ['MOYENNE' as PrioriteIncident, Validators.required],
   });
 
@@ -51,6 +57,7 @@ export class IncidentPage implements OnInit {
       priorite: incident.priorite ?? 'MOYENNE',
     });
     this.erreur.set(null);
+    this.erreursServeur.set({});
     this.enModification.set(true);
   }
 
@@ -60,16 +67,24 @@ export class IncidentPage implements OnInit {
   }
 
   enregistrer(incident: Incident): void {
-    const valeurs = this.formulaire.getRawValue();
-    this.incidentService
-      .modifierIncident(incident.id, {
-        description: valeurs.description.trim() || null,
-        priorite: valeurs.priorite,
-      })
-      .subscribe({
-        next: () => this.charger(incident.id),
-        error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la modification.')),
-      });
+    this.erreursServeur.set({});
+    if (this.formulaire.invalid) {
+      this.formulaire.markAllAsTouched();
+      return;
+    }
+    const {description, priorite} = this.formulaire.getRawValue();
+    this.incidentService.modifierIncident(incident.id, {description: description.trim(), priorite}).subscribe({
+      next: () => this.charger(incident.id),
+      error: (erreur: HttpErrorResponse) => this.afficherErreurModification(erreur),
+    });
+  }
+
+  private afficherErreurModification(erreur: HttpErrorResponse): void {
+    if (erreur.status === HttpStatusCode.BadRequest && erreur.error?.erreurs) {
+      this.erreursServeur.set(erreur.error.erreurs);
+      return;
+    }
+    this.erreur.set(this.message(erreur, 'Échec de la modification.'));
   }
 
   resoudre(incident: Incident): void {
@@ -107,9 +122,9 @@ export class IncidentPage implements OnInit {
   }
 
   private message(erreur: HttpErrorResponse, parDefaut: string): string {
-    if (erreur.status === 403) {
-      return 'Votre profil ne permet pas cette action.';
+    if (erreur.error?.detail) {
+      return erreur.error.detail;
     }
-    return erreur.error?.detail ?? erreur.error?.message ?? parDefaut;
+    return erreur.status === HttpStatusCode.Forbidden ? 'Votre profil ne permet pas cette action.' : parDefaut;
   }
 }

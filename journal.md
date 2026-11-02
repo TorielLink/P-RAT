@@ -87,6 +87,37 @@ ISP parce que ...
   Un prestataire est refusé avant même la lecture de ses données : il ne peut pas apprendre si un
   équipement existe (RG11).
 
+### Modification d'un incident (F6)
+
+- **Principe** : on corrige ce que le déclarant a saisi ; on ne touche pas à ce que le serveur ou un
+  autre processus a fixé.
+  - Modifiables : description (obligatoire, 10 à 500 caractères, même validation que F4 grâce aux
+    constantes de `DeclarationIncidentRequest`) et priorité (optionnelle).
+  - Non modifiables : équipement (RG1), date d'ouverture (fixée par l'horloge serveur, base de RG3),
+    statut et prestataire (F7, F8), date de résolution (F8, RG5).
+- **Droits** : Admin sur tout incident non résolu ; Agent sur ses propres incidents encore non
+  affectés (`OUVERT`) ; Prestataire jamais. Un incident résolu n'est modifiable par personne.
+  La règle est dans le modèle (`Incident.estModifiablePar`) avec un `switch` exhaustif sur le profil :
+  un nouveau profil oblige à décider de ses droits pour compiler.
+- **Déclarant** : champ `utilisateur` de l'incident, renseigné à la déclaration (F4) ; aucune migration.
+- **`PATCH /api/incidents/{id}`** plutôt que `PUT` : modification partielle des seuls champs autorisés.
+- **Champs non modifiables ignorés (et non rejetés)** : `ModificationIncidentRequest` ne contient que
+  `description` et `priorite` (liste blanche). Un champ envoyé en plus (`statut`, `prestataireId`…)
+  n'existe pas dans le DTO et ne peut jamais atteindre l'entité. Vérifié par un test (`ArgumentCaptor`).
+- **Ordre des contrôles** : incident inexistant (404) → incident résolu (409, RG5, pour tous les profils)
+  → droits (403). Le Prestataire est refusé encore plus tôt, par `SecurityConfig` (RG11).
+- **403 avec message** : `OperationInterditeException`, traduite par `GestionnaireExceptions`, plutôt que
+  `AccessDeniedException` de Spring, qui renvoie un corps vide. L'interface affiche le message précis.
+- **Indicateur `modifiable` dans le détail** : calculé par le serveur avec la même règle, il pilote le
+  bouton « Modifier ». La règle n'est pas recopiée en TypeScript (une seule source de vérité) ; le
+  serveur la réapplique si on force l'appel.
+- **Pas de `save()` dans `modifierIncident`** : l'incident est chargé dans la transaction ; Hibernate
+  détecte la modification (dirty checking) et écrit l'`UPDATE` à la fin de la méthode.
+- **Changement de droit** : le Prestataire pouvait modifier ses incidents (ancien `PUT`) ; ce droit est
+  retiré. Il ne corrige pas la déclaration, il intervient sur l'équipement (état) et sur la résolution.
+- **Journal métier (alpha n°5)** : non retenu à ce stade. S'il l'est, `modifierIncident` est le point
+  d'accroche unique pour tracer qui, quand, ancienne et nouvelle valeur.
+
 ### Gestion des exceptions
 
 - **`@RestControllerAdvice` + `ProblemDetail`** plutôt que `ResponseStatusException` : la traduction

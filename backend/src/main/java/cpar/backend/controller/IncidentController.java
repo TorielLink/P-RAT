@@ -54,11 +54,11 @@ public class IncidentController {
         return ResponseEntity.created(URI.create("/api/incidents/" + incident.id())).body(incident);
     }
 
-    @PutMapping("/incidents/{id}")
+    @PatchMapping("/incidents/{id}")
     public IncidentDto modifierIncident(@PathVariable Long id,
-                                        @Valid @RequestBody ModificationIncidentFormulaire formulaire,
+                                        @Valid @RequestBody ModificationIncidentRequest demande,
                                         Authentication authentification) {
-        return IncidentDto.depuis(incidentService.modifierIncident(id, formulaire, authentification.getName()));
+        return IncidentDto.depuis(incidentService.modifierIncident(id, demande, authentification.getName()));
     }
 
     @PatchMapping("/incidents/{id}/prestataire")

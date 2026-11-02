@@ -12,6 +12,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "incident")
@@ -59,10 +60,28 @@ public class Incident {
     @Column(name = "dateResolution")
     private LocalDateTime dateResolution;
 
-    /** La durée s'arrête à la résolution : un incident résolu a une durée figée. */
+    /** La durée s'arrête à la résolution : un incident résolu a une durée figée */
     public Duration dureeOuverture(LocalDateTime maintenant) {
         LocalDateTime fin = dateResolution != null ? dateResolution : maintenant;
         return Duration.between(dateOuverture, fin);
+    }
+
+    /** Admin corrige tout incident non résolu ; Agent, ses propres incidents encore non affectés */
+    public boolean estModifiablePar(Utilisateur demandeur) {
+        if (statut == StatutIncident.RESOLU) {
+            return false;
+        }
+        return switch (demandeur.getProfil()) {
+            case ADMIN -> true;
+            case AGENT -> statut == StatutIncident.OUVERT && estDeclarePar(demandeur);
+            case PRESTATAIRE -> false;
+        };
+    }
+
+    private boolean estDeclarePar(Utilisateur demandeur) {
+        return utilisateur != null
+                && utilisateur.getId() != null
+                && Objects.equals(utilisateur.getId(), demandeur.getId());
     }
 
     public Long getId() {
