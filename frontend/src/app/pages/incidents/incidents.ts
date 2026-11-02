@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { Incident, IncidentService, StatutIncident } from '../../core/incident/incident.service';
 import { AuthService } from '../../core/auth/auth.service';
 
+
+
 /** Page /incidents : ouverts à gauche, en cours au centre, résolus à droite. */
 @Component({
   selector: 'app-incidents',
@@ -19,11 +21,24 @@ export class Incidents implements OnInit {
   readonly erreur = signal<string | null>(null);
 
 
+  private static readonly LIMITE_PAR_COLONNE = 5;
+
+  // Recalculé automatiquement à chaque changement de la liste
   readonly colonnes = computed(() => [
-    { titre: 'Ouverts', incidents: this.parStatut('OUVERT'), lien: null },
-    { titre: 'En cours', incidents: this.parStatut('EN_COURS'), lien: null },
-    { titre: 'Résolus', incidents: this.parStatut('RESOLU'), lien: '/incidents/historique' },
+    this.colonne('Ouverts', this.parStatut('OUVERT'), null),
+    this.colonne('En cours', this.parStatut('EN_COURS'), null),
+    // Comme l'historique : les plus récemment résolus d'abord
+    this.colonne('Résolus', this.parStatut('RESOLU').sort(parDateResolutionDecroissante), '/incidents/historique'),
   ]);
+
+  private colonne(titre: string, incidents: Incident[], lien: string | null) {
+    return {
+      titre,
+      lien,
+      total: incidents.length,
+      incidents: incidents.slice(0, Incidents.LIMITE_PAR_COLONNE),
+    };
+  }
 
   ngOnInit(): void {
     this.incidentService.obtenirTousIncidents().subscribe({
@@ -36,4 +51,10 @@ export class Incidents implements OnInit {
   private parStatut(statut: StatutIncident): Incident[] {
     return this.incidents().filter(incident => incident.statut === statut);
   }
+
+
+}
+
+function parDateResolutionDecroissante(a: Incident, b: Incident): number {
+  return (b.dateResolution ?? '').localeCompare(a.dateResolution ?? '');
 }

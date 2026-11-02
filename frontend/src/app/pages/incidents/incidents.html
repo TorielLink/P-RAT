@@ -17,7 +17,7 @@
         } @else {
           {{ colonne.titre }}
         }
-        ({{ colonne.incidents.length }})
+        ({{ colonne.total }})
       </h2>
       @if (colonne.incidents.length === 0) {
         <p>Aucun incident.</p>
@@ -39,6 +39,9 @@
             </li>
           }
         </ul>
+        @if (colonne.lien && colonne.total > colonne.incidents.length) {
+          <a [routerLink]="colonne.lien">Voir les {{ colonne.total }} incidents</a>
+        }
       }
     </section>
   }
