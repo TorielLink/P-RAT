@@ -67,14 +67,21 @@ public class IncidentController {
         return IncidentDto.depuis(incidentService.affecterPrestataire(id, formulaire.prestataireId()));
     }
 
-    @PatchMapping("/incidents/{id}/resolution")
-    public IncidentDto resoudreIncident(@PathVariable Long id) {
-        return IncidentDto.depuis(incidentService.resoudreIncident(id));
-    }
-
     @DeleteMapping("/incidents/{id}")
     public ResponseEntity<Void> supprimerIncident(@PathVariable Long id) {
         incidentService.supprimerIncident(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/incidents/{id}/resolution")
+    public IncidentDto resoudreIncident(@PathVariable Long id, Authentication authentification) {
+        return IncidentDto.depuis(incidentService.resoudreIncident(id, authentification.getName()));
+    }
+
+    @GetMapping("/incidents/historique")
+    public PageDto<HistoriqueIncidentDto> obtenirHistorique(@RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "20") int taille,
+                                                            Authentication authentification) {
+        return incidentService.obtenirHistorique(authentification.getName(), page, taille);
     }
 }

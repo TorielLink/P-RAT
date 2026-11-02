@@ -65,6 +65,30 @@ export const LIBELLES_NIVEAU: Record<NiveauAttention, string> = {
   RESOLU: 'Résolu',
 };
 
+/** Une ligne de l'historique : correspond à HistoriqueIncidentDto côté backend. */
+export interface HistoriqueIncident {
+  id: number;
+  equipementId: number;
+  equipementReference: string | null;
+  stationId: number | null;
+  stationNom: string | null;
+  description: string | null;
+  dateOuverture: string;
+  dateResolution: string;
+  dureeTraitementMinutes: number;
+  prestataireNom: string | null;
+  note: number | null;
+}
+
+/** Une page de résultats : correspond à PageDto côté backend. */
+export interface Page<T> {
+  contenu: T[];
+  page: number;
+  taille: number;
+  totalElements: number;
+  totalPages: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class IncidentService {
   private readonly http = inject(HttpClient);
@@ -100,6 +124,11 @@ export class IncidentService {
 
   obtenirIncidentsParEquipement(equipementId: number): Observable<Incident[]> {
     return this.http.get<Incident[]>(this.url, { params: new HttpParams().set('equipementId', equipementId) });
+  }
+
+  obtenirHistorique(page: number, taille = 20): Observable<Page<HistoriqueIncident>> {
+    const params = new HttpParams().set('page', page).set('taille', taille);
+    return this.http.get<Page<HistoriqueIncident>>(`${this.url}/historique`, { params });
   }
 
 }

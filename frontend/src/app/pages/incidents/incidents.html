@@ -11,7 +11,14 @@
 <div class="colonnes">
   @for (colonne of colonnes(); track colonne.titre) {
     <section>
-      <h2>{{ colonne.titre }} ({{ colonne.incidents.length }})</h2>
+      <h2>
+        @if (colonne.lien) {
+          <a [routerLink]="colonne.lien">{{ colonne.titre }}</a>
+        } @else {
+          {{ colonne.titre }}
+        }
+        ({{ colonne.incidents.length }})
+      </h2>
       @if (colonne.incidents.length === 0) {
         <p>Aucun incident.</p>
       } @else {

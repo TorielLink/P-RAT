@@ -1,0 +1,49 @@
+<h1>Historique des incidents</h1>
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}
+
+@if (historique(); as resultat) {
+  @if (resultat.totalElements === 0) {
+    <p>Aucun incident résolu</p>
+  } @else {
+    <table>
+      <tr>
+        <th>Équipement</th>
+        <th>Station</th>
+        <th>Description</th>
+        <th>Ouvert le</th>
+        <th>Résolu le</th>
+        <th>Durée de traitement</th>
+        <th>Prestataire</th>
+        <th>Note</th>
+      </tr>
+      @for (inc of resultat.contenu; track inc.id) {
+        <!-- Toute la ligne ouvre le détail (F5) ; le lien permet aussi le clavier -->
+        <tr class="cliquable" [routerLink]="['/incidents', inc.id]">
+          <td><a [routerLink]="['/incidents', inc.id]">{{ inc.equipementReference ?? 'n°' + inc.equipementId }}</a></td>
+          <td>{{ inc.stationNom ?? '—' }}</td>
+          <td>{{ abreger(inc.description) }}</td>
+          <td>{{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ formaterDuree(inc.dureeTraitementMinutes) }}</td>
+          <td>{{ inc.prestataireNom ?? 'non affecté' }}</td>
+          <td>{{ inc.note !== null ? inc.note + ' / 5' : '—' }}</td>
+        </tr>
+      }
+    </table>
+
+    @if (resultat.totalPages > 1) {
+      <p>
+        <button type="button" [disabled]="resultat.page === 0" (click)="allerALaPage(resultat.page - 1)">
+          Précédent
+        </button>
+        Page {{ resultat.page + 1 }} / {{ resultat.totalPages }} ({{ resultat.totalElements }} incidents)
+        <button type="button" [disabled]="resultat.page + 1 >= resultat.totalPages" (click)="allerALaPage(resultat.page + 1)">
+          Suivant
+        </button>
+      </p>
+    }
+  }
+}

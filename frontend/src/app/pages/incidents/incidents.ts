@@ -18,11 +18,11 @@ export class Incidents implements OnInit {
   readonly incidents = signal<Incident[]>([]);
   readonly erreur = signal<string | null>(null);
 
-  // Recalculé automatiquement à chaque changement de la liste
+
   readonly colonnes = computed(() => [
-    { titre: 'Ouverts', incidents: this.parStatut('OUVERT') },
-    { titre: 'En cours', incidents: this.parStatut('EN_COURS') },
-    { titre: 'Résolus', incidents: this.parStatut('RESOLU') },
+    { titre: 'Ouverts', incidents: this.parStatut('OUVERT'), lien: null },
+    { titre: 'En cours', incidents: this.parStatut('EN_COURS'), lien: null },
+    { titre: 'Résolus', incidents: this.parStatut('RESOLU'), lien: '/incidents/historique' },
   ]);
 
   ngOnInit(): void {

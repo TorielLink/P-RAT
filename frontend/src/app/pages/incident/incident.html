@@ -80,8 +80,8 @@
     @if (inc.modifiable) {
       <button type="button" (click)="modifier(inc)">Modifier</button>
     }
-    @if (authService.estAdmin() && inc.statut !== 'RESOLU') {
-      <button type="button" (click)="resoudre(inc)">Résoudre</button>
+    @if (authService.peutResoudreIncidents() && inc.statut !== 'RESOLU') {
+      <button type="button" (click)="resoudre(inc)">Déclarer résolu</button>
     }
     @if (authService.estAdmin()) {
       <button type="button" (click)="supprimer(inc)">Supprimer</button>

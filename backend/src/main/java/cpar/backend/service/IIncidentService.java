@@ -1,8 +1,6 @@
 package cpar.backend.service;
 
-import cpar.backend.dto.DeclarationIncidentRequest;
-import cpar.backend.dto.IncidentDetailDto;
-import cpar.backend.dto.ModificationIncidentRequest;
+import cpar.backend.dto.*;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.enums.StatutIncident;
 
@@ -30,4 +28,8 @@ public interface IIncidentService {
     Incident resoudreIncident(Long id);
 
     void supprimerIncident(Long id);
+
+    Incident resoudreIncident(Long id, String login);
+
+    PageDto<HistoriqueIncidentDto> obtenirHistorique(String login, int page, int taille);
 }

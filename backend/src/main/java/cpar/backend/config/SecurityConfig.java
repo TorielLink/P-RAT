@@ -45,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/incidents/**").hasRole("ADMIN")
                         // Seul Admin peut acceder aux prestataires
                         .requestMatchers("/api/prestataires/**").hasRole("ADMIN")
+                        // Admin et prestataire (sur ces incidents) peuvent le resoudre
+                        .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/resolution").hasAnyRole("ADMIN", "PRESTATAIRE")
                         .anyRequest().authenticated())
                 .formLogin(formulaire -> formulaire
                         .loginProcessingUrl("/api/auth/login")
