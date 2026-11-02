@@ -14,19 +14,24 @@ import {
   TypeEquipement,
 } from '../../core/equipement/equipement.service';
 import { EtatEquipementComponent } from '../../shared/etat-equipement';
+import { Incident, IncidentService } from '../../core/incident/incident.service';
+import { StatutIncidentComponent } from '../../shared/statut-incident';
+
 
 /** Page /equipements/:id */
 @Component({
   selector: 'app-equipement',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, EtatEquipementComponent],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, EtatEquipementComponent, StatutIncidentComponent],
   templateUrl: './equipement.html',
+  styleUrl: './equipement.scss'
 })
 export class EquipementPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly equipementService = inject(EquipementService);
   protected readonly authService = inject(AuthService);
-
+  private readonly incidentService = inject(IncidentService);
+  readonly incidents = signal<Incident[]>([]);
   protected readonly etats = ETATS_EQUIPEMENT;
   protected readonly types = TYPES_EQUIPEMENT;
   readonly equipement = signal<Equipement | null>(null);
@@ -42,14 +47,19 @@ export class EquipementPage implements OnInit {
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
+      const id = Number(params.get('id'));
       this.erreur.set(null);
       this.enModification.set(false);
-      this.equipementService.obtenirEquipementParId(Number(params.get('id'))).subscribe({
+      this.equipementService.obtenirEquipementParId(id).subscribe({
         next: equipement => this.equipement.set(equipement),
         error: (erreur: HttpErrorResponse) => {
           this.equipement.set(null);
           this.erreur.set(this.message(erreur, 'Équipement introuvable.'));
         },
+      });
+      this.incidentService.obtenirIncidentsParEquipement(id).subscribe({
+        next: incidents => this.incidents.set(incidents),
+        error: () => this.incidents.set([]),
       });
     });
   }
@@ -107,6 +117,13 @@ export class EquipementPage implements OnInit {
       next: () => this.router.navigate(['/equipements']),
       error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la suppression.')),
     });
+  }
+
+  protected abreger(texte: string | null): string {
+    if (!texte) {
+      return '—';
+    }
+    return texte.length > 30 ? texte.slice(0, 30) + '…' : texte;
   }
 
   private message(erreur: HttpErrorResponse, parDefaut: string): string {

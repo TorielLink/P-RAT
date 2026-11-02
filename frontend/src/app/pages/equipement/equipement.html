@@ -39,13 +39,38 @@
     </p>
     <p>Créé le : {{ eq.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</p>
     <p>État : <app-etat-equipement [etat]="eq.etat" /></p>
-    @if (authService.peutDeclarerIncidents()) {
-      <a [routerLink]="['/equipements', eq.id, 'declarer-incident']">Déclarer un incident</a>
-    }
 
     <button type="button" (click)="modifier(eq)">Modifier</button>
     @if (authService.peutGererEquipements()) {
       <button type="button" (click)="supprimer(eq)">Supprimer</button>
+    }
+
+    <h2>Incidents</h2>
+
+    @if (authService.peutDeclarerIncidents()) {
+      <a [routerLink]="['/equipements', eq.id, 'declarer-incident']">Déclarer un incident</a>
+    }
+
+    @if (incidents().length === 0) {
+      <p>Aucun incident enregistré</p>
+    } @else {
+      <table>
+        <tr>
+          <th>Description</th>
+          <th>Ouvert le</th>
+          <th>Statut</th>
+          <th>Résolu le</th>
+        </tr>
+        @for (inc of incidents(); track inc.id) {
+          <!-- Toute la ligne ouvre le détail (F5) ; le lien permet aussi le clavier -->
+          <tr class="cliquable" [class.resolu]="inc.statut === 'RESOLU'" [routerLink]="['/incidents', inc.id]">
+            <td><a [routerLink]="['/incidents', inc.id]">{{ abreger(inc.description) }}</a></td>
+            <td>{{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td><app-statut-incident [statut]="inc.statut" /></td>
+            <td>{{ inc.dateResolution ? (inc.dateResolution | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+          </tr>
+        }
+      </table>
     }
   }
 }
