@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export const PRIORITES_INCIDENT = ['BASSE', 'MOYENNE', 'HAUTE', 'CRITIQUE'] as const;
@@ -96,6 +96,10 @@ export class IncidentService {
 
   affecterPrestataire(id: number, prestataireId: number): Observable<Incident> {
     return this.http.patch<Incident>(`${this.url}/${id}/prestataire`, { prestataireId });
+  }
+
+  obtenirIncidentsParEquipement(equipementId: number): Observable<Incident[]> {
+    return this.http.get<Incident[]>(this.url, { params: new HttpParams().set('equipementId', equipementId) });
   }
 
 }

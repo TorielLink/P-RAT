@@ -12,13 +12,14 @@ import {
   TYPES_EQUIPEMENT,
   TypeEquipement,
 } from '../../core/equipement/equipement.service';
+import { EtatEquipementComponent } from '../../shared/etat-equipement';
 
 /** Page /stations/:id  */
 @Component({
   selector: 'app-station',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, EtatEquipementComponent],
   templateUrl: './station.html',
-  styleUrl: 'station.css'
+  styleUrl: 'station.scss'
 })
 export class StationPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
