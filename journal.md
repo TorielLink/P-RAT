@@ -118,6 +118,25 @@ ISP parce que ...
 - **Journal métier (alpha n°5)** : non retenu à ce stade. S'il l'est, `modifierIncident` est le point
   d'accroche unique pour tracer qui, quand, ancienne et nouvelle valeur.
 
+### Affectation d'un prestataire (F7)
+
+- **`PUT /api/incidents/{id}/prestataire`** (corps : `prestataireId`) : on remplace le prestataire de
+  l'incident ; affecter et réaffecter sont la même opération. Admin uniquement (`SecurityConfig`).
+- **Règle dans le modèle** : `Incident.affecterA` change ensemble le prestataire et le statut
+  (`EN_COURS`, RG2) ; le niveau d'attention devient « Pris en charge » (RG4).
+- **Même prestataire : sans effet** (200, rien ne change). Cohérent avec l'idempotence de `PUT` ;
+  l'interface affiche « déjà affecté à X : aucune modification » sans appeler le serveur.
+- **Prestataire inexistant : 404** (`PrestataireIntrouvableException`) : la ressource désignée n'existe
+  pas ; même exception et même message que dans le reste de l'API.
+- **Incident résolu : 409** (`IncidentDejaResoluException`, RG5). La vérification reste dans
+  `obtenirIncidentNonResolu`, commun à la modification, à l'affectation et à la résolution.
+- **Atomicité (RG10)** : tous les contrôles (incident, résolu, prestataire) ont lieu avant toute
+  modification ; `@Transactional` sur `affecterPrestataire` annule en plus toute écriture si une
+  exception survient (rollback sur `RuntimeException`).
+- **Lot alpha n°3 (aide à l'affectation)** : la recommandation proposera un prestataire, mais
+  l'affectation passera toujours par `IncidentService.affecterPrestataire`, pour ne jamais contourner
+  RG5 et RG10.
+
 ### Gestion des exceptions
 
 - **`@RestControllerAdvice` + `ProblemDetail`** plutôt que `ResponseStatusException` : la traduction
