@@ -16,12 +16,12 @@ import {
 import { EtatEquipementComponent } from '../../shared/etat-equipement';
 import { Incident, IncidentService } from '../../core/incident/incident.service';
 import { StatutIncidentComponent } from '../../shared/statut-incident';
-
+import { LibellePipe } from '../../shared/libelle.pipe';
 
 /** Page /equipements/:id */
 @Component({
   selector: 'app-equipement',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink, EtatEquipementComponent, StatutIncidentComponent],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, EtatEquipementComponent, StatutIncidentComponent, LibellePipe],
   templateUrl: './equipement.html',
   styleUrl: './equipement.scss'
 })

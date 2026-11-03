@@ -1,8 +1,6 @@
 package cpar.backend.service;
 
-import cpar.backend.dto.DeclarationIncidentRequest;
-import cpar.backend.dto.IncidentDetailDto;
-import cpar.backend.dto.ModificationIncidentRequest;
+import cpar.backend.dto.*;
 import cpar.backend.exception.IncidentIntrouvableException;
 import cpar.backend.exception.IncidentDejaResoluException;
 import cpar.backend.exception.PrestataireIntrouvableException;
@@ -19,13 +17,19 @@ import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
 import cpar.backend.repository.UtilisateurRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -37,6 +41,9 @@ public class IncidentService implements IIncidentService {
     private final EvaluationRepository evaluationRepository;
     private final IEquipementService equipementService;
     private final Clock horloge;
+
+    private static final Sort TRI_HISTORIQUE = Sort.by(Sort.Order.desc("dateResolution"), Sort.Order.desc("id"));
+    private static final int TAILLE_MAX_PAGE = 100;
 
     public IncidentService(IncidentRepository incidentRepository,
                            PrestataireRepository prestataireRepository,
@@ -114,6 +121,25 @@ public class IncidentService implements IIncidentService {
         return incidentRepository.findByStatutOrderByDateOuvertureDescIdDesc(statut);
     }
 
+    @Override
+    public PageDto<HistoriqueIncidentDto> obtenirHistorique(String login, int page, int taille) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(taille, 1), TAILLE_MAX_PAGE),
+                TRI_HISTORIQUE);
+        Utilisateur utilisateur = chargerUtilisateur(login);
+
+        Page<Incident> resolus;
+        if (estPrestataire(utilisateur)) {
+            Long prestataireId = prestataireIdDe(utilisateur);
+            resolus = prestataireId == null
+                    ? Page.empty(pageable)
+                    : incidentRepository.findByStatutAndPrestataireId(StatutIncident.RESOLU, prestataireId, pageable);
+        } else {
+            resolus = incidentRepository.findByStatut(StatutIncident.RESOLU, pageable);
+        }
+
+        return PageDto.depuis(resolus, resolus.getContent().stream().map(HistoriqueIncidentDto::depuis).toList());
+    }
+
     // ---------- Écriture ----------
 
     /** Rattaché à un équipement, ouvert à l'instant du serveur, sans prestataire ni résolution. */
@@ -157,16 +183,6 @@ public class IncidentService implements IIncidentService {
         return incident;
     }
 
-    /** Admin seulement (SecurityConfig). */
-    @Override
-    @Transactional
-    public Incident resoudreIncident(Long id) {
-        Incident incident = obtenirIncidentNonResolu(id);
-        incident.setStatut(StatutIncident.RESOLU);
-        incident.setDateResolution(LocalDateTime.now(horloge));
-        return incident;
-    }
-
     /** Admin seulement (SecurityConfig). Supprime aussi l'évaluation (ON DELETE CASCADE en base). */
     @Override
     @Transactional
@@ -197,6 +213,36 @@ public class IncidentService implements IIncidentService {
 
     private static boolean estPrestataire(Utilisateur utilisateur) {
         return utilisateur.getProfil() == ProfilUtilisateur.PRESTATAIRE;
+    }
+
+    @Override
+    @Transactional
+    public Incident resoudreIncident(Long id, String login) {
+        Incident incident = obtenirIncidentNonResolu(id); // 404 puis 409
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
+            throw new OperationInterditeException("Cet incident n'est pas affecté à votre entreprise.");
+        }
+        incident.setStatut(StatutIncident.RESOLU);
+        incident.setDateResolution(LocalDateTime.now(horloge));
+        return incident;
+    }
+
+    @Override
+    public List<IncidentActifDto> obtenirIncidentsActifs(String login) {
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        List<Incident> actifs;
+        if (estPrestataire(utilisateur)) {
+            Long prestataireId = prestataireIdDe(utilisateur);
+            actifs = prestataireId == null
+                    ? List.of()
+                    : incidentRepository.findByStatutNotAndPrestataireIdOrderByDateOuvertureAscIdAsc(
+                    StatutIncident.RESOLU, prestataireId);
+        } else {
+            actifs = incidentRepository.findByStatutNotOrderByDateOuvertureAscIdAsc(StatutIncident.RESOLU);
+        }
+        LocalDateTime maintenant = LocalDateTime.now(horloge);
+        return actifs.stream().map(incident -> IncidentActifDto.depuis(incident, maintenant)).toList();
     }
 
     private static Long prestataireIdDe(Utilisateur utilisateur) {

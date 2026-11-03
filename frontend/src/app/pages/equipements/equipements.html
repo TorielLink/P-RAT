@@ -18,7 +18,7 @@
     @for (eq of equipements(); track eq.id) {
       <tr>
         <td><a [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
-        <td>{{ eq.type }}</td>
+        <td>{{ eq.type | libelle }}</td>
         <td>{{ eq.description }}</td>
         <td>
           @if (eq.stationId) {

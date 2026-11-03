@@ -1,9 +1,10 @@
 import { Component, inject } from '@angular/core';
 import {AuthService} from '../../core/auth/auth.service';
-import {Router} from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-entete',
+  imports: [RouterLink],
   templateUrl: './entete.html',
   styleUrl: './entete.scss',
 })

@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Incident, IncidentService } from '../../core/incident/incident.service';
 import { Prestataire, PrestataireService } from '../../core/prestataire/prestataire.service';
+import { LibellePipe } from '../../shared/libelle.pipe';
 
 /** Page /affectations : affecter ou réaffecter un prestataire aux incidents non résolus (admin). */
 @Component({
   selector: 'app-affectations',
-  imports: [RouterLink],
+  imports: [RouterLink, LibellePipe],
   templateUrl: './affectations.html',
 })
 export class Affectations implements OnInit {

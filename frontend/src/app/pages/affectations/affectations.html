@@ -25,8 +25,8 @@
           <td><a [routerLink]="['/incidents', inc.id]">n°{{ inc.id }}</a></td>
           <td>{{ inc.equipementReference ?? 'n°' + inc.equipementId }}</td>
           <td>{{ inc.stationNom ?? '—' }}</td>
-          <td>{{ inc.priorite ?? '—' }}</td>
-          <td>{{ inc.statut }}</td>
+          <td>{{ inc.priorite | libelle }}</td>
+          <td>{{ inc.statut | libelle }}</td>
           <td>
             <!-- #choix : référence au menu, lue par le bouton de la même ligne -->
             <select #choix [value]="inc.prestataireId ?? ''">

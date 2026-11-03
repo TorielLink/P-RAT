@@ -1,8 +1,16 @@
-<header class="entete">
-  @if (authService.utilisateurCourant(); as utilisateur) {
+@if (authService.utilisateurCourant(); as utilisateur) {
+  <header class="entete">
+    <nav>
+      @if (authService.peutVoirTableauDeBord()) {
+        <a routerLink="/tableau-de-bord">Tableau de bord</a> |
+      }
+      <a routerLink="/incidents">Incidents</a> |
+      <a routerLink="/stations">Stations</a> |
+      <a routerLink="/equipements">Équipements</a>
+    </nav>
     <span>
       Bonjour {{ utilisateur.prenom }} ({{ utilisateur.profilLibelle }}) |
       <button type="button" class="lien" (click)="seDeconnecter()">Déconnectez-vous</button>
     </span>
-  }
-</header>
+  </header>
+}

@@ -9,7 +9,7 @@
           Type :
           <select formControlName="type">
             @for (type of types; track type) {
-              <option [ngValue]="type">{{ type }}</option>
+              <option [ngValue]="type">{{ type | libelle }}</option>
             }
           </select>
         </p>
@@ -18,7 +18,7 @@
         État :
         <select formControlName="etat">
           @for (etat of etats; track etat) {
-            <option [ngValue]="etat">{{ etat }}</option>
+            <option [ngValue]="etat">{{ etat | libelle }}</option>
           }
         </select>
       </p>
@@ -27,7 +27,7 @@
     </form>
   } @else {
     <h1>Équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
-    <p>Type : {{ eq.type }}</p>
+    <p>Type : {{ eq.type | libelle }}</p>
     <p>Description : {{ eq.description ?? '—' }}</p>
     <p>
       Station :

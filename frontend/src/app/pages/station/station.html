@@ -19,12 +19,12 @@
       <input formControlName="description" placeholder="Description" maxlength="255" />
       <select formControlName="type">
         @for (type of types; track type) {
-          <option [ngValue]="type">{{ type }}</option>
+          <option [ngValue]="type">{{ type | libelle }}</option>
         }
       </select>
       <select formControlName="etat">
         @for (etat of etats; track etat) {
-          <option [ngValue]="etat">{{ etat }}</option>
+          <option [ngValue]="etat">{{ etat | libelle }}</option>
         }
       </select>
       <button type="submit">Ajouter</button>
@@ -46,7 +46,7 @@
       @for (eq of equipements(); track eq.id) {
         <tr>
           <td><a [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
-          <td>{{ eq.type }}</td>
+          <td>{{ eq.type | libelle }}</td>
           <td>{{ eq.description }}</td>
           <td><app-etat-equipement [etat]="eq.etat" /></td>
           <td>

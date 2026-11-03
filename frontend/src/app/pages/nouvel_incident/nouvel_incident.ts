@@ -11,11 +11,13 @@ import {
   PRIORITES_INCIDENT,
   PrioriteIncident,
 } from '../../core/incident/incident.service';
+import { LibellePipe } from '../../shared/libelle.pipe';
+
 
 /** Page /equipements/:id/declarer-incident */
 @Component({
   selector: 'app-nouvel-incident',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, LibellePipe],
   templateUrl: './nouvel_incident.html',
 })
 export class NouvelIncident implements OnInit {

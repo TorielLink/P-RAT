@@ -3,12 +3,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { Equipement, EquipementService } from '../../core/equipement/equipement.service';
 import { EtatEquipementComponent } from '../../shared/etat-equipement';
-
+import { LibellePipe } from '../../shared/libelle.pipe';
 
 /** Page /equipements */
 @Component({
   selector: 'app-equipements',
-  imports: [RouterLink, EtatEquipementComponent],
+  imports: [RouterLink, EtatEquipementComponent,LibellePipe],
   templateUrl: './equipements.html',
 })
 export class Equipements implements OnInit {
