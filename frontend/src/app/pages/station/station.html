@@ -1,12 +1,21 @@
 @if (station(); as st) {
   @if (enModification()) {
-    <h1>
-      <input [formControl]="nom" maxlength="100" />
-      <button type="button" (click)="enregistrer(st)">Enregistrer</button>
+    <form [formGroup]="formulaireStation" (ngSubmit)="enregistrer(st)">
+      <p>Nom : <input formControlName="nom" maxlength="100" /></p>
+      <p>
+        Position sur la carte (de -20 à 20, vide = non placée) :
+        X <input formControlName="positionX" type="number" min="-20" max="20" aria-label="Position X" />
+        Y <input formControlName="positionY" type="number" min="-20" max="20" aria-label="Position Y" />
+      </p>
+      <button type="submit">Enregistrer</button>
       <button type="button" (click)="annuler()">Annuler</button>
-    </h1>
+    </form>
   } @else {
     <h1>{{ st.nom }}</h1>
+    <p>
+      Position sur la carte :
+      {{ st.positionX !== null ? '(' + st.positionX + ', ' + st.positionY + ')' : 'non placée' }}
+    </p>
     @if (authService.peutGererStations()) {
       <button type="button" (click)="modifier(st)">Modifier</button>
     }

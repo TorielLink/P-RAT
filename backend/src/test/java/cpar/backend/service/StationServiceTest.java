@@ -1,7 +1,11 @@
 package cpar.backend.service;
 
+import cpar.backend.dto.StationFormulaire;
+import cpar.backend.exception.PositionOccupeeException;
 import cpar.backend.exception.StationIntrouvableException;
 import cpar.backend.model.entities.Station;
+import cpar.backend.repository.EquipementRepository;
+import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.StationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +29,14 @@ class StationServiceTest {
 
     @Mock
     private StationRepository stationRepository;
+    @Mock
+    private EquipementRepository equipementRepository;
+
+    @Mock
+    private IncidentRepository incidentRepository;
+
+    @Mock
+    private Clock horloge;
 
     @InjectMocks
     private StationService stationService;
@@ -38,15 +51,29 @@ class StationServiceTest {
     @Test
     void ajouterStationEnregistreLeNom() {
         when(stationRepository.save(any(Station.class))).thenAnswer(appel -> appel.getArgument(0));
-        Station resultat = stationService.ajouterStation("  La Defense  ");
+
+        Station resultat = stationService.ajouterStation(new StationFormulaire("  La Defense  ", null, null));
+
         assertThat(resultat.getNom()).isEqualTo("La Defense");
     }
 
     @Test
-    void modifierStationChangeLeNom() {
+    void modifierStationChangeLeNomEtLaPosition() {
         when(stationRepository.findById(1L)).thenReturn(Optional.of(station(1L, "Ancien nom")));
-        Station resultat = stationService.modifierStation(1L, "Nouveau nom");
+
+        Station resultat = stationService.modifierStation(1L, new StationFormulaire("Nouveau nom", 3, -2));
+
         assertThat(resultat.getNom()).isEqualTo("Nouveau nom");
+        assertThat(resultat.getPositionX()).isEqualTo(3);
+    }
+
+    @Test
+    void uneCaseDejaOccupeeEstRefusee() {
+        when(stationRepository.findByPositionXAndPositionY(4, -4)).thenReturn(Optional.of(station(2L, "Gare de Lyon")));
+
+        assertThatThrownBy(() -> stationService.ajouterStation(new StationFormulaire("Bercy", 4, -4)))
+                .isInstanceOf(PositionOccupeeException.class)
+                .hasMessageContaining("Gare de Lyon");
     }
 
     @Test
