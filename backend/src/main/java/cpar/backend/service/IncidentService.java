@@ -1,11 +1,7 @@
 package cpar.backend.service;
 
 import cpar.backend.dto.*;
-import cpar.backend.exception.IncidentIntrouvableException;
-import cpar.backend.exception.IncidentDejaResoluException;
-import cpar.backend.exception.PrestataireIntrouvableException;
-import cpar.backend.exception.UtilisateurIntrouvableException;
-import cpar.backend.exception.OperationInterditeException;
+import cpar.backend.exception.*;
 import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.entities.Prestataire;
@@ -17,6 +13,7 @@ import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
 import cpar.backend.repository.UtilisateurRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -137,7 +135,14 @@ public class IncidentService implements IIncidentService {
             resolus = incidentRepository.findByStatut(StatutIncident.RESOLU, pageable);
         }
 
-        return PageDto.depuis(resolus, resolus.getContent().stream().map(HistoriqueIncidentDto::depuis).toList());
+        List<Long> idsResolus = resolus.getContent().stream().map(Incident::getId).toList();
+        Map<Long, Integer> notes = evaluationRepository.findByIncidentIdIn(idsResolus).stream()
+                .filter(evaluation -> evaluation.getNote() != null)
+                .collect(Collectors.toMap(evaluation -> evaluation.getIncident().getId(), Evaluation::getNote));
+
+        return PageDto.depuis(resolus, resolus.getContent().stream()
+                .map(incident -> HistoriqueIncidentDto.depuis(incident, notes.get(incident.getId())))
+                .toList());
     }
 
     // ---------- Écriture ----------
@@ -255,5 +260,32 @@ public class IncidentService implements IIncidentService {
         return prestataireCompte == null
                 || incident.getPrestataire() == null
                 || !Objects.equals(incident.getPrestataire().getId(), prestataireCompte);
+    }
+
+    // ------ Évaluation prestataire --------
+    /** admin seulement -> incident résolu, affecté, et une seule évaluation */
+    @Override
+    @Transactional
+    public Evaluation evaluerIncident(Long id, EvaluationRequest demande) {
+        Incident incident = chargerIncident(id);
+        incident.verifierQuIlPeutEtreEvalue();
+        if (evaluationRepository.existsByIncidentId(id)) {
+            throw EvaluationImpossibleException.dejaEvalue(id);
+        }
+        Evaluation evaluation = new Evaluation();
+        evaluation.setIncident(incident);
+        evaluation.setNote(demande.note());
+        evaluation.setCommentaire(commentaireOuNull(demande.commentaire()));
+        evaluation.setDateEvaluation(LocalDate.now(horloge));
+        try {
+            return evaluationRepository.saveAndFlush(evaluation);
+        } catch (DataIntegrityViolationException doublon) {
+            throw EvaluationImpossibleException.dejaEvalue(id);
+        }
+    }
+
+    // "" ou "   " = pas de commentaire
+    private static String commentaireOuNull(String commentaire) {
+        return commentaire == null || commentaire.isBlank() ? null : commentaire.trim();
     }
 }

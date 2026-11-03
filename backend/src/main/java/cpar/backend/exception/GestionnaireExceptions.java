@@ -19,7 +19,8 @@ public class GestionnaireExceptions {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
-    @ExceptionHandler({ReferenceDejaUtiliseeException.class, IncidentDejaResoluException.class})
+    @ExceptionHandler({ReferenceDejaUtiliseeException.class, IncidentDejaResoluException.class,
+            EvaluationImpossibleException.class})
     public ProblemDetail conflit(RuntimeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
@@ -45,4 +46,5 @@ public class GestionnaireExceptions {
     public ProblemDetail interdit(OperationInterditeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
     }
+
 }
