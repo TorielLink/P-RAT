@@ -25,6 +25,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(autorisations -> autorisations
                         .requestMatchers("/api/auth/login").permitAll()
+                        // Admin et prestataire (sur ces incidents) peuvent le resoudre
+                        .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/resolution").hasAnyRole("ADMIN", "PRESTATAIRE")
+                        // Acces tableau de bord
+                        .requestMatchers(HttpMethod.GET, "/api/incidents/actifs").hasAnyRole("ADMIN", "PRESTATAIRE")
+                        // Déclaration = Admin et Agent
+                        .requestMatchers(HttpMethod.POST, "/api/equipements/*/incidents").hasAnyRole("ADMIN", "AGENT")
                         // Lecture des stations pour tt le monde
                         .requestMatchers(HttpMethod.GET, "/api/stations/**").authenticated()
                         // Restraint les autres droits de station
@@ -37,18 +43,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/equipements/**").hasAnyRole("ADMIN", "AGENT")
                         // Lecture pour tous (le service filtre pour le prestataire)
                         .requestMatchers(HttpMethod.GET, "/api/incidents/**").authenticated()
-                        // Déclaration = Admin et Agent
-                        .requestMatchers(HttpMethod.POST, "/api/equipements/*/incidents").hasAnyRole("ADMIN", "AGENT")
                         // Modification = admin, et agent sur ses incidents
                         .requestMatchers(HttpMethod.PATCH, "/api/incidents/*").hasAnyRole("ADMIN", "AGENT")
-                        // Acces tableau de bord
-                        .requestMatchers(HttpMethod.GET, "/api/incidents/actifs").hasAnyRole("ADMIN", "PRESTATAIRE")
                         // Restraint les autres droits d'incident
                         .requestMatchers("/api/incidents/**").hasRole("ADMIN")
                         // Seul Admin peut acceder aux prestataires
                         .requestMatchers("/api/prestataires/**").hasRole("ADMIN")
-                        // Admin et prestataire (sur ces incidents) peuvent le resoudre
-                        .requestMatchers(HttpMethod.PATCH, "/api/incidents/*/resolution").hasAnyRole("ADMIN", "PRESTATAIRE")
                         .anyRequest().authenticated())
                 .formLogin(formulaire -> formulaire
                         .loginProcessingUrl("/api/auth/login")

@@ -16,11 +16,14 @@ import {
   PrioriteIncident,
 } from '../../core/incident/incident.service';
 import {formaterDuree} from '../../shared/formater-duree';
+import { LibellePipe } from '../../shared/libelle.pipe';
+import { NiveauAttentionComponent } from '../../shared/niveau-attention';
+import { StatutIncidentComponent } from '../../shared/statut-incident';
 
 /** Page /incidents/:id : détail d'un incident. */
 @Component({
   selector: 'app-incident',
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, LibellePipe, NiveauAttentionComponent, StatutIncidentComponent],
   templateUrl: './incident.html',
 })
 export class IncidentPage implements OnInit {
@@ -30,8 +33,6 @@ export class IncidentPage implements OnInit {
   protected readonly authService = inject(AuthService);
 
   protected readonly priorites = PRIORITES_INCIDENT;
-  protected readonly libellesStatut = LIBELLES_STATUT;
-  protected readonly libellesNiveau = LIBELLES_NIVEAU;
   protected readonly formaterDuree = formaterDuree;
 
   protected readonly descriptionMin = DESCRIPTION_MIN;

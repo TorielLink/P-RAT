@@ -6,6 +6,7 @@ import { TYPES_EQUIPEMENT } from '../../core/equipement/equipement.service';
 import { NiveauAttentionComponent } from '../../shared/niveau-attention';
 import { formaterDuree } from '../../shared/formater-duree';
 import { AuthService } from '../../core/auth/auth.service';
+import { LibellePipe } from '../../shared/libelle.pipe';
 
 type Tri = 'URGENCE' | 'PLUS_ANCIENS' | 'PLUS_RECENTS';
 
@@ -20,7 +21,7 @@ const RANG_URGENCE: Record<IncidentActif['niveauAttention'], number> = {
 /** Page /tableau-de-bord (superviseur) : incidents non résolus, filtres et indicateurs. */
 @Component({
   selector: 'app-tableau-de-bord',
-  imports: [RouterLink, NiveauAttentionComponent],
+  imports: [RouterLink, NiveauAttentionComponent, LibellePipe],
   templateUrl: './tableau-de-bord.html',
   styleUrl: './tableau-de-bord.scss',
 })

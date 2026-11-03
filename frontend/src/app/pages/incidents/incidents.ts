@@ -4,13 +4,13 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Incident, IncidentService, StatutIncident } from '../../core/incident/incident.service';
 import { AuthService } from '../../core/auth/auth.service';
-
+import { LibellePipe } from '../../shared/libelle.pipe';
 
 
 /** Page /incidents : ouverts à gauche, en cours au centre, résolus à droite. */
 @Component({
   selector: 'app-incidents',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, LibellePipe],
   templateUrl: './incidents.html',
   styleUrl: './incidents.scss',
 })
@@ -25,8 +25,8 @@ export class Incidents implements OnInit {
 
   // Recalculé automatiquement à chaque changement de la liste
   readonly colonnes = computed(() => [
-    this.colonne('Ouverts', this.parStatut('OUVERT'), null),
-    this.colonne('En cours', this.parStatut('EN_COURS'), null),
+    this.colonne('Non affectés', this.parStatut('OUVERT'), null),
+    this.colonne('Pris en charge', this.parStatut('EN_COURS'), null),
     // Comme l'historique : les plus récemment résolus d'abord
     this.colonne('Résolus', this.parStatut('RESOLU').sort(parDateResolutionDecroissante), '/incidents/historique'),
   ]);

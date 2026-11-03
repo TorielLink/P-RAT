@@ -13,11 +13,12 @@ import {
   TypeEquipement,
 } from '../../core/equipement/equipement.service';
 import { EtatEquipementComponent } from '../../shared/etat-equipement';
+import { LibellePipe } from '../../shared/libelle.pipe';
 
 /** Page /stations/:id  */
 @Component({
   selector: 'app-station',
-  imports: [ReactiveFormsModule, RouterLink, EtatEquipementComponent],
+  imports: [ReactiveFormsModule, RouterLink, EtatEquipementComponent, LibellePipe],
   templateUrl: './station.html',
   styleUrl: 'station.scss'
 })

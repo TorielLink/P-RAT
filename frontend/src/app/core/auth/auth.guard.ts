@@ -3,7 +3,7 @@ import {inject} from '@angular/core';
 import {AuthService} from './auth.service';
 import {catchError, map, of} from "rxjs";
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (_route, etat) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -12,6 +12,7 @@ export const authGuard: CanActivateFn = () => {
   }
   return authService.chargerUtilisateurCourant().pipe(
     map(() => true),
-    catchError(() => of(router.createUrlTree(['/login'])))
+    // Mémorise la page demandée : après connexion, l'utilisateur y revient
+    catchError(() => of(router.createUrlTree(['/login'], { queryParams: { retour: etat.url } })))
   );
 };

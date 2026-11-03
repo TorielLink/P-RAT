@@ -29,7 +29,7 @@
               — {{ inc.equipementReference ?? 'équipement n°' + inc.equipementId }}
               ({{ inc.stationNom ?? 'sans station' }})
               <br />
-              Priorité : {{ inc.priorite ?? '—' }} · Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}
+              Priorité : {{ inc.priorite | libelle }} · Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}
               <br />
               @if (inc.dateResolution) {
                 Résolu le {{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}

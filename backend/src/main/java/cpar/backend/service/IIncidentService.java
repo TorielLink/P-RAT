@@ -25,15 +25,11 @@ public interface IIncidentService {
 
     Incident affecterPrestataire(Long id, Long prestataireId);
 
-    Incident resoudreIncident(Long id);
-
     void supprimerIncident(Long id);
 
     Incident resoudreIncident(Long id, String login);
 
     PageDto<HistoriqueIncidentDto> obtenirHistorique(String login, int page, int taille);
-
-    List<IncidentActifDto> obtenirIncidentsActifs();
 
     List<IncidentActifDto> obtenirIncidentsActifs(String login);
 }

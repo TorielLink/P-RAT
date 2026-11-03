@@ -42,7 +42,7 @@
       <select [value]="filtreType()" (change)="filtreType.set(valeur($event))">
         <option value="">Tous</option>
         @for (type of types; track type) {
-          <option [value]="type">{{ type }}</option>
+          <option [value]="type">{{ type | libelle }}</option>
         }
       </select>
     </label>
@@ -88,7 +88,7 @@
           <td>{{ inc.stationNom ?? '—' }}</td>
           <td>
             <a [routerLink]="['/incidents', inc.id]">{{ inc.equipementReference ?? 'n°' + inc.equipementId }}</a>
-            — {{ inc.equipementDescription ?? inc.equipementType }}
+            — {{ inc.equipementDescription ?? (inc.equipementType | libelle) }}
           </td>
           <td>{{ abreger(inc.description) }}</td>
           <td>{{ formaterDuree(inc.dureeOuvertureMinutes) }}</td>

@@ -13,7 +13,7 @@
       —
     }
   </p>
-  <p>Statut : {{ libellesStatut[inc.statut] }}</p>
+  <p>Statut : <app-statut-incident [statut]="inc.statut" /></p>
   <p>Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}</p>
   <p>Déclaré par : {{ inc.declarantPrenom ?? '—' }}</p>
   <p>Ouvert le : {{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</p>
@@ -21,7 +21,7 @@
   @if (inc.niveauAttention !== 'RESOLU') {
     <p>
       Niveau d'attention :
-      <span [class]="'attention attention-' + inc.niveauAttention">{{ libellesNiveau[inc.niveauAttention] }}</span>
+      <app-niveau-attention [niveau]="inc.niveauAttention" />
     </p>
   }
 
@@ -46,7 +46,7 @@
       <label for="priorite">Priorité</label>
       <select id="priorite" formControlName="priorite">
         @for (priorite of priorites; track priorite) {
-          <option [ngValue]="priorite">{{ priorite }}</option>
+          <option [ngValue]="priorite">{{ priorite | libelle }}</option>
         }
       </select>
 
@@ -74,7 +74,7 @@
       </p>
     </form>
   } @else {
-    <p>Priorité : {{ inc.priorite ?? '—' }}</p>
+    <p>Priorité : {{ inc.priorite | libelle }}</p>
     <p>Description : {{ inc.description ?? '—' }}</p>
 
     @if (inc.modifiable) {
@@ -82,6 +82,9 @@
     }
     @if (authService.peutResoudreIncidents() && inc.statut !== 'RESOLU') {
       <button type="button" (click)="resoudre(inc)">Déclarer résolu</button>
+    }
+    @if (authService.estAdmin() && inc.statut !== 'RESOLU') {
+      <a routerLink="/affectations">{{ inc.prestataireId ? 'Réaffecter le prestataire' : 'Affecter un prestataire' }}</a>
     }
     @if (authService.estAdmin()) {
       <button type="button" (click)="supprimer(inc)">Supprimer</button>

@@ -1,9 +1,9 @@
 import {Component, inject, signal} from '@angular/core';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AuthService} from '../../core/auth/auth.service';
-import {Router} from '@angular/router';
-import {ROUTE_ACCUEIL_PAR_PROFIL} from '../../core/auth/utilisateur-connecte';
 import {HttpErrorResponse, HttpStatusCode} from '@angular/common/http';
+import {ActivatedRoute, Router} from '@angular/router';
+import {CodeProfil, ROUTE_ACCUEIL_PAR_PROFIL} from '../../core/auth/utilisateur-connecte';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +14,7 @@ import {HttpErrorResponse, HttpStatusCode} from '@angular/common/http';
 export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly formulaire = inject(FormBuilder).nonNullable.group({
     login: ['', Validators.required],
@@ -28,7 +29,7 @@ export class LoginComponent {
     }
     const { login, motDePasse } = this.formulaire.getRawValue();
     this.authService.connecter(login, motDePasse).subscribe({
-      next: utilisateur => this.router.navigateByUrl(ROUTE_ACCUEIL_PAR_PROFIL[utilisateur.profil]),
+      next: utilisateur => this.router.navigateByUrl(this.destination(utilisateur.profil)),
       error: (erreur: HttpErrorResponse) => this.afficherErreur(erreur),
     });
   }
@@ -40,5 +41,12 @@ export class LoginComponent {
         : 'Le service est momentanément indisponible. Réessayez plus tard.'
     );
     this.formulaire.controls.motDePasse.reset();
+  }
+
+  /** Page demandée avant la connexion */
+  private destination(profil: CodeProfil): string {
+    const retour = this.route.snapshot.queryParamMap.get('retour');
+    // Uniquement un chemin interne : pas de redirection vers un autre site
+    return retour && retour.startsWith('/') && !retour.startsWith('//') ? retour : ROUTE_ACCUEIL_PAR_PROFIL[profil];
   }
 }

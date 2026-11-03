@@ -185,16 +185,6 @@ public class IncidentService implements IIncidentService {
         return incident;
     }
 
-    /** Admin seulement (SecurityConfig). */
-    @Override
-    @Transactional
-    public Incident resoudreIncident(Long id) {
-        Incident incident = obtenirIncidentNonResolu(id);
-        incident.setStatut(StatutIncident.RESOLU);
-        incident.setDateResolution(LocalDateTime.now(horloge));
-        return incident;
-    }
-
     /** Admin seulement (SecurityConfig). Supprime aussi l'évaluation (ON DELETE CASCADE en base). */
     @Override
     @Transactional
@@ -238,14 +228,6 @@ public class IncidentService implements IIncidentService {
         incident.setStatut(StatutIncident.RESOLU);
         incident.setDateResolution(LocalDateTime.now(horloge));
         return incident;
-    }
-
-    @Override
-    public List<IncidentActifDto> obtenirIncidentsActifs() {
-        LocalDateTime maintenant = LocalDateTime.now(horloge);
-        return incidentRepository.findByStatutNotOrderByDateOuvertureAscIdAsc(StatutIncident.RESOLU).stream()
-                .map(incident -> IncidentActifDto.depuis(incident, maintenant))
-                .toList();
     }
 
     @Override
