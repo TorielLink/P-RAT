@@ -83,9 +83,6 @@
     @if (authService.peutResoudreIncidents() && inc.statut !== 'RESOLU') {
       <button type="button" (click)="resoudre(inc)">Déclarer résolu</button>
     }
-    @if (authService.estAdmin() && inc.statut !== 'RESOLU') {
-      <a routerLink="/affectations">{{ inc.prestataireId ? 'Réaffecter le prestataire' : 'Affecter un prestataire' }}</a>
-    }
     @if (authService.estAdmin()) {
       <button type="button" (click)="supprimer(inc)">Supprimer</button>
     }
