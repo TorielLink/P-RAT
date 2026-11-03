@@ -5,8 +5,9 @@ import cpar.backend.dto.IncidentDetailDto;
 import cpar.backend.dto.ModificationIncidentRequest;
 import cpar.backend.exception.EquipementIntrouvableException;
 import cpar.backend.exception.IncidentIntrouvableException;
-import cpar.backend.exception.IncidentResoluException;
+import cpar.backend.exception.IncidentDejaResoluException;
 import cpar.backend.exception.OperationInterditeException;
+import cpar.backend.exception.PrestataireIntrouvableException;
 import cpar.backend.model.entities.Equipement;
 import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
@@ -34,9 +35,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 class IncidentServiceTest {
@@ -149,7 +149,7 @@ class IncidentServiceTest {
         resolu.setDescription("Description d'origine");
         when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(resolu));
 
-        assertThrows(IncidentResoluException.class, () -> incidentService.modifierIncident(1L,
+        assertThrows(IncidentDejaResoluException.class, () -> incidentService.modifierIncident(1L,
                 new ModificationIncidentRequest("Nouvelle description valide", null), "admin"));
         assertEquals("Description d'origine", resolu.getDescription());
     }
@@ -209,6 +209,46 @@ class IncidentServiceTest {
         assertEquals(ouverture, modifie.getDateOuverture());
         assertNull(modifie.getDateResolution());
         assertEquals(PrioriteIncident.MOYENNE, modifie.getPriorite());
+    }
+
+    // ---------- AFFECTATION ----------
+
+    @Test
+    void affecterPuisReaffecterRemplaceLePrestataire() {
+        Incident incident = incidentOuvertDepuis(Duration.ofHours(5));
+        Prestataire premier = entreprise(1L);
+        Prestataire second = entreprise(2L);
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
+        when(prestataireRepository.findById(1L)).thenReturn(Optional.of(premier));
+        when(prestataireRepository.findById(2L)).thenReturn(Optional.of(second));
+
+        incidentService.affecterPrestataire(1L, 1L);
+        Incident reaffecte = incidentService.affecterPrestataire(1L, 2L);
+
+        assertEquals(second, reaffecte.getPrestataire());
+        assertEquals(StatutIncident.EN_COURS, reaffecte.getStatut());
+    }
+
+    @Test
+    void unIncidentResoluNePeutPasEtreAffecteEtRienNEstModifie() {
+        Incident resolu = incidentOuvertDepuis(Duration.ofDays(2));
+        resolu.setStatut(StatutIncident.RESOLU);
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(resolu));
+
+        assertThrows(IncidentDejaResoluException.class, () -> incidentService.affecterPrestataire(1L, 1L));
+        assertNull(resolu.getPrestataire());
+        verifyNoInteractions(prestataireRepository);
+    }
+
+    @Test
+    void unPrestataireInexistantLaisseLIncidentIntact() {
+        Incident incident = incidentOuvertDepuis(Duration.ofHours(5));
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
+        when(prestataireRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(PrestataireIntrouvableException.class, () -> incidentService.affecterPrestataire(1L, 99L));
+        assertNull(incident.getPrestataire());
+        assertEquals(StatutIncident.OUVERT, incident.getStatut());
     }
 
     private static Incident incidentOuvertDepuis(Duration duree) {

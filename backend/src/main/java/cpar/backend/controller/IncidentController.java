@@ -61,7 +61,7 @@ public class IncidentController {
         return IncidentDto.depuis(incidentService.modifierIncident(id, demande, authentification.getName()));
     }
 
-    @PatchMapping("/incidents/{id}/prestataire")
+    @PutMapping("/incidents/{id}/prestataire")
     public IncidentDto affecterPrestataire(@PathVariable Long id,
                                            @Valid @RequestBody AffectationPrestataireFormulaire formulaire) {
         return IncidentDto.depuis(incidentService.affecterPrestataire(id, formulaire.prestataireId()));

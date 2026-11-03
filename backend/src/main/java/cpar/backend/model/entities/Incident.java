@@ -84,6 +84,21 @@ public class Incident {
                 && Objects.equals(utilisateur.getId(), demandeur.getId());
     }
 
+    /** l'incident devient affecté + réaffecter au même prestataire ne fait rien */
+    public void affecterA(Prestataire nouveauPrestataire) {
+        if (estDejaAffecteA(nouveauPrestataire)) {
+            return;
+        }
+        prestataire = nouveauPrestataire;
+        statut = StatutIncident.EN_COURS;
+    }
+
+    private boolean estDejaAffecteA(Prestataire candidat) {
+        return prestataire != null
+                && prestataire.getId() != null
+                && Objects.equals(prestataire.getId(), candidat.getId());
+    }
+
     public Long getId() {
         return id;
     }

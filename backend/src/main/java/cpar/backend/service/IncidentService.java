@@ -2,7 +2,7 @@ package cpar.backend.service;
 
 import cpar.backend.dto.*;
 import cpar.backend.exception.IncidentIntrouvableException;
-import cpar.backend.exception.IncidentResoluException;
+import cpar.backend.exception.IncidentDejaResoluException;
 import cpar.backend.exception.PrestataireIntrouvableException;
 import cpar.backend.exception.UtilisateurIntrouvableException;
 import cpar.backend.exception.OperationInterditeException;
@@ -179,9 +179,7 @@ public class IncidentService implements IIncidentService {
         Incident incident = obtenirIncidentNonResolu(id);
         Prestataire prestataire = prestataireRepository.findById(prestataireId)
                 .orElseThrow(() -> new PrestataireIntrouvableException(prestataireId));
-
-        incident.setPrestataire(prestataire);
-        incident.setStatut(StatutIncident.EN_COURS);
+        incident.affecterA(prestataire);
         return incident;
     }
 
@@ -203,7 +201,7 @@ public class IncidentService implements IIncidentService {
     private Incident obtenirIncidentNonResolu(Long id) {
         Incident incident = chargerIncident(id);
         if (incident.getStatut() == StatutIncident.RESOLU) {
-            throw new IncidentResoluException(id);
+            throw new IncidentDejaResoluException(id);
         }
         return incident;
     }

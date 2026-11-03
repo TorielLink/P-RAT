@@ -2,16 +2,14 @@ package cpar.backend.controller;
 
 import cpar.backend.config.SecurityConfig;
 import cpar.backend.dto.IncidentDetailDto;
-import cpar.backend.exception.EquipementIntrouvableException;
-import cpar.backend.exception.IncidentIntrouvableException;
+import cpar.backend.exception.*;
 import cpar.backend.model.entities.Equipement;
 import cpar.backend.model.entities.Incident;
+import cpar.backend.model.entities.Prestataire;
 import cpar.backend.model.enums.StatutIncident;
 import cpar.backend.service.IIncidentService;
 import cpar.backend.service.UtilisateurDetailsService;
 import cpar.backend.dto.ModificationIncidentRequest;
-import cpar.backend.exception.IncidentResoluException;
-import cpar.backend.exception.OperationInterditeException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -31,9 +29,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,9 +42,12 @@ class IncidentControllerTest {
     private static final String DEMANDE_VALIDE = """
             { "description": "La caméra ne répond plus depuis ce matin", "priorite": "HAUTE" }""";
 
-    @Autowired private MockMvc mockMvc;
-    @MockitoBean private IIncidentService incidentService;
-    @MockitoBean private UtilisateurDetailsService utilisateurDetailsService;
+    @Autowired
+    private MockMvc mockMvc;
+    @MockitoBean
+    private IIncidentService incidentService;
+    @MockitoBean
+    private UtilisateurDetailsService utilisateurDetailsService;
 
     @Test
     @WithMockUser(roles = "AGENT")
@@ -155,7 +154,7 @@ class IncidentControllerTest {
     // -------- MODIFICATION --------
 
     private static final String MODIFICATION_VALIDE = """
-        { "description": "Image figée sur le moniteur du poste", "priorite": "HAUTE" }""";
+            { "description": "Image figée sur le moniteur du poste", "priorite": "HAUTE" }""";
 
     private static Incident incidentRenvoye() {
         Incident incident = new Incident();
@@ -179,8 +178,8 @@ class IncidentControllerTest {
         when(incidentService.modifierIncident(eq(1L), any(), anyString())).thenReturn(incidentRenvoye());
 
         mockMvc.perform(patch("/api/incidents/1").contentType(MediaType.APPLICATION_JSON).content("""
-                    { "description": "Image figée sur le moniteur du poste",
-                      "statut": "RESOLU", "prestataireId": 3, "dateOuverture": "2020-01-01T00:00:00" }"""))
+                        { "description": "Image figée sur le moniteur du poste",
+                          "statut": "RESOLU", "prestataireId": 3, "dateOuverture": "2020-01-01T00:00:00" }"""))
                 .andExpect(status().isOk());
 
         ArgumentCaptor<ModificationIncidentRequest> demande = ArgumentCaptor.forClass(ModificationIncidentRequest.class);
@@ -192,7 +191,7 @@ class IncidentControllerTest {
     @WithMockUser(roles = "AGENT")
     void uneDescriptionTropCourteEnModificationRenvoie400() throws Exception {
         mockMvc.perform(patch("/api/incidents/1").contentType(MediaType.APPLICATION_JSON).content("""
-                    { "description": "court" }"""))
+                        { "description": "court" }"""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.erreurs.description")
                         .value("La description doit contenir entre 10 et 500 caractères."));
@@ -202,11 +201,12 @@ class IncidentControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void modifierUnIncidentResoluRenvoie409() throws Exception {
-        when(incidentService.modifierIncident(eq(1L), any(), anyString())).thenThrow(new IncidentResoluException(1L));
+        when(incidentService.modifierIncident(eq(1L), any(), anyString())).thenThrow(new IncidentDejaResoluException(1L));
 
         mockMvc.perform(patch("/api/incidents/1").contentType(MediaType.APPLICATION_JSON).content(MODIFICATION_VALIDE))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.detail").value("L'incident 1 est résolu : il ne peut plus être modifié."));
+                .andExpect(jsonPath("$.detail").value(
+                        "L'incident 1 est déjà résolu : il ne peut plus être modifié, affecté ni réaffecté."));
     }
 
     @Test
@@ -237,5 +237,72 @@ class IncidentControllerTest {
 
         mockMvc.perform(patch("/api/incidents/999").contentType(MediaType.APPLICATION_JSON).content(MODIFICATION_VALIDE))
                 .andExpect(status().isNotFound());
+    }
+
+    // ---------- AFFECTATION ----------
+
+    private static final String AFFECTATION = """
+            { "prestataireId": 2 }""";
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void uneAffectationRenvoie200AvecLeNouveauPrestataire() throws Exception {
+        Prestataire prestataire = new Prestataire();
+        prestataire.setId(2L);
+        prestataire.setNom("Vidéo Services");
+        Incident affecte = incidentRenvoye();
+        affecte.setPrestataire(prestataire);
+        affecte.setStatut(StatutIncident.EN_COURS);
+        when(incidentService.affecterPrestataire(1L, 2L)).thenReturn(affecte);
+
+        mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.prestataireNom").value("Vidéo Services"))
+                .andExpect(jsonPath("$.statut").value("EN_COURS"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void affecterUnIncidentResoluRenvoie409() throws Exception {
+        when(incidentService.affecterPrestataire(1L, 2L)).thenThrow(new IncidentDejaResoluException(1L));
+
+        mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        "L'incident 1 est déjà résolu : il ne peut plus être modifié, affecté ni réaffecté."));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void unPrestataireInexistantRenvoie404() throws Exception {
+        when(incidentService.affecterPrestataire(1L, 2L)).thenThrow(new PrestataireIntrouvableException(2L));
+
+        mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void uneAffectationSansPrestataireRenvoie400() throws Exception {
+        mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content("{ }"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erreurs.prestataireId").value("Le prestataire est obligatoire."));
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    @WithMockUser(roles = "AGENT")
+    void unAgentNePeutPasAffecter() throws Exception {
+        mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    @WithMockUser(roles = "PRESTATAIRE")
+    void unPrestataireNePeutPasAffecter() throws Exception {
+        mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(incidentService);
     }
 }
