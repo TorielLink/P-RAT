@@ -41,6 +41,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/equipements/*/incidents").hasAnyRole("ADMIN", "AGENT")
                         // Modification = admin, et agent sur ses incidents
                         .requestMatchers(HttpMethod.PATCH, "/api/incidents/*").hasAnyRole("ADMIN", "AGENT")
+                        // Acces tableau de bord
+                        .requestMatchers(HttpMethod.GET, "/api/incidents/actifs").hasAnyRole("ADMIN", "PRESTATAIRE")
                         // Restraint les autres droits d'incident
                         .requestMatchers("/api/incidents/**").hasRole("ADMIN")
                         // Seul Admin peut acceder aux prestataires

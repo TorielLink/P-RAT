@@ -32,4 +32,8 @@ public interface IIncidentService {
     Incident resoudreIncident(Long id, String login);
 
     PageDto<HistoriqueIncidentDto> obtenirHistorique(String login, int page, int taille);
+
+    List<IncidentActifDto> obtenirIncidentsActifs();
+
+    List<IncidentActifDto> obtenirIncidentsActifs(String login);
 }

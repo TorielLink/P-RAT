@@ -240,6 +240,31 @@ public class IncidentService implements IIncidentService {
         return incident;
     }
 
+    @Override
+    public List<IncidentActifDto> obtenirIncidentsActifs() {
+        LocalDateTime maintenant = LocalDateTime.now(horloge);
+        return incidentRepository.findByStatutNotOrderByDateOuvertureAscIdAsc(StatutIncident.RESOLU).stream()
+                .map(incident -> IncidentActifDto.depuis(incident, maintenant))
+                .toList();
+    }
+
+    @Override
+    public List<IncidentActifDto> obtenirIncidentsActifs(String login) {
+        Utilisateur utilisateur = chargerUtilisateur(login);
+        List<Incident> actifs;
+        if (estPrestataire(utilisateur)) {
+            Long prestataireId = prestataireIdDe(utilisateur);
+            actifs = prestataireId == null
+                    ? List.of()
+                    : incidentRepository.findByStatutNotAndPrestataireIdOrderByDateOuvertureAscIdAsc(
+                    StatutIncident.RESOLU, prestataireId);
+        } else {
+            actifs = incidentRepository.findByStatutNotOrderByDateOuvertureAscIdAsc(StatutIncident.RESOLU);
+        }
+        LocalDateTime maintenant = LocalDateTime.now(horloge);
+        return actifs.stream().map(incident -> IncidentActifDto.depuis(incident, maintenant)).toList();
+    }
+
     private static Long prestataireIdDe(Utilisateur utilisateur) {
         return utilisateur.getPrestataire() != null ? utilisateur.getPrestataire().getId() : null;
     }

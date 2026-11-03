@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { TypeEquipement } from '../equipement/equipement.service';
 
 export const PRIORITES_INCIDENT = ['BASSE', 'MOYENNE', 'HAUTE', 'CRITIQUE'] as const;
 export type PrioriteIncident = (typeof PRIORITES_INCIDENT)[number];
@@ -89,6 +90,22 @@ export interface Page<T> {
   totalPages: number;
 }
 
+/** Correspond à IncidentActifDto côté backend */
+export interface IncidentActif {
+  id: number;
+  niveauAttention: Exclude<NiveauAttention, 'RESOLU'>;
+  stationId: number | null;
+  stationNom: string | null;
+  equipementId: number;
+  equipementReference: string | null;
+  equipementDescription: string | null;
+  equipementType: TypeEquipement;
+  description: string | null;
+  dureeOuvertureMinutes: number;
+  prestataireId: number | null;
+  prestataireNom: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class IncidentService {
   private readonly http = inject(HttpClient);
@@ -129,6 +146,10 @@ export class IncidentService {
   obtenirHistorique(page: number, taille = 20): Observable<Page<HistoriqueIncident>> {
     const params = new HttpParams().set('page', page).set('taille', taille);
     return this.http.get<Page<HistoriqueIncident>>(`${this.url}/historique`, { params });
+  }
+
+  obtenirIncidentsActifs(): Observable<IncidentActif[]> {
+    return this.http.get<IncidentActif[]>(`${this.url}/actifs`);
   }
 
 }

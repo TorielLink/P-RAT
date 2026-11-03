@@ -11,7 +11,8 @@ import { Incidents } from './pages/incidents/incidents';
 import { NouvelIncident } from './pages/nouvel_incident/nouvel_incident';
 import { Affectations } from './pages/affectations/affectations';
 import { Historique } from './pages/historique/historique';
-
+import { adminGuard } from './core/auth/admin.guard';
+import { tableauDeBordGuard } from './core/auth/admin.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -19,7 +20,6 @@ export const routes: Routes = [
     path: '',
     canActivate: [authGuard],
     children: [
-      { path: 'tableau-de-bord', component: TableauDeBord },
       { path: 'stations', component: Stations },
       { path: 'stations/:id', component: StationPage },
       { path: 'equipements/:id', component: EquipementPage },
@@ -29,7 +29,9 @@ export const routes: Routes = [
       { path: 'incidents', component: Incidents },
       { path: 'equipements/:id/declarer-incident', component: NouvelIncident },
       { path: 'incidents/historique', component: Historique },
-      { path: 'incidents/:id', component: IncidentPage }
+      { path: 'incidents/:id', component: IncidentPage },
+      { path: 'tableau-de-bord', component: TableauDeBord, canActivate: [adminGuard] },
+      { path: 'tableau-de-bord', component: TableauDeBord, canActivate: [tableauDeBordGuard] }
     ],
   },
   { path: '**', redirectTo: 'login' },

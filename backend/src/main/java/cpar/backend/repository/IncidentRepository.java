@@ -39,4 +39,10 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
 
     @EntityGraph(attributePaths = {"equipement", "equipement.station", "prestataire"})
     Page<Incident> findByStatutAndPrestataireId(StatutIncident statut, Long prestataireId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"equipement", "equipement.station", "prestataire"})
+    List<Incident> findByStatutNotOrderByDateOuvertureAscIdAsc(StatutIncident statut);
+
+    @EntityGraph(attributePaths = {"equipement", "equipement.station", "prestataire"})
+    List<Incident> findByStatutNotAndPrestataireIdOrderByDateOuvertureAscIdAsc(StatutIncident statut, Long prestataireId);
 }

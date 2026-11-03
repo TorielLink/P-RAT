@@ -84,4 +84,9 @@ public class IncidentController {
                                                             Authentication authentification) {
         return incidentService.obtenirHistorique(authentification.getName(), page, taille);
     }
+
+    @GetMapping("/incidents/actifs")
+    public List<IncidentActifDto> obtenirIncidentsActifs(Authentication authentification) {
+        return incidentService.obtenirIncidentsActifs(authentification.getName());
+    }
 }
