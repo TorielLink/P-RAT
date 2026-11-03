@@ -1,11 +1,11 @@
 import { Component, computed, input } from '@angular/core';
-import { StatutIncident } from '../core/incident/incident.service';
+import { LIBELLES_STATUT, StatutIncident } from '../core/incident/incident.service';
 
 // Icône + libellé : le statut reste compréhensible sans la couleur
 const AFFICHAGE: Record<StatutIncident, { icone: string; libelle: string }> = {
-  OUVERT: { icone: '●', libelle: 'Ouvert' },
-  EN_COURS: { icone: '◐', libelle: 'En cours' },
-  RESOLU: { icone: '✓', libelle: 'Résolu' },
+  OUVERT: { icone: '●', libelle: LIBELLES_STATUT.OUVERT },
+  EN_COURS: { icone: '◐', libelle: LIBELLES_STATUT.EN_COURS },
+  RESOLU: { icone: '✓', libelle: LIBELLES_STATUT.RESOLU },
 };
 
 @Component({

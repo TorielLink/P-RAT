@@ -132,9 +132,9 @@ class IncidentServiceTest {
 
     @Test
     void laDateDeResolutionVientDeLHorloge() {
-        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incidentOuvertDepuis(Duration.ofHours(10))));
+        when(utilisateurRepository.findByLogin("admin")).thenReturn(Optional.of(compte(ProfilUtilisateur.ADMIN, null)));
 
-        Incident resolu = incidentService.resoudreIncident(1L);
+        Incident resolu = incidentService.resoudreIncident(1L, "admin");
 
         assertEquals(StatutIncident.RESOLU, resolu.getStatut());
         assertEquals(MAINTENANT, resolu.getDateResolution());

@@ -11,7 +11,14 @@
 <div class="colonnes">
   @for (colonne of colonnes(); track colonne.titre) {
     <section>
-      <h2>{{ colonne.titre }} ({{ colonne.incidents.length }})</h2>
+      <h2>
+        @if (colonne.lien) {
+          <a [routerLink]="colonne.lien">{{ colonne.titre }}</a>
+        } @else {
+          {{ colonne.titre }}
+        }
+        ({{ colonne.total }})
+      </h2>
       @if (colonne.incidents.length === 0) {
         <p>Aucun incident.</p>
       } @else {
@@ -22,7 +29,7 @@
               — {{ inc.equipementReference ?? 'équipement n°' + inc.equipementId }}
               ({{ inc.stationNom ?? 'sans station' }})
               <br />
-              Priorité : {{ inc.priorite ?? '—' }} · Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}
+              Priorité : {{ inc.priorite | libelle }} · Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}
               <br />
               @if (inc.dateResolution) {
                 Résolu le {{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}
@@ -32,6 +39,9 @@
             </li>
           }
         </ul>
+        @if (colonne.lien && colonne.total > colonne.incidents.length) {
+          <a [routerLink]="colonne.lien">Voir les {{ colonne.total }} incidents</a>
+        }
       }
     </section>
   }

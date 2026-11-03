@@ -6,13 +6,13 @@
   <form [formGroup]="formulaire" (ngSubmit)="declarer(eq)">
     <p>
       Équipement : <strong>{{ eq.reference ?? 'n°' + eq.id }}</strong>
-      — {{ eq.type }} ({{ eq.stationNom ?? 'sans station' }})
+      — {{ eq.type | libelle }} ({{ eq.stationNom ?? 'sans station' }})
     </p>
 
     <label for="priorite">Priorité</label>
     <select id="priorite" formControlName="priorite">
       @for (priorite of priorites; track priorite) {
-        <option [ngValue]="priorite">{{ priorite }}</option>
+        <option [ngValue]="priorite">{{ priorite | libelle }}</option>
       }
     </select>
 
