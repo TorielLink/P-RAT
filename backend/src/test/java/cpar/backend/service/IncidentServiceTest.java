@@ -5,7 +5,7 @@ import cpar.backend.dto.IncidentDetailDto;
 import cpar.backend.dto.ModificationIncidentRequest;
 import cpar.backend.exception.EquipementIntrouvableException;
 import cpar.backend.exception.IncidentIntrouvableException;
-import cpar.backend.exception.IncidentResoluException;
+import cpar.backend.exception.IncidentDejaResoluException;
 import cpar.backend.exception.OperationInterditeException;
 import cpar.backend.model.entities.Equipement;
 import cpar.backend.model.entities.Evaluation;
@@ -149,7 +149,7 @@ class IncidentServiceTest {
         resolu.setDescription("Description d'origine");
         when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(resolu));
 
-        assertThrows(IncidentResoluException.class, () -> incidentService.modifierIncident(1L,
+        assertThrows(IncidentDejaResoluException.class, () -> incidentService.modifierIncident(1L,
                 new ModificationIncidentRequest("Nouvelle description valide", null), "admin"));
         assertEquals("Description d'origine", resolu.getDescription());
     }

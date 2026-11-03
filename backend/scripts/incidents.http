@@ -78,3 +78,44 @@ PATCH http://localhost:8080/api/incidents/99999
 Content-Type: application/json
 
 { "description": "Incident qui n'existe pas du tout." }
+
+####------ Affectation prestataire ---------
+
+### Affecter DEMCAM01 (non affecté) → 200, statut EN_COURS
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 2 }
+
+### Même prestataire → 200, rien ne change
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 2 }
+
+### Réaffecter à un autre → 200, nouveau prestataire
+PUT http://localhost:8080/api/incidents/1/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 3 }
+
+### Le détail affiche le nouveau prestataire et niveauAttention = PRIS_EN_CHARGE
+GET http://localhost:8080/api/incidents/1
+
+### Incident résolu (DEMCAM02) → 409
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 3 }
+
+### Prestataire inexistant → 404, l'incident garde son prestataire
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 99999 }
+
+### Corps sans prestataire → 400
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ }

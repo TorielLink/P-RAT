@@ -10,7 +10,7 @@ import cpar.backend.model.enums.StatutIncident;
 import cpar.backend.service.IIncidentService;
 import cpar.backend.service.UtilisateurDetailsService;
 import cpar.backend.dto.ModificationIncidentRequest;
-import cpar.backend.exception.IncidentResoluException;
+import cpar.backend.exception.IncidentDejaResoluException;
 import cpar.backend.exception.OperationInterditeException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -202,7 +202,7 @@ class IncidentControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void modifierUnIncidentResoluRenvoie409() throws Exception {
-        when(incidentService.modifierIncident(eq(1L), any(), anyString())).thenThrow(new IncidentResoluException(1L));
+        when(incidentService.modifierIncident(eq(1L), any(), anyString())).thenThrow(new IncidentDejaResoluException(1L));
 
         mockMvc.perform(patch("/api/incidents/1").contentType(MediaType.APPLICATION_JSON).content(MODIFICATION_VALIDE))
                 .andExpect(status().isConflict())
