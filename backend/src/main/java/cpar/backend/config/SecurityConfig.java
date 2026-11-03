@@ -25,6 +25,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(autorisations -> autorisations
                         .requestMatchers("/api/auth/login").permitAll()
+                        // Documentation OpenAPI réservée aux utilisateurs connectés
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").authenticated()
                         // Lecture des stations pour tt le monde
                         .requestMatchers(HttpMethod.GET, "/api/stations/**").authenticated()
                         // Restraint les autres droits de station
