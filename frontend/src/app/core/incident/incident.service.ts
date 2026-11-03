@@ -95,7 +95,7 @@ export class IncidentService {
   }
 
   affecterPrestataire(id: number, prestataireId: number): Observable<Incident> {
-    return this.http.patch<Incident>(`${this.url}/${id}/prestataire`, { prestataireId });
+    return this.http.put<Incident>(`${this.url}/${id}/prestataire`, { prestataireId });
   }
 
   obtenirIncidentsParEquipement(equipementId: number): Observable<Incident[]> {

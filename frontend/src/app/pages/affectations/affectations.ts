@@ -44,6 +44,10 @@ export class Affectations implements OnInit {
       this.message.set(`Choisissez un prestataire pour l'incident n°${incident.id}.`);
       return;
     }
+    if (Number(prestataireId) === incident.prestataireId) {
+      this.message.set(`L'incident n°${incident.id} est déjà affecté à ${incident.prestataireNom} -> aucune modification.`);
+      return;
+    }
     this.incidentService.affecterPrestataire(incident.id, Number(prestataireId)).subscribe({
       next: modifie => {
         // Remplace la ligne : statut EN_COURS et nouveau prestataire affichés sans recharger

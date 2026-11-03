@@ -1,9 +1,10 @@
 import {Component, OnInit, inject, signal} from '@angular/core';
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import {DatePipe} from '@angular/common';
-import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, FormControl, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {AuthService} from '../../core/auth/auth.service';
+import {Prestataire, PrestataireService} from '../../core/prestataire/prestataire.service';
 import {
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
@@ -42,13 +43,28 @@ export class IncidentPage implements OnInit {
   readonly enModification = signal(false);
   readonly erreur = signal<string | null>(null);
 
+  private readonly prestataireService = inject(PrestataireService);
+  readonly prestataires = signal<Prestataire[]>([]);
+  readonly information = signal<string | null>(null);
+  readonly choixPrestataire = new FormControl<number | null>(null);
+
   readonly formulaire = inject(FormBuilder).nonNullable.group({
     description: ['', [Validators.required, Validators.minLength(DESCRIPTION_MIN), Validators.maxLength(DESCRIPTION_MAX)]],
     priorite: ['MOYENNE' as PrioriteIncident, Validators.required],
   });
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => this.charger(Number(params.get('id'))));
+    this.route.paramMap.subscribe(params => {
+      this.information.set(null);
+      this.charger(Number(params.get('id')));
+    });
+    if (this.authService.estAdmin()) {
+      this.prestataireService.obtenirTousPrestataires().subscribe({
+        next: prestataires => this.prestataires.set(prestataires),
+        error: (erreur: HttpErrorResponse) =>
+          this.erreur.set(this.message(erreur, 'Impossible de charger les prestataires.')),
+      });
+    }
   }
 
   modifier(incident: Incident): void {
@@ -97,6 +113,25 @@ export class IncidentPage implements OnInit {
     });
   }
 
+  affecter(incident: IncidentDetail): void {
+    const prestataireId = this.choixPrestataire.value;
+    if (prestataireId === null) {
+      return;
+    }
+    if (prestataireId === incident.prestataireId) {
+      this.information.set(`L'incident est déjà affecté à ${incident.prestataireNom} -> aucune modification.`);
+      return;
+    }
+    this.information.set(null);
+    this.incidentService.affecterPrestataire(incident.id, prestataireId).subscribe({
+      next: affecte => {
+        this.information.set(`Incident affecté à ${affecte.prestataireNom}.`);
+        this.charger(incident.id);
+      },
+      error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, "Échec de l'affectation.")),
+    });
+  }
+
   supprimer(incident: Incident): void {
     if (!confirm(`Supprimer l'incident n°${incident.id} et son évaluation ?`)) {
       return;
@@ -113,7 +148,10 @@ export class IncidentPage implements OnInit {
     this.erreur.set(null);
     this.enModification.set(false);
     this.incidentService.obtenirIncidentParId(id).subscribe({
-      next: incident => this.incident.set(incident),
+      next: incident => {
+        this.incident.set(incident);
+        this.choixPrestataire.setValue(incident.prestataireId);
+      },
       error: (erreur: HttpErrorResponse) => {
         this.incident.set(null);
         this.erreur.set(this.message(erreur, 'Incident introuvable.'));

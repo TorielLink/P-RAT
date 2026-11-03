@@ -86,7 +86,27 @@
     @if (authService.estAdmin()) {
       <button type="button" (click)="supprimer(inc)">Supprimer</button>
     }
+
+    <!-- affecter ou réaffecter un prestataire (admin + incident non résolu) -->
+    @if (authService.estAdmin() && inc.statut !== 'RESOLU') {
+      <section class="affectation">
+        <h2>{{ inc.prestataireId ? 'Réaffecter' : 'Affecter' }} un prestataire</h2>
+        <label for="prestataire">Prestataire</label>
+        <select id="prestataire" [formControl]="choixPrestataire">
+          <option [ngValue]="null" disabled>Choisir un prestataire…</option>
+          @for (prestataire of prestataires(); track prestataire.id) {
+            <option [ngValue]="prestataire.id">{{ prestataire.nom }}</option>
+          }
+        </select>
+        <button type="button" (click)="affecter(inc)" [disabled]="choixPrestataire.value === null">Valider</button>
+      </section>
+    }
   }
+}
+
+<!-- confirmation d'une affectation ou « déjà affecté » -->
+@if (information()) {
+  <p class="information" role="status">{{ information() }}</p>
 }
 
 @if (erreur()) {
