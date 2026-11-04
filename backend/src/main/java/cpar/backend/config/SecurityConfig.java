@@ -1,9 +1,12 @@
 package cpar.backend.config;
 
 import cpar.backend.service.UtilisateurDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,9 +15,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
-import org.springframework.http.HttpMethod;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
@@ -66,15 +70,16 @@ public class SecurityConfig {
                         .successHandler((requete, reponse, authentification) ->
                                 reponse.setStatus(HttpStatus.OK.value()))
                         .failureHandler((requete, reponse, exception) ->
-                                reponse.setStatus(HttpStatus.UNAUTHORIZED.value())))
+                                ecrireProbleme(reponse, HttpStatus.UNAUTHORIZED, "Identifiant ou mot de passe incorrect.")))
                 .logout(deconnexion -> deconnexion
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID"))
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                        .accessDeniedHandler((requete, reponse, exception) ->
-                                reponse.setStatus(HttpStatus.FORBIDDEN.value())));
+                        .authenticationEntryPoint((requete, reponse, exception) -> ecrireProbleme(reponse,
+                                HttpStatus.UNAUTHORIZED, "Authentification requise : connectez-vous pour accéder à cette ressource."))
+                        .accessDeniedHandler((requete, reponse, exception) -> ecrireProbleme(reponse,
+                                HttpStatus.FORBIDDEN, "Votre profil ne permet pas cette opération.")));
 
         return http.build();
     }
@@ -91,5 +96,13 @@ public class SecurityConfig {
         DaoAuthenticationProvider fournisseur = new DaoAuthenticationProvider(utilisateurDetailsService);
         fournisseur.setPasswordEncoder(encodeurDeMotDePasse);
         return fournisseur;
+    }
+
+    private static void ecrireProbleme(HttpServletResponse reponse, HttpStatus statut, String detail) throws IOException {
+        reponse.setStatus(statut.value());
+        reponse.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        reponse.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        reponse.getWriter().write("""
+                {"title":"%s","status":%d,"detail":"%s"}""".formatted(statut.getReasonPhrase(), statut.value(), detail));
     }
 }
