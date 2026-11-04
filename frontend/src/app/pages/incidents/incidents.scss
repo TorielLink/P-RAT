@@ -1,8 +1,5 @@
-.colonnes {
-  display: flex;
-  gap: 2rem;
-}
-
-.colonnes section {
-  flex: 1;
+/* Incidents résolus : en retrait par rapport aux incidents en cours */
+tr.resolu {
+  color: var(--texte-discret);
+  font-style: italic;
 }

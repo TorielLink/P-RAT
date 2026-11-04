@@ -35,11 +35,11 @@
     </table>
 
     @if (resultat.totalPages > 1) {
-      <p>
+      <p class="pagination">
         <button type="button" [disabled]="resultat.page === 0" (click)="allerALaPage(resultat.page - 1)">
           Précédent
         </button>
-        Page {{ resultat.page + 1 }} / {{ resultat.totalPages }} ({{ resultat.totalElements }} incidents)
+        <span>Page <span class="mono">{{ resultat.page + 1 }} / {{ resultat.totalPages }}</span> ({{ resultat.totalElements }} incidents)</span>
         <button type="button" [disabled]="resultat.page + 1 >= resultat.totalPages" (click)="allerALaPage(resultat.page + 1)">
           Suivant
         </button>

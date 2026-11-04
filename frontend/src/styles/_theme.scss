@@ -1,0 +1,51 @@
+// Thème « console d'exploitation » (style B) : toutes les couleurs et polices du site.
+// Les composants utilisent ces variables, jamais de code couleur en dur.
+:root {
+  // Fonds
+  --fond: #0d1117;
+  --fond-menu: #010409;
+  --surface: #161b22;
+  --surface-survol: #1c2128;
+
+  // Bordures
+  --bordure: #30363d;
+  --bordure-douce: #21262d;
+
+  // Texte
+  --texte: #e6edf3;
+  --texte-secondaire: #c9d1d9;
+  --texte-discret: #8b949e;
+
+  // Accent (boutons principaux, menu actif, focus)
+  --accent: #8957e5;
+  --accent-survol: #a371f7;
+  --accent-fond: #2b1f4a;
+  --lien: #c5a8ff;
+  --lien-survol: #e2d4ff;
+
+  // Couleurs de sens : texte clair sur fond foncé (contraste WCAG AA)
+  --rouge: #ff8182;
+  --rouge-fond: #3d1418;
+  --rouge-trait: #f85149;
+  --orange: #ffa657;
+  --orange-fond: #3d2410;
+  --orange-trait: #db6d28;
+  --vert: #56d364;
+  --vert-fond: #12261e;
+  --vert-trait: #3fb950;
+  --bleu: #79c0ff;
+  --bleu-fond: #0c2d4a;
+  --bleu-trait: #388bfd;
+  --jaune: #e3b341;
+  --jaune-fond: #3a2e0f;
+  --gris: #b1bac4;
+  --gris-fond: #2d333b;
+
+  // Polices
+  --police: 'Roboto', system-ui, sans-serif;
+  --police-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  // Formes
+  --rayon: 6px;
+  --rayon-bloc: 8px;
+}

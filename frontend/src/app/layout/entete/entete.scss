@@ -1,13 +1,95 @@
-.entete {
+// Bandeau horizontal en haut de toutes les pages (connecté seulement)
+.bandeau {
+  position: sticky; // reste visible quand on fait défiler la page
+  top: 0;
+  z-index: 10;
   display: flex;
-  justify-content: flex-end;
-  padding: 0.75rem 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  min-height: 56px;
+  padding: 0 32px;
+  background: var(--fond-menu);
+  border-bottom: 1px solid var(--bordure-douce);
 }
-.lien {
-  background: none;
-  border: none;
-  color: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-  font: inherit;
+
+.marque {
+  font-family: var(--police-mono);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.marque:hover {
+  color: #ffffff;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: stretch;
+  gap: 4px;
+}
+
+// Lien actif : souligné violet collé au bas du bandeau
+nav a {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  color: var(--texte-secondaire);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+nav a:hover {
+  color: var(--texte);
+  border-bottom-color: var(--bordure);
+}
+
+nav a.actif {
+  font-weight: 600;
+  color: #ffffff;
+  border-bottom-color: var(--accent-survol);
+}
+
+.utilisateur {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--texte-secondaire);
+}
+
+.profil {
+  color: var(--texte-discret);
+}
+
+.utilisateur button {
+  margin: 0;
+}
+
+// Téléphone : liens sous le nom de l'application, défilement horizontal
+@media (max-width: 700px) {
+  .bandeau {
+    padding: 8px 16px 0;
+  }
+
+  nav {
+    order: 3;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  nav a {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  .utilisateur .profil {
+    display: none;
+  }
 }

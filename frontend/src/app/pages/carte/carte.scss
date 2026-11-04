@@ -9,16 +9,18 @@
   width: 100%;
   max-width: 600px;
   height: auto;
-  border: 1px solid #d0d7de;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
 }
 
 .ligne {
-  stroke: #eaeef2;
+  stroke: var(--bordure-douce);
   stroke-width: 1;
 }
 
 .ligne-forte {
-  stroke: #afb8c1;
+  stroke: var(--bordure);
 }
 
 .marqueur {
@@ -32,7 +34,7 @@
 /* Focus clavier et sélection : anneau autour du marqueur */
 .marqueur:focus-visible circle,
 .marqueur.selectionne circle {
-  stroke: #24292f;
+  stroke: var(--texte);
   stroke-width: 3;
 }
 
@@ -43,15 +45,14 @@
 }
 
 .nom {
-  fill: #24292f;
+  fill: var(--texte);
   font-size: 13px;
   pointer-events: none;
 }
 
 .fenetre {
   min-width: 220px;
-  border: 1px solid #d0d7de;
-  padding: 0.75rem;
+  margin-top: 0;
 }
 
 .legende {

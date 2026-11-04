@@ -42,7 +42,7 @@
 
     <button type="button" (click)="modifier(eq)">Modifier</button>
     @if (authService.peutGererEquipements()) {
-      <button type="button" (click)="supprimer(eq)">Supprimer</button>
+      <button type="button" class="danger" (click)="supprimer(eq)">Supprimer</button>
     }
 
     <h2>Incidents</h2>

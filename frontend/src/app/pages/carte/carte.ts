@@ -6,11 +6,11 @@ import { NiveauAttentionComponent } from '../../shared/niveau-attention';
 
 // Couleur doublée d'un symbole (accessibilité) : mêmes symboles que le badge de niveau
 const AFFICHAGE_SITUATION: Record<SituationStation, { couleur: string; symbole: string; libelle: string }> = {
-  ROUGE: { couleur: '#cf222e', symbole: '◆', libelle: 'Rouge' },
-  ORANGE: { couleur: '#bc4c00', symbole: '▲', libelle: 'Orange' },
-  VERT: { couleur: '#1a7f37', symbole: '●', libelle: 'Vert' },
-  PRIS_EN_CHARGE: { couleur: '#0550ae', symbole: '◐', libelle: 'Pris en charge' },
-  AUCUN: { couleur: '#6e7781', symbole: '○', libelle: 'Aucun incident' },
+  ROUGE: { couleur: '#da3633', symbole: '◆', libelle: 'Rouge' },
+  ORANGE: { couleur: '#bd561d', symbole: '▲', libelle: 'Orange' },
+  VERT: { couleur: '#238636', symbole: '●', libelle: 'Vert' },
+  PRIS_EN_CHARGE: { couleur: '#1f6feb', symbole: '◐', libelle: 'Pris en charge' },
+  AUCUN: { couleur: '#6e7681', symbole: '○', libelle: 'Aucun incident' },
 };
 
 const TAILLE = 600; // côté du dessin SVG, en unités du viewBox

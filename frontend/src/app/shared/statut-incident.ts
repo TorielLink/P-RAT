@@ -21,14 +21,14 @@ const AFFICHAGE: Record<StatutIncident, { icone: string; libelle: string }> = {
       display: inline-flex;
       gap: 0.35em;
       padding: 0.1em 0.6em;
-      border: 1px solid;
+      border: 1px solid transparent;
       border-radius: 1em;
       font-weight: 600;
       white-space: nowrap;
     }
-    .OUVERT { color: #cf222e; background: #ffebe9; }
-    .EN_COURS { color: #0550ae; background: #ddf4ff; }
-    .RESOLU { color: #1a7f37; background: #dafbe1; }
+    .OUVERT { color: var(--rouge); background: var(--rouge-fond); }
+    .EN_COURS { color: var(--bleu); background: var(--bleu-fond); }
+    .RESOLU { color: var(--vert); background: var(--vert-fond); }
   `,
 })
 export class StatutIncidentComponent {
