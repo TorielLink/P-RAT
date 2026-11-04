@@ -20,7 +20,7 @@ public class GestionnaireExceptions {
     }
 
     @ExceptionHandler({ReferenceDejaUtiliseeException.class, IncidentDejaResoluException.class,
-            EvaluationImpossibleException.class})
+            EvaluationImpossibleException.class, PositionOccupeeException.class})
     public ProblemDetail conflit(RuntimeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }

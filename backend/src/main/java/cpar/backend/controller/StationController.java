@@ -1,5 +1,6 @@
 package cpar.backend.controller;
 
+import cpar.backend.dto.StationCarteDto;
 import cpar.backend.dto.StationFormulaire;
 import cpar.backend.model.entities.Station;
 import cpar.backend.service.IStationService;
@@ -45,18 +46,24 @@ public class StationController {
 
     @PostMapping
     public ResponseEntity<Station> ajouterStation(@Valid @RequestBody StationFormulaire formulaire) {
-        Station station = stationService.ajouterStation(formulaire.nom());
+        Station station = stationService.ajouterStation(formulaire);
         return ResponseEntity.created(URI.create("/api/stations/" + station.getId())).body(station);
     }
 
     @PutMapping("/{id}")
     public Station modifierStation(@PathVariable Long id, @Valid @RequestBody StationFormulaire formulaire) {
-        return stationService.modifierStation(id, formulaire.nom());
+        return stationService.modifierStation(id, formulaire);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimerStation(@PathVariable Long id) {
         stationService.supprimerStation(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Carte du réseau (superviseur)
+    @GetMapping("/carte")
+    public List<StationCarteDto> obtenirCarte() {
+        return stationService.obtenirCarte();
     }
 }

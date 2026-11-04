@@ -2,7 +2,10 @@
 
 @if (authService.peutGererStations()) {
   <form [formGroup]="formulaire" (ngSubmit)="ajouter()">
-    <input formControlName="nom" placeholder="Nom de la station" maxlength="100" />
+    <input formControlName="nom" placeholder="Nom de la station" maxlength="100" aria-label="Nom" />
+    <!-- Position facultative : sans elle, la station n'apparaît pas sur la carte -->
+    <input formControlName="positionX" type="number" min="-20" max="20" placeholder="X" aria-label="Position X" />
+    <input formControlName="positionY" type="number" min="-20" max="20" placeholder="Y" aria-label="Position Y" />
     <button type="submit">Ajouter</button>
   </form>
 }

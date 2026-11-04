@@ -4,6 +4,9 @@
       @if (authService.peutVoirTableauDeBord()) {
         <a routerLink="/tableau-de-bord">Tableau de bord</a> |
       }
+      @if (authService.estAdmin()) {
+        <a routerLink="/carte">Carte</a> |
+      }
       <a routerLink="/incidents">Incidents</a> |
       <a routerLink="/stations">Stations</a> |
       <a routerLink="/equipements">Équipements</a>

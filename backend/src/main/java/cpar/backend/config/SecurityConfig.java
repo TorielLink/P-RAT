@@ -25,6 +25,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(autorisations -> autorisations
                         .requestMatchers("/api/auth/login").permitAll()
+                        // Carte du réseau que pour Admin
+                        .requestMatchers(HttpMethod.GET, "/api/stations/carte").hasRole("ADMIN")
                         // Documentation OpenAPI réservée aux utilisateurs connectés
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").authenticated()
                         // Admin et prestataire (sur ces incidents) peuvent le resoudre

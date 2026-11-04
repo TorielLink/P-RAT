@@ -1,5 +1,7 @@
 package cpar.backend.service;
 
+import cpar.backend.dto.StationCarteDto;
+import cpar.backend.dto.StationFormulaire;
 import cpar.backend.model.entities.Station;
 
 import java.util.List;
@@ -12,9 +14,11 @@ public interface IStationService {
 
     List<Station> obtenirToutesStations();
 
-    Station ajouterStation(String nom);
-
     void supprimerStation(Long id);
 
-    Station modifierStation(Long id, String nom);
+    Station ajouterStation(StationFormulaire formulaire);
+
+    Station modifierStation(Long id, StationFormulaire formulaire);
+
+    List<StationCarteDto> obtenirCarte();
 }

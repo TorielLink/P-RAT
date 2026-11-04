@@ -14,6 +14,7 @@ import {
 } from '../../core/equipement/equipement.service';
 import { EtatEquipementComponent } from '../../shared/etat-equipement';
 import { LibellePipe } from '../../shared/libelle.pipe';
+import { VALIDATEURS_POSITION, messagePosition, positionCompleteValidator } from '../../shared/position';
 
 /** Page /stations/:id  */
 @Component({
@@ -36,7 +37,14 @@ export class StationPage implements OnInit {
   readonly enModification = signal(false);
   readonly erreur = signal<string | null>(null);
 
-  readonly nom = this.fb.control('', [Validators.required, Validators.maxLength(100)]);
+  readonly formulaireStation = inject(FormBuilder).group(
+    {
+      nom: ['', [Validators.required, Validators.maxLength(100)]],
+      positionX: [null as number | null, VALIDATEURS_POSITION],
+      positionY: [null as number | null, VALIDATEURS_POSITION],
+    },
+    { validators: positionCompleteValidator }
+  );
   readonly formulaire = this.fb.group({
     reference: ['', Validators.pattern(/^[A-Z0-9]{0,8}$/)],
     description: [''],
@@ -70,22 +78,18 @@ export class StationPage implements OnInit {
   }
 
   modifier(station: Station): void {
-    this.nom.setValue(station.nom);
+    this.formulaireStation.setValue({ nom: station.nom, positionX: station.positionX, positionY: station.positionY });
     this.erreur.set(null);
     this.enModification.set(true);
   }
 
-  annuler(): void {
-    this.enModification.set(false);
-    this.erreur.set(null);
-  }
-
   enregistrer(station: Station): void {
-    if (this.nom.invalid) {
-      this.erreur.set('Le nom est obligatoire (100 caractères maximum).');
+    if (this.formulaireStation.invalid) {
+      this.erreur.set(messagePosition(this.formulaireStation) ?? 'Le nom est obligatoire (100 caractères maximum).');
       return;
     }
-    this.stationService.modifierStation(station.id, this.nom.value.trim()).subscribe({
+    const { nom, positionX, positionY } = this.formulaireStation.getRawValue();
+    this.stationService.modifierStation(station.id, { nom: (nom ?? '').trim(), positionX, positionY }).subscribe({
       next: modifiee => {
         this.station.set(modifiee);
         this.enModification.set(false);
@@ -94,6 +98,13 @@ export class StationPage implements OnInit {
       error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, 'Échec de la modification.')),
     });
   }
+
+  annuler(): void {
+    this.enModification.set(false);
+    this.erreur.set(null);
+  }
+
+
 
   ajouter(station: Station): void {
     if (this.formulaire.invalid) {

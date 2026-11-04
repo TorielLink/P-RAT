@@ -1,0 +1,63 @@
+.carte-et-fenetre {
+  display: flex;
+  flex-wrap: wrap; /* petit écran : la fenêtre passe sous la carte */
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.carte {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  border: 1px solid #d0d7de;
+}
+
+.ligne {
+  stroke: #eaeef2;
+  stroke-width: 1;
+}
+
+.ligne-forte {
+  stroke: #afb8c1;
+}
+
+.marqueur {
+  cursor: pointer;
+}
+
+.marqueur:focus {
+  outline: none;
+}
+
+/* Focus clavier et sélection : anneau autour du marqueur */
+.marqueur:focus-visible circle,
+.marqueur.selectionne circle {
+  stroke: #24292f;
+  stroke-width: 3;
+}
+
+.symbole {
+  fill: #ffffff;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.nom {
+  fill: #24292f;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.fenetre {
+  min-width: 220px;
+  border: 1px solid #d0d7de;
+  padding: 0.75rem;
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+}

@@ -14,6 +14,7 @@ import { Affectations } from './pages/affectations/affectations';
 import { Prestataires } from './pages/prestataires/prestataires';
 import { PrestatairePage } from './pages/prestataire/prestataire';
 import { accueilGuard, dejaConnecteGuard, profilGuard } from './core/auth/profil.guard';
+import { Carte } from './pages/carte/carte';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'stations', component: Stations },
       { path: 'stations/:id', component: StationPage },
       { path: 'equipements', component: Equipements },
+      { path: 'carte', component: Carte, canActivate: [profilGuard('ADMIN')] },
       {
         path: 'equipements/:id/declarer-incident',
         component: NouvelIncident,
