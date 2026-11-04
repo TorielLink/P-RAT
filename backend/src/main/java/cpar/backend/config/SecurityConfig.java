@@ -62,7 +62,9 @@ public class SecurityConfig {
                         // Lecture : Admin (tous) et Prestataire (sa propre entreprise)
                         .requestMatchers(HttpMethod.GET, "/api/prestataires/**").hasAnyRole("ADMIN", "PRESTATAIRE")
                         .requestMatchers("/api/prestataires/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        // Toute l'API exige une session
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll())
                 .formLogin(formulaire -> formulaire
                         .loginProcessingUrl("/api/auth/login")
                         .usernameParameter("login")
