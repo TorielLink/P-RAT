@@ -23,16 +23,16 @@ export const AFFICHAGE_NIVEAU: Record<NiveauAttention, { icone: string; libelle:
       display: inline-flex;
       gap: 0.35em;
       padding: 0.1em 0.6em;
-      border: 1px solid;
+      border: 1px solid transparent;
       border-radius: 1em;
       font-weight: 600;
       white-space: nowrap;
     }
-    .VERT { color: #1a7f37; background: #dafbe1; }
-    .ORANGE { color: #9a4e00; background: #fff1e5; }
-    .ROUGE { color: #cf222e; background: #ffebe9; }
-    .PRIS_EN_CHARGE { color: #0550ae; background: #ddf4ff; }
-    .RESOLU { color: #57606a; background: #eaeef2; }
+    .VERT { color: var(--vert); background: var(--vert-fond); }
+    .ORANGE { color: var(--orange); background: var(--orange-fond); }
+    .ROUGE { color: var(--rouge); background: var(--rouge-fond); }
+    .PRIS_EN_CHARGE { color: var(--bleu); background: var(--bleu-fond); }
+    .RESOLU { color: var(--gris); background: var(--gris-fond); }
   `,
 })
 export class NiveauAttentionComponent {

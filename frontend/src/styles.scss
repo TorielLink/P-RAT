@@ -1,1 +1,444 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'styles/theme';
+
+// ---------- Base ----------
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark; // barres de défilement et listes déroulantes sombres
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--police);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--lien);
+}
+
+a:hover {
+  color: var(--lien-survol);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-survol);
+  outline-offset: 2px;
+}
+
+h1 {
+  margin: 0 0 20px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+h2 {
+  margin: 24px 0 12px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+small {
+  color: var(--texte-discret);
+}
+
+// Chiffres, références, durées
+.mono,
+code {
+  font-family: var(--police-mono);
+}
+
+// ---------- Mise en page : bandeau en haut + contenu ----------
+
+.coquille {
+  min-height: 100vh;
+}
+
+.contenu {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 32px;
+}
+
+@media (max-width: 700px) {
+  .contenu {
+    padding: 20px 16px;
+  }
+}
+
+// Blocs des pages (affectation, évaluation, journal, fenêtre de la carte)
+.affectation,
+.evaluation,
+.journal,
+.fenetre {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
+
+.affectation h2,
+.evaluation h2,
+.journal h2 {
+  margin-top: 0;
+}
+
+// ---------- Formulaires ----------
+
+label {
+  display: block;
+  margin: 12px 0 4px;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+input,
+select,
+textarea {
+  max-width: 100%;
+  min-height: 36px;
+  padding: 7px 10px;
+  font: inherit;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--texte-discret);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-survol);
+  box-shadow: 0 0 0 3px var(--accent-fond);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--texte-discret);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+// Champ invalide après passage de l'utilisateur (classes posées par Angular)
+input.ng-invalid.ng-touched,
+select.ng-invalid.ng-touched,
+textarea.ng-invalid.ng-touched {
+  border-color: var(--rouge-trait);
+}
+
+// Liste déroulante : flèche dessinée, identique sur tous les navigateurs
+select {
+  appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238b949e' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+select option {
+  color: var(--texte);
+  background: var(--surface);
+}
+
+// Champs numériques (coordonnées) : chiffres alignés, sans flèches
+input[type='number'] {
+  font-family: var(--police-mono);
+  appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+// Cases à cocher, boutons radio
+input[type='checkbox'],
+input[type='radio'] {
+  min-height: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+// Curseurs (sliders)
+input[type='range'] {
+  appearance: none;
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  min-height: 0;
+  padding: 0;
+  background: var(--bordure);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent-survol);
+  border: 3px solid var(--fond);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--accent-survol);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--accent-survol);
+  border: 3px solid var(--fond);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--accent-survol);
+}
+
+input[type='range']::-moz-range-progress {
+  height: 6px;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+// ---------- Boutons ----------
+// Par défaut : bouton secondaire (contour).
+// type="submit" ou class="principal" : action principale. class="danger" : suppression.
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  margin: 4px 8px 4px 0;
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--texte);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.05s;
+}
+
+button:hover {
+  background: var(--surface-survol);
+  border-color: var(--texte-discret);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button[type='submit'],
+button.principal {
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+button[type='submit']:hover,
+button.principal:hover {
+  background: var(--accent-survol);
+  border-color: var(--accent-survol);
+}
+
+button.danger {
+  color: var(--rouge);
+  background: transparent;
+  border-color: var(--rouge-trait);
+}
+
+button.danger:hover {
+  color: #ffffff;
+  background: var(--rouge-trait);
+}
+
+button:disabled,
+button:disabled:hover {
+  opacity: 0.45;
+  color: var(--texte-discret);
+  background: var(--surface);
+  border-color: var(--bordure);
+  cursor: not-allowed;
+  transform: none;
+}
+
+// Pagination de l'historique
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--texte-discret);
+}
+
+.pagination button {
+  margin: 0;
+}
+
+// ---------- Tableaux ----------
+
+table {
+  width: 100%;
+  border-collapse: separate; // nécessaire pour les coins arrondis
+  border-spacing: 0;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+  overflow: hidden;
+}
+
+th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--texte-discret);
+  border-bottom: 1px solid var(--bordure);
+}
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--bordure-douce);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tr.cliquable {
+  cursor: pointer;
+}
+
+tbody tr td {
+  transition: background 0.1s;
+}
+
+tr.cliquable:hover td {
+  background: var(--surface-survol);
+}
+
+// Téléphone : le tableau défile horizontalement au lieu d'élargir la page
+@media (max-width: 700px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+// ---------- Messages ----------
+
+.erreur,
+.information {
+  padding: 10px 14px;
+  border: 1px solid;
+  border-radius: var(--rayon);
+}
+
+.erreur {
+  color: var(--rouge);
+  background: var(--rouge-fond);
+  border-color: var(--rouge-trait);
+}
+
+.information {
+  color: var(--bleu);
+  background: var(--bleu-fond);
+  border-color: var(--bleu-trait);
+}
+
+.erreur-champ {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--rouge);
+}
+
+// ---------- Page de connexion (sans menu) ----------
+
+.page-connexion {
+  max-width: 360px;
+  margin: 10vh auto;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
+
+.page-connexion input {
+  width: 100%;
+}
+
+.page-connexion button {
+  width: 100%;
+  margin: 20px 0 0;
+}
+
+// ---------- Finitions ----------
+
+::selection {
+  color: #ffffff;
+  background: var(--accent);
+}
+
+// Barres de défilement fines et sombres
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bordure) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bordure);
+  border: 2px solid var(--fond);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--texte-discret);
+}
+
+// Pour qui a demandé moins d'animations dans son système
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

@@ -60,7 +60,7 @@
           <td><app-etat-equipement [etat]="eq.etat" /></td>
           <td>
             @if (authService.peutGererEquipements()) {
-              <button type="button" (click)="supprimer(eq)">Supprimer</button>
+              <button type="button" class="danger" (click)="supprimer(eq)">Supprimer</button>
             }
           </td>
         </tr>

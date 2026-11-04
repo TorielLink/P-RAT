@@ -1,22 +1,27 @@
 @if (authService.utilisateurCourant(); as utilisateur) {
-  <header class="entete">
-    <nav>
+  <header class="bandeau">
+    <a class="marque" routerLink="/">P-RAT</a>
+
+    <nav aria-label="Navigation principale">
       @if (authService.peutVoirTableauDeBord()) {
-        <a routerLink="/tableau-de-bord">Tableau de bord</a> |
+        <a routerLink="/tableau-de-bord" routerLinkActive="actif" ariaCurrentWhenActive="page">Tableau de bord</a>
       }
       @if (authService.estAdmin()) {
-        <a routerLink="/carte">Carte</a> |
+        <a routerLink="/carte" routerLinkActive="actif" ariaCurrentWhenActive="page">Carte</a>
       }
-      <a routerLink="/incidents">Incidents</a> |
-      <a routerLink="/stations">Stations</a> |
-      <a routerLink="/equipements">Équipements</a>
+      <a routerLink="/incidents" routerLinkActive="actif" ariaCurrentWhenActive="page">Incidents</a>
+      <a routerLink="/stations" routerLinkActive="actif" ariaCurrentWhenActive="page">Stations</a>
+      <a routerLink="/equipements" routerLinkActive="actif" ariaCurrentWhenActive="page">Équipements</a>
       @if (authService.peutVoirPrestataires()) {
-        | <a routerLink="/prestataires">{{ authService.estPrestataire() ? 'Mes évaluations' : 'Prestataires' }}</a>
+        <a routerLink="/prestataires" routerLinkActive="actif" ariaCurrentWhenActive="page">
+          {{ authService.estPrestataire() ? 'Mes évaluations' : 'Prestataires' }}
+        </a>
       }
     </nav>
-    <span>
-      Bonjour {{ utilisateur.prenom }} ({{ utilisateur.profilLibelle }}) |
-      <button type="button" class="lien" (click)="seDeconnecter()">Déconnectez-vous</button>
-    </span>
+
+    <div class="utilisateur">
+      <span>{{ utilisateur.prenom }} <span class="profil">· {{ utilisateur.profilLibelle }}</span></span>
+      <button type="button" (click)="seDeconnecter()">Se déconnecter</button>
+    </div>
   </header>
 }

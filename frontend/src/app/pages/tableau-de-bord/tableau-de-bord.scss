@@ -1,12 +1,47 @@
-.indicateurs,
+// Indicateurs : une tuile par chiffre
+.indicateurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.indicateurs > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  font-size: 12px;
+  color: var(--texte-discret);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
+
+.indicateurs strong {
+  font-family: var(--police-mono);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--texte);
+}
+
 .filtres {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 1rem;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
 }
 
-tr.cliquable {
-  cursor: pointer;
+.filtres label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
 }

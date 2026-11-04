@@ -81,10 +81,10 @@
       <button type="button" (click)="modifier(inc)">Modifier</button>
     }
     @if (authService.peutResoudreIncidents() && inc.statut !== 'RESOLU') {
-      <button type="button" (click)="resoudre(inc)">Déclarer résolu</button>
+      <button type="button" class="principal" (click)="resoudre(inc)">Déclarer résolu</button>
     }
     @if (authService.estAdmin()) {
-      <button type="button" (click)="supprimer(inc)">Supprimer</button>
+      <button type="button" class="danger" (click)="supprimer(inc)">Supprimer</button>
     }
 
     <!-- affecter ou réaffecter un prestataire (admin + incident non résolu) -->
@@ -98,7 +98,7 @@
             <option [ngValue]="prestataire.id">{{ prestataire.nom }}</option>
           }
         </select>
-        <button type="button" (click)="affecter(inc)" [disabled]="choixPrestataire.value === null">Valider</button>
+        <button type="button" class="principal" (click)="affecter(inc)" [disabled]="choixPrestataire.value === null">Valider</button>
       </section>
     }
 
@@ -147,7 +147,7 @@
       } @else {
         <table>
           <thead>
-          <tr><th>Date</th><th>Auteur</th><th>Événement</th><th>Détail</th></tr>
+            <tr><th>Date</th><th>Auteur</th><th>Événement</th><th>Détail</th></tr>
           </thead>
           <tbody>
             @for (evenement of journal(); track $index) {

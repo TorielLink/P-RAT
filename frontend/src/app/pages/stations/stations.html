@@ -22,7 +22,7 @@
       <li>
         <a [routerLink]="['/stations', station.id]">{{ station.nom }}</a>
         @if (authService.peutGererStations()) {
-          <button type="button" (click)="supprimer(station)">Supprimer</button>
+          <button type="button" class="danger" (click)="supprimer(station)">Supprimer</button>
         }
       </li>
     }

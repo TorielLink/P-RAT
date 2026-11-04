@@ -23,7 +23,7 @@ const AFFICHAGE: Record<EtatEquipement, { icone: string; libelle: string }> = {
       align-items: center;
       gap: 0.35em;
       padding: 0.1em 0.6em;
-      border: 1px solid;
+      border: 1px solid transparent;
       border-radius: 1em;
       font-weight: 600;
       white-space: nowrap;
@@ -31,11 +31,11 @@ const AFFICHAGE: Record<EtatEquipement, { icone: string; libelle: string }> = {
     .icone {
       font-weight: 700;
     }
-    /* Texte foncé sur fond clair : contraste suffisant (WCAG AA) */
-    .EN_SERVICE { color: #1a7f37; background: #dafbe1; }
-    .EN_PANNE { color: #cf222e; background: #ffebe9; }
-    .EN_MAINTENANCE { color: #9a6700; background: #fff8c5; }
-    .HORS_SERVICE { color: #57606a; background: #eaeef2; }
+    /* Texte clair sur fond foncé : contraste suffisant (WCAG AA) */
+    .EN_SERVICE { color: var(--vert); background: var(--vert-fond); }
+    .EN_PANNE { color: var(--rouge); background: var(--rouge-fond); }
+    .EN_MAINTENANCE { color: var(--jaune); background: var(--jaune-fond); }
+    .HORS_SERVICE { color: var(--gris); background: var(--gris-fond); }
   `,
 })
 export class EtatEquipementComponent {
