@@ -89,4 +89,12 @@ public class IncidentController {
     public List<IncidentActifDto> obtenirIncidentsActifs(Authentication authentification) {
         return incidentService.obtenirIncidentsActifs(authentification.getName());
     }
+
+    @PostMapping("/incidents/{id}/evaluation")
+    public ResponseEntity<EvaluationDto> evaluerIncident(@PathVariable Long id,
+                                                         @Valid @RequestBody EvaluationRequest demande) {
+        EvaluationDto evaluation = EvaluationDto.depuis(incidentService.evaluerIncident(id, demande));
+        // l'eval n'a pas d'adresse propre : elle se consulte dans le détail de l'incident
+        return ResponseEntity.created(URI.create("/api/incidents/" + id)).body(evaluation);
+    }
 }

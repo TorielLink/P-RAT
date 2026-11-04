@@ -18,16 +18,16 @@
 ## CHOIX TECHNIQUES
 ### Droits par profil : # Droits d'accès par profil
 
-| N° | Fonctionnalité | Profil 1Superviseur | Profil 2Prestataire externe | Profil 3Agent de terrain |
-| --- | --- | --- | --- | --- |
-| F2–F3 | Consulter équipements et fiches | WL | L | WL |
-| F4 | Déclarer un incident | WL | WL | WL |
-| F5–F6 | Consulter / modifier un incident | WL | WL | WL |
-| F7 | Affecter ou réaffecter un prestataire | WL | X | X |
-| F8 | Déclarer un incident résolu | WL | X | X |
-| F9 | Consulter l'historique | WL | L | L |
-| F10 | Évaluer un prestataire | WL | X | X |
-| F11 | Tableau de bord | WL | L | L |
+| N° | Fonctionnalité | Profil 1Admin | Profil 2Prestataire externe | Profil 3Agent de terrain |
+| --- | --- |------------| --- | --- |
+| F2–F3 | Consulter équipements et fiches | WL         | L | WL |
+| F4 | Déclarer un incident | WL         | WL | WL |
+| F5–F6 | Consulter / modifier un incident | WL         | WL | WL |
+| F7 | Affecter ou réaffecter un prestataire | WL         | X | X |
+| F8 | Déclarer un incident résolu | WL         | X | X |
+| F9 | Consulter l'historique | WL         | L | L |
+| F10 | Évaluer un prestataire | WL         | X | X |
+| F11 | Tableau de bord | WL         | L | L |
 
 WL : Lecture et écriture &nbsp;  L : Lecture seule &nbsp; X : Aucun accès
 
@@ -136,6 +136,31 @@ ISP parce que ...
 - **Lot alpha n°3 (aide à l'affectation)** : la recommandation proposera un prestataire, mais
   l'affectation passera toujours par `IncidentService.affecterPrestataire`, pour ne jamais contourner
   RG5 et RG10.
+
+### Évaluation des prestataires
+
+- **`POST /api/incidents/{id}/evaluation`** (corps : `note`, `commentaire`) → `201 Created`,
+  `Location: /api/incidents/{id}` (l'évaluation se consulte dans le détail de l'incident).
+  Admin uniquement (`SecurityConfig`).
+- **Validation** : note entière obligatoire de 1 à 5 (`@NotNull`, `@Min`, `@Max`) ; une note à virgule
+  est refusée au lieu d'être tronquée (`accept-float-as-int=false`) ; commentaire facultatif, 500
+  caractères au plus. Reprise dans Angular : liste déroulante 1 à 5, compteur de caractères.
+- **RG8 dans le modèle** : `Incident.verifierQuIlPeutEtreEvalue` refuse un incident non résolu ou sans
+  prestataire (`EvaluationImpossibleException`, 409, un message précis par cas).
+- **Une seule évaluation par incident** : contrôle dans le service (`existsByIncidentId`) **et**
+  contrainte unique en base (`cleIncidentUnique`, V1). `saveAndFlush` envoie l'INSERT immédiatement :
+  si deux évaluations arrivent en même temps, la violation de contrainte est traduite en 409, pas en 500.
+- **Date de l'évaluation** : `LocalDate.now(horloge)`, fixée par le serveur.
+- **Ordre des contrôles** : 404 (incident) → 409 (non résolu) → 409 (sans prestataire) → 409 (déjà évalué).
+- **Atomicité (RG10)** : `@Transactional` ; tous les contrôles précèdent l'insertion.
+- **Note moyenne calculée à la volée** : requête JPQL d'agrégation
+  (`EvaluationRepository.calculerStatistiquesParPrestataire`, `AVG` et `COUNT` avec `GROUP BY`),
+  jamais stockée. Arrondie à une décimale à l'affichage (« 4,5 / 5 ») ; « Pas encore évalué » sinon.
+- **Où consulter les notes** : page Prestataires (moyenne et nombre d'évaluations), fiche prestataire
+  (liste des évaluations), détail de l'incident (F5) et historique (F9). Les notes de l'historique sont
+  chargées en une seule requête par page (`findByIncidentIdIn`), pour éviter le problème N+1.
+- **Droits de lecture** : Admin, tous les prestataires ; Prestataire, sa seule entreprise
+  (filtre dans `PrestataireService`, 404 sur la fiche d'un autre) ; Agent, aucun accès (403).
 
 ### Gestion des exceptions
 

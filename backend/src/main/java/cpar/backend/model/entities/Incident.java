@@ -1,5 +1,6 @@
 package cpar.backend.model.entities;
 
+import cpar.backend.exception.EvaluationImpossibleException;
 import cpar.backend.model.enums.PrioriteIncident;
 import cpar.backend.model.enums.StatutIncident;
 import jakarta.persistence.*;
@@ -97,6 +98,16 @@ public class Incident {
         return prestataire != null
                 && prestataire.getId() != null
                 && Objects.equals(prestataire.getId(), candidat.getId());
+    }
+
+    /** seule l'intervention d'un prestataire sur un incident résolu peut être évaluée. */
+    public void verifierQuIlPeutEtreEvalue() {
+        if (statut != StatutIncident.RESOLU) {
+            throw EvaluationImpossibleException.incidentNonResolu(id);
+        }
+        if (prestataire == null) {
+            throw EvaluationImpossibleException.sansPrestataire(id);
+        }
     }
 
     public Long getId() {

@@ -1,6 +1,7 @@
 package cpar.backend.service;
 
 import cpar.backend.dto.*;
+import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.enums.StatutIncident;
 
@@ -32,4 +33,6 @@ public interface IIncidentService {
     PageDto<HistoriqueIncidentDto> obtenirHistorique(String login, int page, int taille);
 
     List<IncidentActifDto> obtenirIncidentsActifs(String login);
+
+    Evaluation evaluerIncident(Long id, EvaluationRequest demande);
 }

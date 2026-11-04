@@ -17,9 +17,10 @@ public record HistoriqueIncidentDto(
         LocalDateTime dateOuverture,
         LocalDateTime dateResolution,
         long dureeTraitementMinutes,
-        String prestataireNom) {
+        String prestataireNom,
+        Integer note) {
 
-    public static HistoriqueIncidentDto depuis(Incident incident) {
+    public static HistoriqueIncidentDto depuis(Incident incident, Integer note) {
         Equipement equipement = incident.getEquipement();
         Station station = equipement.getStation();
         return new HistoriqueIncidentDto(
@@ -32,6 +33,7 @@ public record HistoriqueIncidentDto(
                 incident.getDateOuverture(),
                 incident.getDateResolution(),
                 incident.dureeOuverture(incident.getDateResolution()).toMinutes(),
-                incident.getPrestataire() != null ? incident.getPrestataire().getNom() : null);
+                incident.getPrestataire() != null ? incident.getPrestataire().getNom() : null,
+                note);
     }
 }

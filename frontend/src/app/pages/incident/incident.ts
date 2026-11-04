@@ -1,25 +1,27 @@
-import {Component, OnInit, inject, signal} from '@angular/core';
-import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
+import {Component, inject, OnInit, signal} from '@angular/core';
+import {HttpErrorResponse, HttpStatusCode} from '@angular/common/http';
 import {DatePipe} from '@angular/common';
 import {FormBuilder, FormControl, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {AuthService} from '../../core/auth/auth.service';
 import {Prestataire, PrestataireService} from '../../core/prestataire/prestataire.service';
 import {
+  COMMENTAIRE_MAX,
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
   Incident,
   IncidentDetail,
   IncidentService,
-  LIBELLES_NIVEAU,
-  LIBELLES_STATUT,
-  PRIORITES_INCIDENT,
+  NOTE_MAX,
+  NOTE_MIN,
+  NOTES_POSSIBLES,
   PrioriteIncident,
+  PRIORITES_INCIDENT,
 } from '../../core/incident/incident.service';
 import {formaterDuree} from '../../shared/formater-duree';
-import { LibellePipe } from '../../shared/libelle.pipe';
-import { NiveauAttentionComponent } from '../../shared/niveau-attention';
-import { StatutIncidentComponent } from '../../shared/statut-incident';
+import {LibellePipe} from '../../shared/libelle.pipe';
+import {NiveauAttentionComponent} from '../../shared/niveau-attention';
+import {StatutIncidentComponent} from '../../shared/statut-incident';
 
 /** Page /incidents/:id : détail d'un incident. */
 @Component({
@@ -52,6 +54,15 @@ export class IncidentPage implements OnInit {
   readonly formulaire = inject(FormBuilder).nonNullable.group({
     description: ['', [Validators.required, Validators.minLength(DESCRIPTION_MIN), Validators.maxLength(DESCRIPTION_MAX)]],
     priorite: ['MOYENNE' as PrioriteIncident, Validators.required],
+  });
+
+  protected readonly notesPossibles = NOTES_POSSIBLES;
+  protected readonly commentaireMax = COMMENTAIRE_MAX;
+  readonly erreursEvaluation = signal<Record<string, string>>({});
+
+  readonly formulaireEvaluation = inject(FormBuilder).group({
+    note: [null as number | null, [Validators.required, Validators.min(NOTE_MIN), Validators.max(NOTE_MAX)]],
+    commentaire: ['', Validators.maxLength(COMMENTAIRE_MAX)],
   });
 
   ngOnInit(): void {
@@ -130,6 +141,36 @@ export class IncidentPage implements OnInit {
         this.charger(incident.id);
       },
       error: (erreur: HttpErrorResponse) => this.erreur.set(this.message(erreur, "Échec de l'affectation.")),
+    });
+  }
+
+  peutEtreEvalue(incident: IncidentDetail): boolean {
+    return this.authService.estAdmin()
+      && incident.statut === 'RESOLU'
+      && incident.prestataireId !== null
+      && incident.evaluation === null;
+  }
+
+  evaluer(incident: IncidentDetail): void {
+    this.erreursEvaluation.set({});
+    if (this.formulaireEvaluation.invalid) {
+      this.formulaireEvaluation.markAllAsTouched();
+      return;
+    }
+    const { note, commentaire } = this.formulaireEvaluation.getRawValue();
+    this.incidentService.evaluerIncident(incident.id, { note: note!, commentaire: commentaire?.trim() || null }).subscribe({
+      next: () => {
+        this.formulaireEvaluation.reset({ note: null, commentaire: '' });
+        this.information.set('Évaluation enregistrée.');
+        this.charger(incident.id);
+      },
+      error: (erreur: HttpErrorResponse) => {
+        if (erreur.status === HttpStatusCode.BadRequest && erreur.error?.erreurs) {
+          this.erreursEvaluation.set(erreur.error.erreurs);
+          return;
+        }
+        this.erreur.set(this.message(erreur, "Échec de l'enregistrement de l'évaluation."));
+      },
     });
   }
 

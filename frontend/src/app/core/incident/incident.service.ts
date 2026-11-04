@@ -42,6 +42,18 @@ export interface ModificationIncidentRequest {
 export interface EvaluationIncident {
   note: number;
   commentaire: string | null;
+  dateEvaluation: string;
+}
+
+export const NOTE_MIN = 1;
+export const NOTE_MAX = 5;
+export const COMMENTAIRE_MAX = 500;
+export const NOTES_POSSIBLES = Array.from({ length: NOTE_MAX - NOTE_MIN + 1 }, (_, rang) => NOTE_MIN + rang);
+
+/** Correspond à EvaluationRequest côté backend. */
+export interface EvaluationRequest {
+  note: number;
+  commentaire: string | null;
 }
 
 /** Correspond à IncidentDetailDto côté backend. */
@@ -150,6 +162,10 @@ export class IncidentService {
 
   obtenirIncidentsActifs(): Observable<IncidentActif[]> {
     return this.http.get<IncidentActif[]>(`${this.url}/actifs`);
+  }
+
+  evaluerIncident(id: number, demande: EvaluationRequest): Observable<EvaluationIncident> {
+    return this.http.post<EvaluationIncident>(`${this.url}/${id}/evaluation`, demande);
   }
 
 }

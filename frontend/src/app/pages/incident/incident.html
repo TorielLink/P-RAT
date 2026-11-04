@@ -35,10 +35,10 @@
   }
 
   @if (inc.evaluation; as evaluation) {
-    <p>Évaluation : {{ evaluation.note }} / 5</p>
+    <p>Évaluation : {{ evaluation.note }} / 5 (le {{ evaluation.dateEvaluation | date: 'dd/MM/yyyy' }})</p>
     <p>Commentaire : {{ evaluation.commentaire ?? '—' }}</p>
   } @else if (inc.statut === 'RESOLU') {
-    <p>Évaluation : pas encore évalué</p>
+    <p>Évaluation : {{ inc.prestataireId ? 'pas encore évalué' : 'aucune intervention de prestataire à évaluer' }}</p>
   }
 
   @if (enModification()) {
@@ -101,10 +101,45 @@
         <button type="button" (click)="affecter(inc)" [disabled]="choixPrestataire.value === null">Valider</button>
       </section>
     }
+
+    <!-- évaluer l'intervention (admin + incident résolu, affecté, pas encore évalué) -->
+    @if (peutEtreEvalue(inc)) {
+      <section class="evaluation">
+        <h2>Évaluer l'intervention de {{ inc.prestataireNom }}</h2>
+        <form [formGroup]="formulaireEvaluation" (ngSubmit)="evaluer(inc)">
+          <label for="note">Note</label>
+          <select id="note" formControlName="note">
+            <option [ngValue]="null" disabled>Choisir une note…</option>
+            @for (note of notesPossibles; track note) {
+              <option [ngValue]="note">{{ note }} / 5</option>
+            }
+          </select>
+          @if (formulaireEvaluation.controls.note.touched && formulaireEvaluation.controls.note.invalid) {
+            <p class="erreur-champ">Choisissez une note de 1 à 5.</p>
+          }
+          @if (erreursEvaluation()['note']; as message) {
+            <p class="erreur-champ">{{ message }}</p>
+          }
+
+          <label for="commentaire">Commentaire (facultatif)</label>
+          <textarea id="commentaire" formControlName="commentaire" rows="3" cols="60"
+                    [attr.maxlength]="commentaireMax"></textarea>
+          <small>{{ formulaireEvaluation.controls.commentaire.value?.length ?? 0 }} / {{ commentaireMax }}</small>
+          @if (formulaireEvaluation.controls.commentaire.hasError('maxlength')) {
+            <p class="erreur-champ">Le commentaire ne doit pas dépasser {{ commentaireMax }} caractères.</p>
+          }
+          @if (erreursEvaluation()['commentaire']; as message) {
+            <p class="erreur-champ">{{ message }}</p>
+          }
+
+          <button type="submit">Enregistrer l'évaluation</button>
+        </form>
+      </section>
+    }
   }
 }
 
-<!-- confirmation d'une affectation ou « déjà affecté » -->
+<!-- confirmation d'une affectation, d'une évaluation, ou « déjà affecté » -->
 @if (information()) {
   <p class="information" role="status">{{ information() }}</p>
 }

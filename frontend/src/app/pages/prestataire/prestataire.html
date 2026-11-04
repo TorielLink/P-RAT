@@ -1,0 +1,40 @@
+@if (fiche(); as prestataire) {
+  <h1>{{ prestataire.nom }}</h1>
+  <p>Contact : {{ prestataire.email ?? '—' }} · {{ prestataire.telephone ?? '—' }}</p>
+  <p>
+    Note moyenne : <strong>{{ formaterNoteMoyenne(prestataire.noteMoyenne) }}</strong>
+    @if (prestataire.nombreEvaluations > 0) {
+      ({{ prestataire.nombreEvaluations }} évaluation{{ prestataire.nombreEvaluations > 1 ? 's' : '' }})
+    }
+  </p>
+
+  <h2>Évaluations</h2>
+  @if (prestataire.evaluations.length === 0) {
+    <p>Aucune évaluation pour l'instant.</p>
+  } @else {
+    <table>
+      <tr>
+        <th>Date</th>
+        <th>Incident</th>
+        <th>Équipement</th>
+        <th>Station</th>
+        <th>Note</th>
+        <th>Commentaire</th>
+      </tr>
+      @for (evaluation of prestataire.evaluations; track evaluation.incidentId) {
+        <tr>
+          <td>{{ evaluation.dateEvaluation | date: 'dd/MM/yyyy' }}</td>
+          <td><a [routerLink]="['/incidents', evaluation.incidentId]">n°{{ evaluation.incidentId }}</a></td>
+          <td>{{ evaluation.equipementReference ?? '—' }}</td>
+          <td>{{ evaluation.stationNom ?? '—' }}</td>
+          <td>{{ evaluation.note }} / 5</td>
+          <td>{{ evaluation.commentaire ?? '—' }}</td>
+        </tr>
+      }
+    </table>
+  }
+}
+
+@if (erreur()) {
+  <p class="erreur" role="alert">{{ erreur() }}</p>
+}

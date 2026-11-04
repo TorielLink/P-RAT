@@ -10,6 +10,9 @@
       <a routerLink="/incidents">Incidents</a> |
       <a routerLink="/stations">Stations</a> |
       <a routerLink="/equipements">Équipements</a>
+      @if (authService.peutVoirPrestataires()) {
+        | <a routerLink="/prestataires">{{ authService.estPrestataire() ? 'Mes évaluations' : 'Prestataires' }}</a>
+      }
     </nav>
     <span>
       Bonjour {{ utilisateur.prenom }} ({{ utilisateur.profilLibelle }}) |

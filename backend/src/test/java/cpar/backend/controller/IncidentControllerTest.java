@@ -4,6 +4,7 @@ import cpar.backend.config.SecurityConfig;
 import cpar.backend.dto.IncidentDetailDto;
 import cpar.backend.exception.*;
 import cpar.backend.model.entities.Equipement;
+import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.entities.Prestataire;
 import cpar.backend.model.enums.StatutIncident;
@@ -302,6 +303,82 @@ class IncidentControllerTest {
     @WithMockUser(roles = "PRESTATAIRE")
     void unPrestataireNePeutPasAffecter() throws Exception {
         mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(incidentService);
+    }
+
+    // -------- ÉVALUATION --------
+
+    private static final String URL_EVALUATION = "/api/incidents/1/evaluation";
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void uneEvaluationValideRenvoie201AvecLocation() throws Exception {
+        Evaluation evaluation = new Evaluation();
+        evaluation.setNote(4);
+        when(incidentService.evaluerIncident(eq(1L), any())).thenReturn(evaluation);
+
+        mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
+                    { "note": 4, "commentaire": "Intervention rapide." }"""))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/incidents/1"))
+                .andExpect(jsonPath("$.note").value(4));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void uneNoteDeZeroEstRefuseeAvecMessage() throws Exception {
+        mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
+                    { "note": 0 }"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erreurs.note").value("La note doit être un entier de 1 à 5."));
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void uneNoteDeSixEstRefusee() throws Exception {
+        mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
+                    { "note": 6 }"""))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void uneNoteAbsenteEstRefusee() throws Exception {
+        mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("{ }"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erreurs.note").value("La note est obligatoire."));
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void evaluerUnIncidentDejaEvalueRenvoie409() throws Exception {
+        when(incidentService.evaluerIncident(eq(1L), any())).thenThrow(EvaluationImpossibleException.dejaEvalue(1L));
+
+        mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
+                    { "note": 4 }"""))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        "L'incident 1 a déjà été évalué : une seule évaluation est possible par incident."));
+    }
+
+    @Test
+    @WithMockUser(roles = "AGENT")
+    void unAgentNePeutPasEvaluer() throws Exception {
+        mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
+                    { "note": 4 }"""))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(incidentService);
+    }
+
+    @Test
+    @WithMockUser(roles = "PRESTATAIRE")
+    void unPrestataireNePeutPasEvaluer() throws Exception {
+        mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
+                    { "note": 4 }"""))
                 .andExpect(status().isForbidden());
         verifyNoInteractions(incidentService);
     }

@@ -7,7 +7,6 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "evaluation")
@@ -32,7 +31,7 @@ public class Evaluation {
 
     @NotNull
     @Column(name = "dateEvaluation", nullable = false)
-    private LocalDate dateEvaluation = LocalDate.now();
+    private LocalDate dateEvaluation;
 
     public Long getId() {
         return id;
