@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Station, StationService } from '../../core/station/station.service';
+import { VALIDATEURS_POSITION, messagePosition, positionCompleteValidator } from '../../shared/position';
 
 /** Page /stations */
 @Component({
@@ -19,9 +20,14 @@ export class Stations implements OnInit {
   readonly stations = signal<Station[]>([]);
   readonly erreur = signal<string | null>(null);
 
-  readonly formulaire = inject(FormBuilder).nonNullable.group({
-    nom: ['', [Validators.required, Validators.maxLength(100)]],
-  });
+  readonly formulaire = inject(FormBuilder).group(
+    {
+      nom: ['', [Validators.required, Validators.maxLength(100)]],
+      positionX: [null as number | null, VALIDATEURS_POSITION],
+      positionY: [null as number | null, VALIDATEURS_POSITION],
+    },
+    { validators: positionCompleteValidator }
+  );
 
   ngOnInit(): void {
     this.charger();
@@ -36,10 +42,11 @@ export class Stations implements OnInit {
 
   ajouter(): void {
     if (this.formulaire.invalid) {
-      this.erreur.set('Le nom est obligatoire (100 caractères maximum).');
+      this.erreur.set(messagePosition(this.formulaire) ?? 'Le nom est obligatoire (100 caractères maximum).');
       return;
     }
-    this.stationService.ajouterStation(this.formulaire.getRawValue().nom.trim()).subscribe({
+    const { nom, positionX, positionY } = this.formulaire.getRawValue();
+    this.stationService.ajouterStation({ nom: (nom ?? '').trim(), positionX, positionY }).subscribe({
       next: () => {
         this.formulaire.reset();
         this.erreur.set(null);

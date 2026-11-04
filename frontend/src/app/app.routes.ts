@@ -12,6 +12,7 @@ import { Historique } from './pages/historique/historique';
 import { IncidentPage } from './pages/incident/incident';
 import { Affectations } from './pages/affectations/affectations';
 import { accueilGuard, dejaConnecteGuard, profilGuard } from './core/auth/profil.guard';
+import { Carte } from './pages/carte/carte';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -24,6 +25,7 @@ export const routes: Routes = [
       { path: 'stations', component: Stations },
       { path: 'stations/:id', component: StationPage },
       { path: 'equipements', component: Equipements },
+      { path: 'carte', component: Carte, canActivate: [profilGuard('ADMIN')] },
       {
         path: 'equipements/:id/declarer-incident',
         component: NouvelIncident,

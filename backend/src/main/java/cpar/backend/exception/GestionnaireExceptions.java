@@ -19,7 +19,7 @@ public class GestionnaireExceptions {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
-    @ExceptionHandler({ReferenceDejaUtiliseeException.class, IncidentDejaResoluException.class})
+    @ExceptionHandler({ReferenceDejaUtiliseeException.class, IncidentDejaResoluException.class, PositionOccupeeException.class})
     public ProblemDetail conflit(RuntimeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }

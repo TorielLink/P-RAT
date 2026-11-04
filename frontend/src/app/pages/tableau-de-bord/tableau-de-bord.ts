@@ -1,12 +1,12 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
 import { IncidentActif, IncidentService } from '../../core/incident/incident.service';
 import { TYPES_EQUIPEMENT } from '../../core/equipement/equipement.service';
 import { NiveauAttentionComponent } from '../../shared/niveau-attention';
 import { formaterDuree } from '../../shared/formater-duree';
 import { AuthService } from '../../core/auth/auth.service';
 import { LibellePipe } from '../../shared/libelle.pipe';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 type Tri = 'URGENCE' | 'PLUS_ANCIENS' | 'PLUS_RECENTS';
 
@@ -27,7 +27,7 @@ const RANG_URGENCE: Record<IncidentActif['niveauAttention'], number> = {
 })
 export class TableauDeBord implements OnInit {
   private readonly incidentService = inject(IncidentService);
-
+  private readonly route = inject(ActivatedRoute);
   protected readonly formaterDuree = formaterDuree;
   protected readonly types = TYPES_EQUIPEMENT;
   protected readonly authService = inject(AuthService);
@@ -87,6 +87,7 @@ export class TableauDeBord implements OnInit {
   );
 
   ngOnInit(): void {
+    this.filtreStation.set(this.route.snapshot.queryParamMap.get('station') ?? '');
     this.incidentService.obtenirIncidentsActifs().subscribe({
       next: incidents => this.incidents.set(incidents),
       error: (erreur: HttpErrorResponse) =>
