@@ -1,0 +1,34 @@
+<h1>Équipements</h1>
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}
+
+@if (equipements().length === 0) {
+  <p>Aucun équipement.</p>
+} @else {
+  <table>
+    <tr>
+      <th>Référence</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Station</th>
+      <th>État</th>
+    </tr>
+    @for (eq of equipements(); track eq.id) {
+      <tr>
+        <td><a [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
+        <td>{{ eq.type | libelle }}</td>
+        <td>{{ eq.description }}</td>
+        <td>
+          @if (eq.stationId) {
+            <a [routerLink]="['/stations', eq.stationId]">{{ eq.stationNom }}</a>
+          } @else {
+            —
+          }
+        </td>
+        <td><app-etat-equipement [etat]="eq.etat" /></td>
+      </tr>
+    }
+  </table>
+}

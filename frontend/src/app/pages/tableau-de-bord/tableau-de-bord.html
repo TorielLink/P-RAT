@@ -1,0 +1,102 @@
+<h1>{{ authService.estPrestataire() ? 'Mes incidents en cours' : 'Tableau de bord' }}</h1>
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+} @else {
+  <!-- Indicateurs : calculés sur les incidents affichés, donc mis à jour avec les filtres -->
+  <section class="indicateurs" aria-label="Indicateurs">
+    <div><strong>{{ indicateurs().actifs }}</strong> incidents actifs</div>
+    @if (!authService.estPrestataire()) {
+      <div><strong>{{ indicateurs().rouge }}</strong> <app-niveau-attention niveau="ROUGE" /></div>
+      <div><strong>{{ indicateurs().orange }}</strong> <app-niveau-attention niveau="ORANGE" /></div>
+      <div><strong>{{ indicateurs().vert }}</strong> <app-niveau-attention niveau="VERT" /></div>
+      <div><strong>{{ indicateurs().prisEnCharge }}</strong> <app-niveau-attention niveau="PRIS_EN_CHARGE" /></div>
+    }
+    <div><strong>{{ indicateurs().dureeMoyenne }}</strong> durée moyenne d'ouverture</div>
+  </section>
+
+  <section class="filtres" aria-label="Filtres">
+    @if (!authService.estPrestataire()) {
+      <label>
+        Niveau
+        <select [value]="filtreNiveau()" (change)="filtreNiveau.set(valeur($event))">
+          <option value="">Tous</option>
+          <option value="ROUGE">Rouge</option>
+          <option value="ORANGE">Orange</option>
+          <option value="VERT">Vert</option>
+          <option value="PRIS_EN_CHARGE">Pris en charge</option>
+        </select>
+      </label>
+    }
+    <label>
+      Station
+      <select [value]="filtreStation()" (change)="filtreStation.set(valeur($event))">
+        <option value="">Toutes</option>
+        @for (station of stations(); track station.id) {
+          <option [value]="station.id">{{ station.nom }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Type d'équipement
+      <select [value]="filtreType()" (change)="filtreType.set(valeur($event))">
+        <option value="">Tous</option>
+        @for (type of types; track type) {
+          <option [value]="type">{{ type | libelle }}</option>
+        }
+      </select>
+    </label>
+    @if (!authService.estPrestataire()) {
+      <label>
+        Affectation
+        <select [value]="filtreAffectation()" (change)="filtreAffectation.set(valeur($event))">
+          <option value="">Tous</option>
+          <option value="NON_AFFECTE">Non affectés</option>
+          <option value="AFFECTE">Affectés</option>
+        </select>
+      </label>
+    }
+    <label>
+      Tri
+      <select [value]="tri()" (change)="tri.set($any(valeur($event)))">
+        <option value="URGENCE">Urgence puis ancienneté</option>
+        <option value="PLUS_ANCIENS">Plus anciens d'abord</option>
+        <option value="PLUS_RECENTS">Plus récents d'abord</option>
+      </select>
+    </label>
+    <button type="button" (click)="reinitialiser()">Réinitialiser</button>
+  </section>
+
+  @if (affiches().length === 0) {
+    <p>{{ filtresActifs() ? 'Aucun incident ne correspond aux filtres' : 'Aucun incident actif' }}</p>
+  } @else {
+    <table>
+      <tr>
+        <th>Niveau</th>
+        <th>Station</th>
+        <th>Équipement</th>
+        <th>Description</th>
+        <th>Ouvert depuis</th>
+        @if (!authService.estPrestataire()) {
+          <th>Prestataire</th>
+        }
+      </tr>
+      @for (inc of affiches(); track inc.id) {
+        <!-- Toute la ligne ouvre le détail (F5) ; le lien permet aussi le clavier -->
+        <tr class="cliquable" [routerLink]="['/incidents', inc.id]">
+          <td><app-niveau-attention [niveau]="inc.niveauAttention" /></td>
+          <td>{{ inc.stationNom ?? '—' }}</td>
+          <td>
+            <a [routerLink]="['/incidents', inc.id]">{{ inc.equipementReference ?? 'n°' + inc.equipementId }}</a>
+            — {{ inc.equipementDescription ?? (inc.equipementType | libelle) }}
+          </td>
+          <td>{{ abreger(inc.description) }}</td>
+          <td>{{ formaterDuree(inc.dureeOuvertureMinutes) }}</td>
+          @if (!authService.estPrestataire()) {
+            <td>{{ inc.prestataireNom ?? 'non affecté' }}</td>
+          }
+        </tr>
+      }
+    </table>
+  }
+}

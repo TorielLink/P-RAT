@@ -1,0 +1,50 @@
+### Connexion admin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=admin&motDePasse=demo123
+
+### Évaluation valide → 201 + Location
+POST http://localhost:8080/api/incidents/6/evaluation
+Content-Type: application/json
+
+{ "note": 5, "commentaire": "Intervention rapide et soignée." }
+
+### Seconde évaluation sur le même incident → 409
+POST http://localhost:8080/api/incidents/6/evaluation
+Content-Type: application/json
+
+{ "note": 3 }
+
+### Incident déjà évalué par la V4 → 409
+POST http://localhost:8080/api/incidents/5/evaluation
+Content-Type: application/json
+
+{ "note": 3 }
+
+### Incident non résolu → 409
+POST http://localhost:8080/api/incidents/3/evaluation
+Content-Type: application/json
+
+{ "note": 4 }
+
+### Note hors bornes → 400 (essaie aussi 0)
+POST http://localhost:8080/api/incidents/3/evaluation
+Content-Type: application/json
+
+{ "note": 6 }
+
+### Note à virgule → 400
+POST http://localhost:8080/api/incidents/3/evaluation
+Content-Type: application/json
+
+{ "note": 3.5 }
+
+### Historique : la colonne note est remplie
+GET http://localhost:8080/api/incidents/historique
+
+### En admin : tous les prestataires, triés par nom, avec moyenne et nombre
+GET http://localhost:8080/api/prestataires
+
+### En admin : la fiche 3 et ses évaluations
+GET http://localhost:8080/api/prestataires/3

@@ -1,0 +1,121 @@
+### Connexion agent
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=agent&motDePasse=demo123
+
+### Description trop courte → 400 + message sur le champ
+POST http://localhost:8080/api/equipements/1/incidents
+Content-Type: application/json
+
+{ "description": "court", "priorite": "HAUTE" }
+
+### Équipement inexistant → 404
+POST http://localhost:8080/api/equipements/99999/incidents
+Content-Type: application/json
+
+{ "description": "La caméra ne répond plus depuis ce matin", "priorite": "HAUTE" }
+
+### Déclaration valide → 201 + Location
+POST http://localhost:8080/api/equipements/1/incidents
+Content-Type: application/json
+
+{ "description": "La caméra ne répond plus depuis ce matin", "priorite": "HAUTE" }
+
+### Détail : durée, niveau d'attention, évaluation
+GET http://localhost:8080/api/incidents/1
+
+
+####----------------Modification incident -------------------
+### Connexion agent
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=agent&motDePasse=demo123
+
+### Son incident non affecté → 200
+PATCH http://localhost:8080/api/incidents/1
+Content-Type: application/json
+
+{ "description": "Image figée sur le moniteur, écran noir par intermittence.", "priorite": "HAUTE" }
+
+### Champs non modifiables envoyés → ignorés (200, statut et date inchangés)
+PATCH http://localhost:8080/api/incidents/1
+Content-Type: application/json
+
+{ "description": "Image figée sur le moniteur du poste de contrôle.", "statut": "RESOLU",
+  "prestataireId": 1, "dateOuverture": "2020-01-01T00:00:00" }
+
+### Vérifier : statut toujours OUVERT, dateOuverture inchangée
+GET http://localhost:8080/api/incidents/1
+
+### Incident d'un autre (déclaré par admin) → 403 + message
+PATCH http://localhost:8080/api/incidents/3
+Content-Type: application/json
+
+{ "description": "Tentative de modification par un autre agent." }
+
+### Son incident déjà affecté → 403
+PATCH http://localhost:8080/api/incidents/4
+Content-Type: application/json
+
+{ "description": "Tentative sur un incident pris en charge." }
+
+### Incident résolu → 409
+PATCH http://localhost:8080/api/incidents/5
+Content-Type: application/json
+
+{ "description": "Tentative sur un incident résolu." }
+
+### Description trop courte → 400
+PATCH http://localhost:8080/api/incidents/1
+Content-Type: application/json
+
+{ "description": "court" }
+
+### Incident inexistant → 404
+PATCH http://localhost:8080/api/incidents/99999
+Content-Type: application/json
+
+{ "description": "Incident qui n'existe pas du tout." }
+
+####------ Affectation prestataire ---------
+
+### Affecter DEMCAM01 (non affecté) → 200, statut EN_COURS
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 2 }
+
+### Même prestataire → 200, rien ne change
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 2 }
+
+### Réaffecter à un autre → 200, nouveau prestataire
+PUT http://localhost:8080/api/incidents/1/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 3 }
+
+### Le détail affiche le nouveau prestataire et niveauAttention = PRIS_EN_CHARGE
+GET http://localhost:8080/api/incidents/1
+
+### Incident résolu (DEMCAM02) → 409
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 3 }
+
+### Prestataire inexistant → 404, l'incident garde son prestataire
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ "prestataireId": 99999 }
+
+### Corps sans prestataire → 400
+PUT http://localhost:8080/api/incidents/2/prestataire
+Content-Type: application/json
+
+{ }

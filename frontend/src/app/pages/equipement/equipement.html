@@ -1,0 +1,80 @@
+@if (equipement(); as eq) {
+  @if (enModification()) {
+    <h1>Modifier l'équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
+    <form [formGroup]="formulaire" (ngSubmit)="enregistrer(eq)">
+      @if (authService.peutGererEquipements()) {
+        <p>Référence : <input formControlName="reference" maxlength="8" /></p>
+        <p>Description : <input formControlName="description" maxlength="255" /></p>
+        <p>
+          Type :
+          <select formControlName="type">
+            @for (type of types; track type) {
+              <option [ngValue]="type">{{ type | libelle }}</option>
+            }
+          </select>
+        </p>
+      }
+      <p>
+        État :
+        <select formControlName="etat">
+          @for (etat of etats; track etat) {
+            <option [ngValue]="etat">{{ etat | libelle }}</option>
+          }
+        </select>
+      </p>
+      <button type="submit">Enregistrer</button>
+      <button type="button" (click)="annuler()">Annuler</button>
+    </form>
+  } @else {
+    <h1>Équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
+    <p>Type : {{ eq.type | libelle }}</p>
+    <p>Description : {{ eq.description ?? '—' }}</p>
+    <p>
+      Station :
+      @if (eq.stationId) {
+        <a [routerLink]="['/stations', eq.stationId]">{{ eq.stationNom }}</a>
+      } @else {
+        —
+      }
+    </p>
+    <p>Créé le : {{ eq.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</p>
+    <p>État : <app-etat-equipement [etat]="eq.etat" /></p>
+
+    <button type="button" (click)="modifier(eq)">Modifier</button>
+    @if (authService.peutGererEquipements()) {
+      <button type="button" (click)="supprimer(eq)">Supprimer</button>
+    }
+
+    <h2>Incidents</h2>
+
+    @if (authService.peutDeclarerIncidents()) {
+      <a [routerLink]="['/equipements', eq.id, 'declarer-incident']">Déclarer un incident</a>
+    }
+
+    @if (incidents().length === 0) {
+      <p>Aucun incident enregistré</p>
+    } @else {
+      <table>
+        <tr>
+          <th>Description</th>
+          <th>Ouvert le</th>
+          <th>Statut</th>
+          <th>Résolu le</th>
+        </tr>
+        @for (inc of incidents(); track inc.id) {
+          <!-- Toute la ligne ouvre le détail (F5) ; le lien permet aussi le clavier -->
+          <tr class="cliquable" [class.resolu]="inc.statut === 'RESOLU'" [routerLink]="['/incidents', inc.id]">
+            <td><a [routerLink]="['/incidents', inc.id]">{{ abreger(inc.description) }}</a></td>
+            <td>{{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td><app-statut-incident [statut]="inc.statut" /></td>
+            <td>{{ inc.dateResolution ? (inc.dateResolution | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+          </tr>
+        }
+      </table>
+    }
+  }
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}

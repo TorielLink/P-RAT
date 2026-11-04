@@ -1,0 +1,12 @@
+.indicateurs,
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+tr.cliquable {
+  cursor: pointer;
+}

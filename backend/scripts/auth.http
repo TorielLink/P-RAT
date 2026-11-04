@@ -1,0 +1,150 @@
+### 1. Sans session : /me doit renvoyer 401
+# @no-cookie-jar
+GET http://localhost:8080/api/auth/me
+
+> {%
+    client.test("Sans session → 401", () => {
+        client.assert(response.status === 401, "Statut attendu 401, reçu " + response.status);
+    });
+%}
+
+### 2. Mauvais mot de passe : 401
+# @no-cookie-jar
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=agent&motDePasse=mauvais
+
+> {%
+    client.test("Mauvais mot de passe → 401", () => {
+        client.assert(response.status === 401, "Statut attendu 401, reçu " + response.status);
+    });
+%}
+
+### 3. Identifiants valides : 200 + cookie JSESSIONID
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=agent&motDePasse=demo123
+
+> {%
+    client.test("Connexion valide → 200", () => {
+        client.assert(response.status === 200, "Statut attendu 200, reçu " + response.status);
+    });
+    client.test("Cookie de session reçu", () => {
+        const cookie = response.headers.valueOf("Set-Cookie");
+        client.assert(cookie !== null && cookie.includes("JSESSIONID"), "Aucun cookie JSESSIONID");
+    });
+%}
+
+### 4. Avec la session : /me renvoie le prénom et le profil
+GET http://localhost:8080/api/auth/me
+
+> {%
+    client.test("Utilisateur connecté → 200", () => {
+        client.assert(response.status === 200, "Statut attendu 200, reçu " + response.status);
+    });
+    client.test("Prénom et profil corrects", () => {
+        client.assert(response.body.prenom === "Inès", "Prénom reçu : " + response.body.prenom);
+        client.assert(response.body.profil === "AGENT", "Profil reçu : " + response.body.profil);
+        client.assert(response.body.profilLibelle === "Agent", "Libellé reçu : " + response.body.profilLibelle);
+    });
+%}
+
+### 5. Déconnexion : 204
+POST http://localhost:8080/api/auth/logout
+
+> {%
+    client.test("Déconnexion → 204", () => {
+        client.assert(response.status === 204, "Statut attendu 204, reçu " + response.status);
+    });
+%}
+
+### 6. Après déconnexion : /me redevient 401
+GET http://localhost:8080/api/auth/me
+
+> {%
+    client.test("Session fermée → 401", () => {
+        client.assert(response.status === 401, "Statut attendu 401, reçu " + response.status);
+    });
+%}
+
+### 7. Connexion admin
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=admin&motDePasse=demo123
+
+> {%
+    client.test("Connexion admin → 200", () => {
+        client.assert(response.status === 200, "Statut attendu 200, reçu " + response.status);
+    });
+%}
+
+### 8. /me pour l'admin
+GET http://localhost:8080/api/auth/me
+
+> {%
+    client.test("Admin : code ADMIN, libellé Admin", () => {
+        client.assert(response.status === 200, "Statut attendu 200, reçu " + response.status);
+        client.assert(response.body.profil === "ADMIN", "Profil reçu : " + response.body.profil);
+        client.assert(response.body.profilLibelle === "Administrateur", "Libellé reçu : " + response.body.profilLibelle);
+    });
+%}
+
+### Créer une station
+POST http://localhost:8080/api/stations
+Content-Type: application/json
+
+{"nom": "La Défense"}
+
+### Lister les stations
+GET http://localhost:8080/api/stations
+
+### Ajouter un équipement
+POST http://localhost:8080/api/equipements
+Content-Type: application/json
+
+{"reference": "CAM00001", "description": "Caméra quai 1", "type": "CAMERA", "stationId": 1}
+
+### Lister les équipements d'une station
+GET http://localhost:8080/api/equipements?stationId=1
+
+### 1. Agent : déclarer un incident
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=agent&motDePasse=demo123
+
+###
+POST http://localhost:8080/api/incidents
+Content-Type: application/json
+
+{"equipementId": 1, "description": "Écran noir", "priorite": "HAUTE"}
+
+### 2. Admin : affecter le prestataire de démonstration
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=admin&motDePasse=demo123
+
+###
+PATCH http://localhost:8080/api/incidents/1/prestataire
+Content-Type: application/json
+
+{"prestataireId": 1}
+
+### 3. Prestataire : il voit l'incident et peut le modifier
+POST http://localhost:8080/api/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+login=prestataire&motDePasse=demo123
+
+###
+GET http://localhost:8080/api/incidents
+
+###
+PUT http://localhost:8080/api/incidents/1
+Content-Type: application/json
+
+{"description": "Écran noir : carte vidéo remplacée", "priorite": "HAUTE"}

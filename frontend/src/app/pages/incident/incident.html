@@ -1,0 +1,182 @@
+@if (incident(); as inc) {
+  <h1>Incident n°{{ inc.id }}</h1>
+
+  <p>
+    Équipement :
+    <a [routerLink]="['/equipements', inc.equipementId]">{{ inc.equipementReference ?? 'n°' + inc.equipementId }}</a>
+  </p>
+  <p>
+    Station :
+    @if (inc.stationId) {
+      <a [routerLink]="['/stations', inc.stationId]">{{ inc.stationNom }}</a>
+    } @else {
+      —
+    }
+  </p>
+  <p>Statut : <app-statut-incident [statut]="inc.statut" /></p>
+  <p>Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}</p>
+  <p>Déclaré par : {{ inc.declarantPrenom ?? '—' }}</p>
+  <p>Ouvert le : {{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</p>
+
+  @if (inc.niveauAttention !== 'RESOLU') {
+    <p>
+      Niveau d'attention :
+      <app-niveau-attention [niveau]="inc.niveauAttention" />
+    </p>
+  }
+
+  <p>
+    Durée d'ouverture : {{ formaterDuree(inc.dureeOuvertureMinutes) }}
+    @if (inc.statut === 'RESOLU') { (figée à la résolution) }
+  </p>
+
+  @if (inc.dateResolution) {
+    <p>Résolu le : {{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}</p>
+  }
+
+  @if (inc.evaluation; as evaluation) {
+    <p>Évaluation : {{ evaluation.note }} / 5 (le {{ evaluation.dateEvaluation | date: 'dd/MM/yyyy' }})</p>
+    <p>Commentaire : {{ evaluation.commentaire ?? '—' }}</p>
+  } @else if (inc.statut === 'RESOLU') {
+    <p>Évaluation : {{ inc.prestataireId ? 'pas encore évalué' : 'aucune intervention de prestataire à évaluer' }}</p>
+  }
+
+  @if (enModification()) {
+    <form [formGroup]="formulaire" (ngSubmit)="enregistrer(inc)">
+      <label for="priorite">Priorité</label>
+      <select id="priorite" formControlName="priorite">
+        @for (priorite of priorites; track priorite) {
+          <option [ngValue]="priorite">{{ priorite | libelle }}</option>
+        }
+      </select>
+
+      <label for="description">Description</label>
+      <textarea id="description" formControlName="description" rows="5" cols="60"
+                [attr.maxlength]="descriptionMax"></textarea>
+      <small>{{ formulaire.controls.description.value.length }} / {{ descriptionMax }}</small>
+
+      @if (formulaire.controls.description.touched && formulaire.controls.description.errors; as erreurs) {
+        @if (erreurs['required']) {
+          <p class="erreur-champ">La description est obligatoire.</p>
+        } @else if (erreurs['minlength']) {
+          <p class="erreur-champ">La description doit contenir au moins {{ descriptionMin }} caractères.</p>
+        } @else if (erreurs['maxlength']) {
+          <p class="erreur-champ">La description ne doit pas dépasser {{ descriptionMax }} caractères.</p>
+        }
+      }
+      @if (erreursServeur()['description']; as message) {
+        <p class="erreur-champ">{{ message }}</p>
+      }
+
+      <p>
+        <button type="submit">Enregistrer</button>
+        <button type="button" (click)="annuler()">Annuler</button>
+      </p>
+    </form>
+  } @else {
+    <p>Priorité : {{ inc.priorite | libelle }}</p>
+    <p>Description : {{ inc.description ?? '—' }}</p>
+
+    @if (inc.modifiable) {
+      <button type="button" (click)="modifier(inc)">Modifier</button>
+    }
+    @if (authService.peutResoudreIncidents() && inc.statut !== 'RESOLU') {
+      <button type="button" (click)="resoudre(inc)">Déclarer résolu</button>
+    }
+    @if (authService.estAdmin()) {
+      <button type="button" (click)="supprimer(inc)">Supprimer</button>
+    }
+
+    <!-- affecter ou réaffecter un prestataire (admin + incident non résolu) -->
+    @if (authService.estAdmin() && inc.statut !== 'RESOLU') {
+      <section class="affectation">
+        <h2>{{ inc.prestataireId ? 'Réaffecter' : 'Affecter' }} un prestataire</h2>
+        <label for="prestataire">Prestataire</label>
+        <select id="prestataire" [formControl]="choixPrestataire">
+          <option [ngValue]="null" disabled>Choisir un prestataire…</option>
+          @for (prestataire of prestataires(); track prestataire.id) {
+            <option [ngValue]="prestataire.id">{{ prestataire.nom }}</option>
+          }
+        </select>
+        <button type="button" (click)="affecter(inc)" [disabled]="choixPrestataire.value === null">Valider</button>
+      </section>
+    }
+
+    <!-- évaluer l'intervention (admin + incident résolu, affecté, pas encore évalué) -->
+    @if (peutEtreEvalue(inc)) {
+      <section class="evaluation">
+        <h2>Évaluer l'intervention de {{ inc.prestataireNom }}</h2>
+        <form [formGroup]="formulaireEvaluation" (ngSubmit)="evaluer(inc)">
+          <label for="note">Note</label>
+          <select id="note" formControlName="note">
+            <option [ngValue]="null" disabled>Choisir une note…</option>
+            @for (note of notesPossibles; track note) {
+              <option [ngValue]="note">{{ note }} / 5</option>
+            }
+          </select>
+          @if (formulaireEvaluation.controls.note.touched && formulaireEvaluation.controls.note.invalid) {
+            <p class="erreur-champ">Choisissez une note de 1 à 5.</p>
+          }
+          @if (erreursEvaluation()['note']; as message) {
+            <p class="erreur-champ">{{ message }}</p>
+          }
+
+          <label for="commentaire">Commentaire (facultatif)</label>
+          <textarea id="commentaire" formControlName="commentaire" rows="3" cols="60"
+                    [attr.maxlength]="commentaireMax"></textarea>
+          <small>{{ formulaireEvaluation.controls.commentaire.value?.length ?? 0 }} / {{ commentaireMax }}</small>
+          @if (formulaireEvaluation.controls.commentaire.hasError('maxlength')) {
+            <p class="erreur-champ">Le commentaire ne doit pas dépasser {{ commentaireMax }} caractères.</p>
+          }
+          @if (erreursEvaluation()['commentaire']; as message) {
+            <p class="erreur-champ">{{ message }}</p>
+          }
+
+          <button type="submit">Enregistrer l'évaluation</button>
+        </form>
+      </section>
+    }
+  }
+
+  <!-- journal des changements (admin), du plus récent au plus ancien -->
+  @if (authService.estAdmin()) {
+    <section class="journal">
+      <h2>Journal de l'incident</h2>
+      @if (journal().length === 0) {
+        <p>Aucun événement enregistré.</p>
+      } @else {
+        <table>
+          <thead>
+          <tr><th>Date</th><th>Auteur</th><th>Événement</th><th>Détail</th></tr>
+          </thead>
+          <tbody>
+            @for (evenement of journal(); track $index) {
+              <tr>
+                <td>{{ evenement.dateEvenement | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+                <td>{{ evenement.auteur ?? '—' }}</td>
+                <td>{{ evenement.type | libelle }}</td>
+                <td>
+                  @if (evenement.champ) {
+                    {{ evenement.champ | libelle }} :
+                    {{ evenement.ancienneValeur | libelle }} → {{ evenement.nouvelleValeur | libelle }}
+                  } @else {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+}
+
+<!-- confirmation d'une affectation, d'une évaluation, ou « déjà affecté » -->
+@if (information()) {
+  <p class="information" role="status">{{ information() }}</p>
+}
+
+@if (erreur()) {
+  <p class="erreur" role="alert">{{ erreur() }}</p>
+}

@@ -1,0 +1,30 @@
+<h1>Stations</h1>
+
+@if (authService.peutGererStations()) {
+  <form [formGroup]="formulaire" (ngSubmit)="ajouter()">
+    <input formControlName="nom" placeholder="Nom de la station" maxlength="100" aria-label="Nom" />
+    <!-- Position facultative : sans elle, la station n'apparaît pas sur la carte -->
+    <input formControlName="positionX" type="number" min="-20" max="20" placeholder="X" aria-label="Position X" />
+    <input formControlName="positionY" type="number" min="-20" max="20" placeholder="Y" aria-label="Position Y" />
+    <button type="submit">Ajouter</button>
+  </form>
+}
+
+@if (erreur()) {
+  <p>{{ erreur() }}</p>
+}
+
+@if (stations().length === 0) {
+  <p>Aucune station.</p>
+} @else {
+  <ul>
+    @for (station of stations(); track station.id) {
+      <li>
+        <a [routerLink]="['/stations', station.id]">{{ station.nom }}</a>
+        @if (authService.peutGererStations()) {
+          <button type="button" (click)="supprimer(station)">Supprimer</button>
+        }
+      </li>
+    }
+  </ul>
+}
