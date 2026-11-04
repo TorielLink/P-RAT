@@ -26,6 +26,7 @@ public class UtilisateurDetailsService implements UserDetailsService {
         return User.withUsername(utilisateur.getLogin())
                 .password(utilisateur.getMotDePasse())
                 .roles(utilisateur.getProfil().name())
+                .disabled(!utilisateur.getActif())
                 .build();
     }
 }
