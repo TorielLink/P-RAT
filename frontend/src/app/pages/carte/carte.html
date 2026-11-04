@@ -1,89 +1,151 @@
 <h1>Carte du réseau</h1>
 
 @if (erreur()) {
-  <p>{{ erreur() }}</p>
+  <p class="erreur" role="alert">{{ erreur() }}</p>
 } @else {
-  @if (nombreSansPosition() > 0) {
-    <p>
-      {{ nombreSansPosition() }} {{ nombreSansPosition() > 1 ? 'stations sans position' : 'station sans position' }}
-      (non affichées sur la carte, voir la liste ci-dessous)
-    </p>
-  }
-
   <!-- Légende : couleur + symbole + texte -->
   <ul class="legende" aria-label="Légende">
     @for (situation of situations; track situation) {
       <li>
-        <span [style.color]="affichage[situation].couleur" aria-hidden="true">{{ affichage[situation].symbole }}</span>
+        <span class="pastille-legende" [style.background]="affichage[situation].couleur" aria-hidden="true">
+          {{ affichage[situation].symbole }}
+        </span>
         {{ affichage[situation].libelle }}
       </li>
     }
   </ul>
 
   <div class="carte-et-fenetre">
-    <svg
-      [attr.viewBox]="'0 0 ' + taille + ' ' + taille"
-      class="carte"
-      role="group"
-      aria-label="Plan du réseau : une station par marqueur. Tabulation pour passer d'une station à l'autre, Entrée pour l'ouvrir."
-    >
-      <!-- Grille : axe 0 et multiples de 5 plus marqués -->
-      @for (ligne of lignes().verticales; track ligne.valeur) {
-        <line [attr.x1]="ligne.position" y1="0" [attr.x2]="ligne.position" [attr.y2]="taille"
-              [class.ligne-forte]="ligne.valeur % 5 === 0" class="ligne" />
-      }
-      @for (ligne of lignes().horizontales; track ligne.valeur) {
-        <line x1="0" [attr.y1]="ligne.position" [attr.x2]="taille" [attr.y2]="ligne.position"
-              [class.ligne-forte]="ligne.valeur % 5 === 0" class="ligne" />
-      }
+    <div class="cadre-carte">
+      <svg
+        [attr.viewBox]="'-24 -24 ' + (taille + 48) + ' ' + (taille + 48)"
+        class="carte"
+        role="group"
+        aria-label="Plan du réseau : une station par marqueur. Tabulation pour passer d'une station à l'autre, Entrée pour l'ouvrir."
+      >
+        <!-- Grille : axe 0 et multiples de 5 plus marqués -->
+        @for (ligne of lignes().verticales; track ligne.valeur) {
+          <line [attr.x1]="ligne.position" y1="0" [attr.x2]="ligne.position" [attr.y2]="taille"
+                [class.ligne-forte]="ligne.valeur % 5 === 0" [class.axe]="ligne.valeur === 0" class="ligne" />
+        }
+        @for (ligne of lignes().horizontales; track ligne.valeur) {
+          <line x1="0" [attr.y1]="ligne.position" [attr.x2]="taille" [attr.y2]="ligne.position"
+                [class.ligne-forte]="ligne.valeur % 5 === 0" [class.axe]="ligne.valeur === 0" class="ligne" />
+        }
 
-      @for (station of placees(); track station.id) {
-        <g
-          class="marqueur"
-          [class.selectionne]="selection()?.id === station.id"
-          tabindex="0"
-          role="button"
-          [attr.aria-label]="station.nom + ' : ' + affichage[station.situation].libelle + ', ' + nombreIncidentsActifs(station) + ' incident(s) actif(s)'"
-          [attr.transform]="'translate(' + versX(station.positionX!) + ',' + versY(station.positionY!) + ')'"
-          (click)="selectionner(station)"
-          (keydown.enter)="selectionner(station, $event)"
-          (keydown.space)="selectionner(station, $event)"
-        >
-          <circle r="16" [attr.fill]="affichage[station.situation].couleur" />
-          <!-- Symbole dans le marqueur : la situation reste lisible sans la couleur -->
-          <text class="symbole" text-anchor="middle" dominant-baseline="central">
-            {{ affichage[station.situation].symbole }}
-          </text>
-          <text class="nom" y="30" text-anchor="middle">{{ station.nom }}</text>
-        </g>
-      }
-    </svg>
+        @for (station of placees(); track station.id) {
+          <g
+            class="marqueur"
+            [class.selectionne]="selection()?.id === station.id"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="station.nom + ' : ' + affichage[station.situation].libelle + ', ' + nombreIncidentsActifs(station) + ' incident(s) actif(s)'"
+            [attr.transform]="'translate(' + versX(station.positionX!) + ',' + versY(station.positionY!) + ')'"
+            (click)="selectionner(station)"
+            (keydown.enter)="selectionner(station, $event)"
+            (keydown.space)="selectionner(station, $event)"
+          >
+            <!-- Onde autour des stations en rouge : attire l'œil sur l'urgence -->
+            @if (station.situation === 'ROUGE') {
+              <circle class="onde" r="16" [attr.fill]="affichage.ROUGE.couleur" />
+            }
+            <g class="corps">
+              <circle class="disque" r="16" [attr.fill]="affichage[station.situation].couleur" />
+              <!-- Symbole dans le marqueur : la situation reste lisible sans la couleur -->
+              <text class="symbole" text-anchor="middle" dominant-baseline="central">
+                {{ affichage[station.situation].symbole }}
+              </text>
+              <!-- Nombre d'incidents actifs -->
+              @if (nombreIncidentsActifs(station) > 0) {
+                <g transform="translate(13,-13)">
+                  <circle class="compte" r="9" />
+                  <text class="compte-texte" text-anchor="middle" dominant-baseline="central">
+                    {{ nombreIncidentsActifs(station) }}
+                  </text>
+                </g>
+              }
+            </g>
+            <text class="nom" y="32" text-anchor="middle">{{ station.nom }}</text>
+          </g>
+        }
+      </svg>
+    </div>
 
+    <!-- Panneau latéral : détail de la station sélectionnée, sinon résumé du réseau -->
     @if (selection(); as station) {
       <aside class="fenetre" role="dialog" [attr.aria-label]="'Station ' + station.nom">
-        <h2>{{ station.nom }}</h2>
-        <p>
-          Situation :
+        <div class="fenetre-entete">
+          <h2>{{ station.nom }}</h2>
+          <button type="button" class="fermer" (click)="fermer()" aria-label="Fermer">✕</button>
+        </div>
+
+        <p class="situation">
           @if (station.situation === 'AUCUN') {
-            aucun incident actif
+            <span class="aucun">○ Aucun incident actif</span>
           } @else {
             <app-niveau-attention [niveau]="station.situation" />
           }
         </p>
-        <p>{{ station.nombreEquipements }} équipement(s)</p>
-        <p>Incidents actifs : {{ nombreIncidentsActifs(station) }}</p>
-        <ul>
-          <li>{{ station.rouge }} <app-niveau-attention niveau="ROUGE" /></li>
-          <li>{{ station.orange }} <app-niveau-attention niveau="ORANGE" /></li>
-          <li>{{ station.vert }} <app-niveau-attention niveau="VERT" /></li>
-          <li>{{ station.prisEnCharge }} <app-niveau-attention niveau="PRIS_EN_CHARGE" /></li>
+
+        <div class="chiffres">
+          <div><strong class="mono">{{ station.nombreEquipements }}</strong> équipement(s)</div>
+          <div><strong class="mono">{{ nombreIncidentsActifs(station) }}</strong> incident(s) actif(s)</div>
+        </div>
+
+        <ul class="repartition">
+          <li><app-niveau-attention niveau="ROUGE" /> <span class="mono">{{ station.rouge }}</span></li>
+          <li><app-niveau-attention niveau="ORANGE" /> <span class="mono">{{ station.orange }}</span></li>
+          <li><app-niveau-attention niveau="VERT" /> <span class="mono">{{ station.vert }}</span></li>
+          <li><app-niveau-attention niveau="PRIS_EN_CHARGE" /> <span class="mono">{{ station.prisEnCharge }}</span></li>
         </ul>
-        <p><a [routerLink]="['/stations', station.id]">Équipements de la station</a></p>
-        <p>
-          <a [routerLink]="['/tableau-de-bord']" [queryParams]="{ station: station.id }">Incidents actifs de la station</a>
-        </p>
-        <button type="button" (click)="fermer()">Fermer</button>
+
+        <div class="actions">
+          <a class="action principale" [routerLink]="['/tableau-de-bord']" [queryParams]="{ station: station.id }">
+            Incidents actifs de la station
+          </a>
+          <a class="action" [routerLink]="['/stations', station.id]">Équipements de la station</a>
+        </div>
+      </aside>
+    } @else {
+      <aside class="fenetre" aria-label="Résumé du réseau">
+        <h2>Réseau</h2>
+        <p class="aide">Cliquez sur une station (ou Tabulation puis Entrée) pour voir son détail.</p>
+        <ul class="repartition">
+          @for (ligne of resume(); track ligne.situation) {
+            <li>
+              <span>
+                <span class="pastille-legende" [style.background]="affichage[ligne.situation].couleur" aria-hidden="true">
+                  {{ affichage[ligne.situation].symbole }}
+                </span>
+                {{ affichage[ligne.situation].libelle }}
+              </span>
+              <span class="mono">{{ ligne.nombre }}</span>
+            </li>
+          }
+        </ul>
       </aside>
     }
   </div>
+
+  <!-- Stations sans coordonnées : absentes du plan, accessibles ici -->
+  @if (nombreSansPosition() > 0) {
+    <section class="hors-carte">
+      <h2>
+        Hors carte <span class="compteur mono">{{ nombreSansPosition() }}</span>
+      </h2>
+      <p class="aide">Ces stations n'ont pas de position. Ajoutez X et Y depuis leur page pour les placer.</p>
+      <ul>
+        @for (station of sansPosition(); track station.id) {
+          <li>
+            <a [routerLink]="['/stations', station.id]">
+              <span class="pastille-legende petite" [style.background]="affichage[station.situation].couleur" aria-hidden="true">
+                {{ affichage[station.situation].symbole }}
+              </span>
+              {{ station.nom }}
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
 }

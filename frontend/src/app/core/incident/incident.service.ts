@@ -202,4 +202,8 @@ export class IncidentService {
     return this.http.get<EvenementIncident[]>(`${this.url}/${id}/journal`);
   }
 
+  obtenirIncidentsParStatut(statut: StatutIncident): Observable<Incident[]> {
+    return this.http.get<Incident[]>(this.url, { params: new HttpParams().set('statut', statut) });
+  }
+
 }

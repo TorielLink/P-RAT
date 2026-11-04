@@ -25,15 +25,17 @@ export class Incidents implements OnInit {
 
   // Recalculé automatiquement à chaque changement de la liste
   readonly colonnes = computed(() => [
-    this.colonne('Non affectés', this.parStatut('OUVERT'), null),
-    this.colonne('Pris en charge', this.parStatut('EN_COURS'), null),
+    this.colonne('Non affectés', 'OUVERT', this.parStatut('OUVERT'), '/incidents/non-affectes'),
+    this.colonne('Pris en charge', 'EN_COURS', this.parStatut('EN_COURS'), '/incidents/en-cours'),
     // Comme l'historique : les plus récemment résolus d'abord
-    this.colonne('Résolus', this.parStatut('RESOLU').sort(parDateResolutionDecroissante), '/incidents/historique'),
+    this.colonne('Résolus', 'RESOLU', this.parStatut('RESOLU').sort(parDateResolutionDecroissante), '/incidents/historique'),
   ]);
 
-  private colonne(titre: string, incidents: Incident[], lien: string | null) {
+  // statut : sert à la couleur de la colonne (classe CSS)
+  private colonne(titre: string, statut: StatutIncident, incidents: Incident[], lien: string | null) {
     return {
       titre,
+      statut,
       lien,
       total: incidents.length,
       incidents: incidents.slice(0, Incidents.LIMITE_PAR_COLONNE),

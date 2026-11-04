@@ -1,17 +1,70 @@
-.carte-et-fenetre {
+// ---------- Légende ----------
+
+.legende {
   display: flex;
-  flex-wrap: wrap; /* petit écran : la fenêtre passe sous la carte */
-  gap: 1rem;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  font-size: 13px;
+  color: var(--texte-secondaire);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+}
+
+// Rond coloré avec le symbole (légende, résumé, hors carte)
+.pastille-legende {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+  color: #ffffff;
+  border-radius: 50%;
+}
+
+.pastille-legende.petite {
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+}
+
+// ---------- Carte + panneau ----------
+
+.carte-et-fenetre {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+// Écran étroit : le panneau passe sous la carte
+@media (max-width: 900px) {
+  .carte-et-fenetre {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cadre-carte {
+  background: radial-gradient(circle at center, var(--surface-survol) 0%, var(--surface) 70%);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
 }
 
 .carte {
+  display: block;
   width: 100%;
-  max-width: 600px;
-  height: auto;
-  background: var(--surface);
-  border: 1px solid var(--bordure);
-  border-radius: var(--rayon-bloc);
+  max-height: 75vh;
 }
 
 .ligne {
@@ -23,6 +76,14 @@
   stroke: var(--bordure);
 }
 
+.axe {
+  stroke: var(--texte-discret);
+  stroke-dasharray: 4 4;
+  opacity: 0.6;
+}
+
+// ---------- Marqueurs ----------
+
 .marqueur {
   cursor: pointer;
 }
@@ -31,34 +92,264 @@
   outline: none;
 }
 
-/* Focus clavier et sélection : anneau autour du marqueur */
-.marqueur:focus-visible circle,
-.marqueur.selectionne circle {
+// Grossit au survol ; transform-box pour grossir autour du centre du marqueur
+.corps {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.15s;
+}
+
+.marqueur:hover .corps,
+.marqueur:focus-visible .corps,
+.marqueur.selectionne .corps {
+  transform: scale(1.15);
+}
+
+.disque {
+  stroke: var(--fond);
+  stroke-width: 2;
+}
+
+// Focus clavier et sélection : anneau clair autour du marqueur
+.marqueur:focus-visible .disque,
+.marqueur.selectionne .disque {
   stroke: var(--texte);
   stroke-width: 3;
 }
 
 .symbole {
   fill: #ffffff;
-  font-size: 16px;
+  font-size: 15px;
   pointer-events: none;
 }
 
+.compte {
+  fill: var(--fond);
+  stroke: var(--texte-secondaire);
+  stroke-width: 1.5;
+}
+
+.compte-texte {
+  fill: var(--texte);
+  font-family: var(--police-mono);
+  font-size: 10px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+// Nom lisible sur la grille : contour de la couleur du fond derrière le texte
 .nom {
   fill: var(--texte);
   font-size: 13px;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+  stroke-linejoin: round;
   pointer-events: none;
 }
 
-.fenetre {
-  min-width: 220px;
-  margin-top: 0;
+// Onde qui s'élargit autour des stations en rouge
+.onde {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: onde 2s ease-out infinite;
+  pointer-events: none;
 }
 
-.legende {
+@keyframes onde {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onde {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+// ---------- Panneau latéral ----------
+
+.fenetre {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fenetre h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.fenetre-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fermer {
+  min-height: 30px;
+  width: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+.situation {
+  margin: 0;
+}
+
+.aucun {
+  color: var(--texte-discret);
+}
+
+.chiffres {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.chiffres div {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--texte-discret);
+  background: var(--fond);
+  border: 1px solid var(--bordure-douce);
+  border-radius: var(--rayon);
+}
+
+.chiffres strong {
+  font-size: 22px;
+  color: var(--texte);
+}
+
+.repartition {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.repartition li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--bordure-douce);
+}
+
+.repartition li:last-child {
+  border-bottom: none;
+}
+
+.repartition li > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// Liens présentés comme des boutons
+.action {
+  display: block;
+  padding: 9px 12px;
+  text-align: center;
+  color: var(--texte);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.action:hover {
+  color: var(--texte);
+  background: var(--surface-survol);
+  border-color: var(--texte-discret);
+}
+
+.action.principale {
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.action.principale:hover {
+  color: #ffffff;
+  background: var(--accent-survol);
+}
+
+.aide {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+// ---------- Stations hors carte ----------
+
+.hors-carte {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
+
+.hors-carte h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.compteur {
+  padding: 1px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  color: var(--texte-secondaire);
+  background: var(--gris-fond);
+}
+
+.hors-carte ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  list-style: none;
+  gap: 8px;
+  margin: 12px 0 0;
   padding: 0;
+  list-style: none;
+}
+
+.hors-carte a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 6px;
+  color: var(--texte);
+  text-decoration: none;
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+}
+
+.hors-carte a:hover {
+  border-color: var(--accent-survol);
 }

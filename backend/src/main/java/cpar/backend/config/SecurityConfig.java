@@ -37,10 +37,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/incidents/actifs").hasAnyRole("ADMIN", "PRESTATAIRE")
                         // Déclaration = Admin et Agent
                         .requestMatchers(HttpMethod.POST, "/api/equipements/*/incidents").hasAnyRole("ADMIN", "AGENT")
-                        // Lecture des stations pour tt le monde
-                        .requestMatchers(HttpMethod.GET, "/api/stations/**").authenticated()
+                        // Lecture des stations pour Admin et Agent
+                        .requestMatchers(HttpMethod.GET, "/api/stations/**").hasAnyRole("ADMIN", "AGENT")
                         // Restraint les autres droits de station
                         .requestMatchers("/api/stations/**").hasRole("ADMIN")
+                        // Droit
+                        .requestMatchers(HttpMethod.GET, "/api/equipements", "/api/equipements/reference/**").hasAnyRole("ADMIN", "AGENT")
                         // Lecture des equipemts pour tt le monde
                         .requestMatchers(HttpMethod.GET, "/api/equipements/**").authenticated()
                         // Modification de l'etat d'un equipement par tt le monde

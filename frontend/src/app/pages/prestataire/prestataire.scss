@@ -1,0 +1,37 @@
+// Note moyenne à côté du nom
+.note-moyenne {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 999px;
+  color: var(--jaune);
+  background: var(--jaune-fond);
+}
+
+.etoiles {
+  margin-right: 8px;
+  letter-spacing: 1px;
+  color: var(--jaune);
+}
+
+.etoiles-vides {
+  color: var(--bordure);
+}
+
+.note {
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+td {
+  white-space: nowrap;
+}
+
+// Le commentaire peut être long : il revient à la ligne
+td.commentaire {
+  min-width: 200px;
+  white-space: normal;
+}

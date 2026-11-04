@@ -1,26 +1,43 @@
-<h1>Prestataires</h1>
+<div class="entete-page">
+  <h1>Prestataires <span class="pastille mono">{{ prestataires().length }}</span></h1>
+</div>
 
 @if (erreur()) {
   <p class="erreur" role="alert">{{ erreur() }}</p>
 }
 
 @if (prestataires().length === 0) {
-  <p>Aucun prestataire.</p>
+  <p class="vide">Aucun prestataire.</p>
 } @else {
-  <table>
-    <tr>
-      <th>Nom</th>
-      <th>Contact</th>
-      <th>Note moyenne</th>
-      <th>Évaluations</th>
-    </tr>
+  <ul class="grille">
     @for (prestataire of prestataires(); track prestataire.id) {
-      <tr>
-        <td><a [routerLink]="['/prestataires', prestataire.id]">{{ prestataire.nom }}</a></td>
-        <td>{{ prestataire.email ?? '—' }} · {{ prestataire.telephone ?? '—' }}</td>
-        <td>{{ formaterNoteMoyenne(prestataire.noteMoyenne) }}</td>
-        <td>{{ prestataire.nombreEvaluations }}</td>
-      </tr>
+      <li class="carte-prestataire">
+        <a class="nom" [routerLink]="['/prestataires', prestataire.id]">{{ prestataire.nom }}</a>
+
+        <span class="note">
+          @if (prestataire.noteMoyenne !== null) {
+            <span class="etoile" aria-hidden="true">★</span>
+            <span class="mono">{{ formaterNoteMoyenne(prestataire.noteMoyenne) }}</span>
+            <span class="discret">
+              · {{ prestataire.nombreEvaluations }} évaluation{{ prestataire.nombreEvaluations > 1 ? 's' : '' }}
+            </span>
+          } @else {
+            <span class="pastille">Pas encore évalué</span>
+          }
+        </span>
+
+        <span class="contact">
+          @if (prestataire.email) {
+            <a [href]="'mailto:' + prestataire.email">{{ prestataire.email }}</a>
+          }
+          @if (prestataire.telephone) {
+            <a class="mono" [href]="'tel:' + prestataire.telephone">{{ prestataire.telephone }}</a>
+          }
+          @if (!prestataire.email && !prestataire.telephone) {
+            <span class="discret">Aucun contact</span>
+          }
+        </span>
+      </li>
     }
-  </table>
+  </ul>
 }

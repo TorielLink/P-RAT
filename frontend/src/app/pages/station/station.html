@@ -1,74 +1,133 @@
 @if (station(); as st) {
+  <nav class="fil-ariane" aria-label="Fil d'Ariane">
+    <a routerLink="/stations">Stations</a>
+    <span aria-hidden="true">/</span>
+    <span>{{ st.nom }}</span>
+  </nav>
+
   @if (enModification()) {
-    <form [formGroup]="formulaireStation" (ngSubmit)="enregistrer(st)">
-      <p>Nom : <input formControlName="nom" maxlength="100" /></p>
-      <p>
-        Position sur la carte (de -20 à 20, vide = non placée) :
-        X <input formControlName="positionX" type="number" min="-20" max="20" aria-label="Position X" />
-        Y <input formControlName="positionY" type="number" min="-20" max="20" aria-label="Position Y" />
-      </p>
-      <button type="submit">Enregistrer</button>
-      <button type="button" (click)="annuler()">Annuler</button>
-    </form>
+    <div class="entete-page">
+      <h1>Modifier la station</h1>
+    </div>
+    <section class="bloc">
+      <form [formGroup]="formulaireStation" (ngSubmit)="enregistrer(st)">
+        <div class="champs">
+          <div class="champ-large">
+            <label for="nom">Nom</label>
+            <input id="nom" formControlName="nom" maxlength="100" />
+          </div>
+          <div>
+            <label for="positionX">Position X</label>
+            <input id="positionX" formControlName="positionX" type="number" min="-20" max="20" placeholder="-20 à 20" />
+          </div>
+          <div>
+            <label for="positionY">Position Y</label>
+            <input id="positionY" formControlName="positionY" type="number" min="-20" max="20" placeholder="-20 à 20" />
+          </div>
+        </div>
+        <p class="aide">Laissez X et Y vides pour retirer la station de la carte.</p>
+        <div class="boutons-formulaire">
+          <button type="submit">Enregistrer</button>
+          <button type="button" (click)="annuler()">Annuler</button>
+        </div>
+      </form>
+    </section>
   } @else {
-    <h1>{{ st.nom }}</h1>
-    <p>
-      Position sur la carte :
-      {{ st.positionX !== null ? '(' + st.positionX + ', ' + st.positionY + ')' : 'non placée' }}
-    </p>
-    @if (authService.peutGererStations()) {
-      <button type="button" (click)="modifier(st)">Modifier</button>
-    }
+    <div class="entete-page">
+      <h1>
+        {{ st.nom }}
+        @if (st.positionX !== null && st.positionY !== null) {
+          <span class="pastille mono" title="Position sur la carte">({{ st.positionX }} ; {{ st.positionY }})</span>
+        } @else {
+          <span class="pastille">Hors carte</span>
+        }
+      </h1>
+      @if (authService.peutGererStations()) {
+        <div class="actions-page">
+          <button type="button" (click)="modifier(st)">Modifier</button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (erreur()) {
+    <p class="erreur" role="alert">{{ erreur() }}</p>
   }
 
   @if (authService.peutGererEquipements()) {
-    <h2>Ajouter un équipement</h2>
-    <form [formGroup]="formulaire" (ngSubmit)="ajouter(st)">
-      <input formControlName="reference" placeholder="Référence (ex. CAM00001)" maxlength="8" />
-      <input formControlName="description" placeholder="Description" maxlength="255" />
-      <select formControlName="type">
-        @for (type of types; track type) {
-          <option [ngValue]="type">{{ type | libelle }}</option>
-        }
-      </select>
-      <select formControlName="etat">
-        @for (etat of etats; track etat) {
-          <option [ngValue]="etat">{{ etat | libelle }}</option>
-        }
-      </select>
-      <button type="submit">Ajouter</button>
-    </form>
+    <section class="bloc">
+      <h2>Ajouter un équipement</h2>
+      <form [formGroup]="formulaire" (ngSubmit)="ajouter(st)">
+        <div class="champs">
+          <div>
+            <label for="reference">Référence</label>
+            <input id="reference" class="mono" formControlName="reference" placeholder="ex. CAM00001" maxlength="8" />
+          </div>
+          <div>
+            <label for="type">Type</label>
+            <select id="type" formControlName="type">
+              @for (type of types; track type) {
+                <option [ngValue]="type">{{ type | libelle }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="etat">État</label>
+            <select id="etat" formControlName="etat">
+              @for (etat of etats; track etat) {
+                <option [ngValue]="etat">{{ etat | libelle }}</option>
+              }
+            </select>
+          </div>
+          <div class="champ-large">
+            <label for="description-equipement">Description</label>
+            <input id="description-equipement" formControlName="description" placeholder="ex. Caméra quai 2" maxlength="255" />
+          </div>
+        </div>
+        <div class="boutons-formulaire">
+          <button type="submit">Ajouter</button>
+        </div>
+      </form>
+    </section>
   }
 
-  <h2>Équipements</h2>
-  @if (equipements().length === 0) {
-    <p>Aucun équipement dans cette station.</p>
-  } @else {
-    <table>
-      <tr>
-        <th>Référence</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>État</th>
-        <th></th>
-      </tr>
-      @for (eq of equipements(); track eq.id) {
-        <tr>
-          <td><a [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
-          <td>{{ eq.type | libelle }}</td>
-          <td>{{ eq.description }}</td>
-          <td><app-etat-equipement [etat]="eq.etat" /></td>
-          <td>
+  <section class="bloc">
+    <div class="bloc-entete">
+      <h2>Équipements <span class="pastille mono">{{ equipements().length }}</span></h2>
+    </div>
+    @if (equipements().length === 0) {
+      <p class="vide">Aucun équipement dans cette station.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>État</th>
             @if (authService.peutGererEquipements()) {
-              <button type="button" class="danger" (click)="supprimer(eq)">Supprimer</button>
+              <th><span class="visuellement-cache">Actions</span></th>
             }
-          </td>
-        </tr>
-      }
-    </table>
-  }
-}
-
-@if (erreur()) {
-  <p>{{ erreur() }}</p>
+          </tr>
+        </thead>
+        <tbody>
+          @for (eq of equipements(); track eq.id) {
+            <tr>
+              <td><a class="mono" [routerLink]="['/equipements', eq.id]">{{ eq.reference ?? 'n°' + eq.id }}</a></td>
+              <td>{{ eq.type | libelle }}</td>
+              <td>{{ eq.description ?? '—' }}</td>
+              <td><app-etat-equipement [etat]="eq.etat" /></td>
+              @if (authService.peutGererEquipements()) {
+                <td class="cellule-action">
+                  <button type="button" class="danger petit" (click)="supprimer(eq)">Supprimer</button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+} @else if (erreur()) {
+  <p class="erreur" role="alert">{{ erreur() }}</p>
 }

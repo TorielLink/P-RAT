@@ -36,7 +36,16 @@ export class Carte implements OnInit {
   readonly erreur = signal<string | null>(null);
 
   readonly placees = computed(() => this.stations().filter(s => s.positionX !== null && s.positionY !== null));
-  readonly nombreSansPosition = computed(() => this.stations().length - this.placees().length);
+  readonly sansPosition = computed(() => this.stations().filter(s => s.positionX === null || s.positionY === null));
+  readonly nombreSansPosition = computed(() => this.sansPosition().length);
+
+  /** Nombre de stations par situation : résumé affiché quand aucune station n'est sélectionnée. */
+  readonly resume = computed(() =>
+    this.situations.map(situation => ({
+      situation,
+      nombre: this.stations().filter(s => s.situation === situation).length,
+    }))
+  );
 
   /** Cadrage automatique : carré englobant toutes les stations placées, avec une marge. */
   readonly cadre = computed(() => {

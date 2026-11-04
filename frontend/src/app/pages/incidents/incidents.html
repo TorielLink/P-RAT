@@ -1,46 +1,56 @@
-<h1>Incidents</h1>
-
-@if (authService.estAdmin()) {
-  <a routerLink="/affectations">Affecter les prestataires</a>
-}
+<div class="titre-page">
+  <h1>Incidents</h1>
+  @if (authService.estAdmin()) {
+    <a class="bouton-lien" routerLink="/affectations">Affecter les prestataires</a>
+  }
+</div>
 
 @if (erreur()) {
-  <p>{{ erreur() }}</p>
+  <p class="erreur" role="alert">{{ erreur() }}</p>
 }
 
 <div class="colonnes">
   @for (colonne of colonnes(); track colonne.titre) {
-    <section>
+    <section [class]="'colonne ' + colonne.statut" [attr.aria-label]="colonne.titre">
       <h2>
         @if (colonne.lien) {
           <a [routerLink]="colonne.lien">{{ colonne.titre }}</a>
         } @else {
           {{ colonne.titre }}
         }
-        ({{ colonne.total }})
+        <span class="compteur mono">{{ colonne.total }}</span>
       </h2>
+
       @if (colonne.incidents.length === 0) {
-        <p>Aucun incident.</p>
+        <p class="vide">Aucun incident.</p>
       } @else {
         <ul>
           @for (inc of colonne.incidents; track inc.id) {
             <li>
-              <a [routerLink]="['/incidents', inc.id]">n°{{ inc.id }}</a>
-              — {{ inc.equipementReference ?? 'équipement n°' + inc.equipementId }}
-              ({{ inc.stationNom ?? 'sans station' }})
-              <br />
-              Priorité : {{ inc.priorite | libelle }} · Prestataire : {{ inc.prestataireNom ?? 'non affecté' }}
-              <br />
-              @if (inc.dateResolution) {
-                Résolu le {{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}
-              } @else {
-                Ouvert le {{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}
-              }
+              <!-- toute la carte est cliquable -->
+              <a class="carte-incident" [routerLink]="['/incidents', inc.id]">
+                <span class="ligne-haut">
+                  <span class="reference mono">{{ inc.equipementReference ?? 'Équipement n°' + inc.equipementId }}</span>
+                  <span class="numero mono">n°{{ inc.id }}</span>
+                </span>
+                <span class="station">{{ inc.stationNom ?? 'Sans station' }}</span>
+                <span class="details">
+                  <span [class]="'priorite ' + inc.priorite">{{ inc.priorite | libelle }}</span>
+                  <span class="prestataire">{{ inc.prestataireNom ?? 'Non affecté' }}</span>
+                </span>
+                <span class="date">
+                  @if (inc.dateResolution) {
+                    Résolu le <span class="mono">{{ inc.dateResolution | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  } @else {
+                    Ouvert le <span class="mono">{{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  }
+                </span>
+              </a>
             </li>
           }
         </ul>
         @if (colonne.lien && colonne.total > colonne.incidents.length) {
-          <a [routerLink]="colonne.lien">Voir les {{ colonne.total }} incidents</a>
+          <a class="voir-tout" [routerLink]="colonne.lien">Voir les {{ colonne.total }} incidents →</a>
         }
       }
     </section>

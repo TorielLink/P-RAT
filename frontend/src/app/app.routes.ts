@@ -10,6 +10,7 @@ import { NouvelIncident } from './pages/nouvel_incident/nouvel_incident';
 import { Incidents } from './pages/incidents/incidents';
 import { Historique } from './pages/historique/historique';
 import { IncidentPage } from './pages/incident/incident';
+import { IncidentsParStatut } from './pages/incidents-statut/incidents-statut';
 import { Affectations } from './pages/affectations/affectations';
 import { Prestataires } from './pages/prestataires/prestataires';
 import { PrestatairePage } from './pages/prestataire/prestataire';
@@ -24,18 +25,31 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', canActivate: [accueilGuard], children: [] },
       { path: 'tableau-de-bord', component: TableauDeBord, canActivate: [profilGuard('ADMIN', 'PRESTATAIRE')] },
-      { path: 'stations', component: Stations },
-      { path: 'stations/:id', component: StationPage },
-      { path: 'equipements', component: Equipements },
+      // Stations et liste des équipements : pas pour le prestataire
+      { path: 'stations', component: Stations, canActivate: [profilGuard('ADMIN', 'AGENT')] },
+      { path: 'stations/:id', component: StationPage, canActivate: [profilGuard('ADMIN', 'AGENT')] },
+      { path: 'equipements', component: Equipements, canActivate: [profilGuard('ADMIN', 'AGENT')] },
       { path: 'carte', component: Carte, canActivate: [profilGuard('ADMIN')] },
       {
         path: 'equipements/:id/declarer-incident',
         component: NouvelIncident,
         canActivate: [profilGuard('ADMIN', 'AGENT')],
       },
+      // Ouvert à tous : le serveur ne montre au prestataire que les équipements de ses incidents
       { path: 'equipements/:id', component: EquipementPage },
       { path: 'incidents', component: Incidents },
       { path: 'incidents/historique', component: Historique },
+      // Avant 'incidents/:id' : sinon « non-affectes » serait pris pour un identifiant
+      {
+        path: 'incidents/non-affectes',
+        component: IncidentsParStatut,
+        data: { statut: 'OUVERT', titre: 'Incidents non affectés' },
+      },
+      {
+        path: 'incidents/en-cours',
+        component: IncidentsParStatut,
+        data: { statut: 'EN_COURS', titre: 'Incidents pris en charge' },
+      },
       { path: 'incidents/:id', component: IncidentPage },
       { path: 'affectations', component: Affectations, canActivate: [profilGuard('ADMIN')] },
       { path: 'prestataires', component: Prestataires, canActivate: [profilGuard('ADMIN', 'PRESTATAIRE')] },

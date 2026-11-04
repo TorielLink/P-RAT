@@ -90,6 +90,253 @@ code {
 .evaluation h2,
 .journal h2 {
   margin-top: 0;
+  font-size: 15px;
+}
+
+// ---------- Pages de détail (incident, station, équipement) ----------
+
+// Fil d'Ariane : Stations / Châtelet
+.fil-ariane {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--texte-discret);
+}
+
+.fil-ariane a {
+  color: var(--texte-discret);
+  text-decoration: none;
+}
+
+.fil-ariane a:hover {
+  color: var(--lien-survol);
+  text-decoration: underline;
+}
+
+// Titre à gauche, actions à droite
+.entete-page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.entete-page h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+// Pastille de statut ou d'état à côté du titre : taille normale, pas celle du titre
+.entete-page h1 :is(app-statut-incident, app-etat-equipement, app-niveau-attention) {
+  font-size: 13px;
+}
+
+.actions-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actions-page button {
+  margin: 0;
+}
+
+// Bloc de contenu
+.bloc {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
+
+.bloc > h2:first-child,
+.bloc-entete h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+// Titre de bloc + action à droite
+.bloc-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bloc-entete h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+// Liste « libellé : valeur »
+.fiche {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 10px 20px;
+  margin: 0;
+}
+
+.fiche dt {
+  font-size: 13px;
+  color: var(--texte-discret);
+}
+
+.fiche dd {
+  margin: 0;
+}
+
+// Texte long saisi par l'utilisateur : garde les retours à la ligne
+.texte-long {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+// Contenu principal + colonne d'informations à droite
+.disposition-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
+
+.colonne-principale {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.colonne-principale > * {
+  margin: 0;
+}
+
+// Écran étroit : une colonne, les informations en premier
+@media (max-width: 900px) {
+  .disposition-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .colonne-laterale {
+    order: -1;
+  }
+}
+
+// Champs de formulaire en grille
+.champs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0 16px;
+  align-items: end;
+}
+
+.champs input,
+.champs select,
+.champs textarea {
+  width: 100%;
+}
+
+.champ-large {
+  grid-column: 1 / -1;
+}
+
+.boutons-formulaire {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.boutons-formulaire button {
+  margin: 0;
+}
+
+// Pastille neutre (compteur, « Hors carte »...)
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 999px;
+  color: var(--texte-secondaire);
+  background: var(--gris-fond);
+}
+
+// Lien présenté comme le bouton principal
+.bouton-lien {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 16px;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+  background: var(--accent);
+  border-radius: var(--rayon);
+  transition: background 0.15s;
+}
+
+.bouton-lien:hover {
+  color: #ffffff;
+  background: var(--accent-survol);
+}
+
+// Liste vide
+.vide {
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  color: var(--texte-discret);
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon);
+}
+
+// Bloc placé directement dans .disposition-detail
+.disposition-detail > .bloc {
+  min-width: 0;
+  margin: 0;
+}
+
+// Petite phrase d'explication sous un formulaire
+.aide {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+// Bouton compact (dans un tableau)
+button.petit {
+  min-height: 30px;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.cellule-action {
+  text-align: right;
+}
+
+// Texte lu par les lecteurs d'écran mais invisible à l'écran
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 // ---------- Formulaires ----------

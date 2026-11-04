@@ -1,0 +1,33 @@
+<a class="retour" routerLink="/incidents">← Tous les incidents</a>
+
+<div class="titre-page">
+  <h1>{{ titre }} <span class="compteur mono">{{ incidents().length }}</span></h1>
+</div>
+
+@if (erreur()) {
+  <p class="erreur" role="alert">{{ erreur() }}</p>
+} @else if (charge() && incidents().length === 0) {
+  <p class="vide">Aucun incident.</p>
+} @else {
+  <!-- La classe du statut donne la couleur (comme les colonnes de /incidents) -->
+  <ul [class]="'grille ' + statut">
+    @for (inc of incidents(); track inc.id) {
+      <li>
+        <a class="carte-incident" [routerLink]="['/incidents', inc.id]">
+          <span class="ligne-haut">
+            <span class="reference mono">{{ inc.equipementReference ?? 'Équipement n°' + inc.equipementId }}</span>
+            <span class="numero mono">n°{{ inc.id }}</span>
+          </span>
+          <span class="station">{{ inc.stationNom ?? 'Sans station' }}</span>
+          <span class="details">
+            <span [class]="'priorite ' + inc.priorite">{{ inc.priorite | libelle }}</span>
+            <span class="prestataire">{{ inc.prestataireNom ?? 'Non affecté' }}</span>
+          </span>
+          <span class="date">
+            Ouvert le <span class="mono">{{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+}
