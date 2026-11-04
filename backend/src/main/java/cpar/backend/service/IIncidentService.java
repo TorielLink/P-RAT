@@ -12,8 +12,6 @@ public interface IIncidentService {
 
     IncidentDetailDto obtenirDetailIncident(Long id, String login);
 
-    Incident obtenirIncidentParId(Long id, String login);
-
     List<Incident> obtenirTousIncidents(String login);
 
     List<Incident> obtenirIncidentsParEquipement(Long equipementId, String login);
@@ -24,8 +22,6 @@ public interface IIncidentService {
 
     Incident modifierIncident(Long id, ModificationIncidentRequest demande, String login);
 
-    Incident affecterPrestataire(Long id, Long prestataireId);
-
     void supprimerIncident(Long id);
 
     Incident resoudreIncident(Long id, String login);
@@ -34,5 +30,9 @@ public interface IIncidentService {
 
     List<IncidentActifDto> obtenirIncidentsActifs(String login);
 
-    Evaluation evaluerIncident(Long id, EvaluationRequest demande);
+    Incident affecterPrestataire(Long id, Long prestataireId, String login);
+
+    Evaluation evaluerIncident(Long id, EvaluationRequest demande, String login);
+
+    List<EvenementIncidentDto> obtenirJournal(Long id);
 }

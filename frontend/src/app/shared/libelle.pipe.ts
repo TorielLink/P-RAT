@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { EtatEquipement, TypeEquipement } from '../core/equipement/equipement.service';
-import { LIBELLES_STATUT, PrioriteIncident } from '../core/incident/incident.service';
+import { LIBELLES_CHAMP, LIBELLES_EVENEMENT, LIBELLES_STATUT, PrioriteIncident } from '../core/incident/incident.service';
 
 const LIBELLES_TYPE: Record<TypeEquipement, string> = {
   CAMERA: 'Caméra',
@@ -29,6 +29,8 @@ const LIBELLES: Record<string, string> = {
   ...LIBELLES_ETAT,
   ...LIBELLES_PRIORITE,
   ...LIBELLES_STATUT,
+  ...LIBELLES_EVENEMENT,
+  ...LIBELLES_CHAMP,
 };
 
 /** {{ 'EN_PANNE' | libelle }} → « En panne ». Un code inconnu est affiché tel quel ; null → « — ». */

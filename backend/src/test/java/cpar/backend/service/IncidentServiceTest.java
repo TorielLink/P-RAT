@@ -1,5 +1,7 @@
 package cpar.backend.service;
 
+import cpar.backend.logs.JournalIncidentLecteur;
+import org.springframework.context.ApplicationEventPublisher;
 import cpar.backend.dto.DeclarationIncidentRequest;
 import cpar.backend.dto.IncidentDetailDto;
 import cpar.backend.dto.ModificationIncidentRequest;
@@ -52,6 +54,8 @@ class IncidentServiceTest {
     @Mock private UtilisateurRepository utilisateurRepository;
     @Mock private EvaluationRepository evaluationRepository;
     @Mock private IEquipementService equipementService;
+    @Mock private ApplicationEventPublisher evenements;
+    @Mock private JournalIncidentLecteur journal;
 
     private IncidentService incidentService;
 
@@ -59,7 +63,7 @@ class IncidentServiceTest {
     void creeServiceAvecHorlogeFigee() {
         Clock horlogeFigee = Clock.fixed(MAINTENANT.atZone(ZONE).toInstant(), ZONE);
         incidentService = new IncidentService(incidentRepository, prestataireRepository,
-                utilisateurRepository, evaluationRepository, equipementService, horlogeFigee);
+                utilisateurRepository, evaluationRepository, equipementService, evenements, journal, horlogeFigee);
     }
 
     @Test
@@ -225,8 +229,8 @@ class IncidentServiceTest {
         when(prestataireRepository.findById(1L)).thenReturn(Optional.of(premier));
         when(prestataireRepository.findById(2L)).thenReturn(Optional.of(second));
 
-        incidentService.affecterPrestataire(1L, 1L);
-        Incident reaffecte = incidentService.affecterPrestataire(1L, 2L);
+        incidentService.affecterPrestataire(1L, 1L, "admin");
+        Incident reaffecte = incidentService.affecterPrestataire(1L, 2L, "admin");
 
         assertEquals(second, reaffecte.getPrestataire());
         assertEquals(StatutIncident.EN_COURS, reaffecte.getStatut());
@@ -238,7 +242,7 @@ class IncidentServiceTest {
         resolu.setStatut(StatutIncident.RESOLU);
         when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(resolu));
 
-        assertThrows(IncidentDejaResoluException.class, () -> incidentService.affecterPrestataire(1L, 1L));
+        assertThrows(IncidentDejaResoluException.class, () -> incidentService.affecterPrestataire(1L, 1L, "admin"));
         assertNull(resolu.getPrestataire());
         verifyNoInteractions(prestataireRepository);
     }
@@ -249,7 +253,7 @@ class IncidentServiceTest {
         when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
         when(prestataireRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(PrestataireIntrouvableException.class, () -> incidentService.affecterPrestataire(1L, 99L));
+        assertThrows(PrestataireIntrouvableException.class, () -> incidentService.affecterPrestataire(1L, 99L, "admin"));
         assertNull(incident.getPrestataire());
         assertEquals(StatutIncident.OUVERT, incident.getStatut());
     }
@@ -269,7 +273,7 @@ class IncidentServiceTest {
         when(evaluationRepository.existsByIncidentId(1L)).thenReturn(false);
         when(evaluationRepository.saveAndFlush(any(Evaluation.class))).thenAnswer(appel -> appel.getArgument(0));
 
-        Evaluation evaluation = incidentService.evaluerIncident(1L, new EvaluationRequest(4, "   "));
+        Evaluation evaluation = incidentService.evaluerIncident(1L, new EvaluationRequest(4, "   "), "admin");
 
         assertEquals(4, evaluation.getNote());
         assertNull(evaluation.getCommentaire());
@@ -281,7 +285,7 @@ class IncidentServiceTest {
         when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incidentOuvertDepuis(Duration.ofHours(5))));
 
         assertThrows(EvaluationImpossibleException.class,
-                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null)));
+                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null), "admin"));
         verify(evaluationRepository, never()).saveAndFlush(any());
     }
 
@@ -291,7 +295,7 @@ class IncidentServiceTest {
         when(evaluationRepository.existsByIncidentId(1L)).thenReturn(true);
 
         assertThrows(EvaluationImpossibleException.class,
-                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null)));
+                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null), "admin"));
         verify(evaluationRepository, never()).saveAndFlush(any());
     }
 
@@ -303,7 +307,7 @@ class IncidentServiceTest {
                 .thenThrow(new DataIntegrityViolationException("cleIncidentUnique"));
 
         assertThrows(EvaluationImpossibleException.class,
-                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null)));
+                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null), "admin"));
     }
 
     private static Incident incidentOuvertDepuis(Duration duree) {

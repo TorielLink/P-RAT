@@ -35,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+
 @WebMvcTest(IncidentController.class)
 @Import(SecurityConfig.class)
 class IncidentControllerTest {
@@ -254,7 +256,7 @@ class IncidentControllerTest {
         Incident affecte = incidentRenvoye();
         affecte.setPrestataire(prestataire);
         affecte.setStatut(StatutIncident.EN_COURS);
-        when(incidentService.affecterPrestataire(1L, 2L)).thenReturn(affecte);
+        when(incidentService.affecterPrestataire(eq(1L), eq(2L), any())).thenReturn(affecte);
 
         mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
                 .andExpect(status().isOk())
@@ -265,7 +267,7 @@ class IncidentControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void affecterUnIncidentResoluRenvoie409() throws Exception {
-        when(incidentService.affecterPrestataire(1L, 2L)).thenThrow(new IncidentDejaResoluException(1L));
+        when(incidentService.affecterPrestataire(eq(1L), eq(2L), any())).thenThrow(new IncidentDejaResoluException(1L));
 
         mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
                 .andExpect(status().isConflict())
@@ -276,7 +278,7 @@ class IncidentControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void unPrestataireInexistantRenvoie404() throws Exception {
-        when(incidentService.affecterPrestataire(1L, 2L)).thenThrow(new PrestataireIntrouvableException(2L));
+        when(incidentService.affecterPrestataire(eq(1L), eq(2L), any())).thenThrow(new PrestataireIntrouvableException(2L));
 
         mockMvc.perform(put("/api/incidents/1/prestataire").contentType(MediaType.APPLICATION_JSON).content(AFFECTATION))
                 .andExpect(status().isNotFound());
@@ -316,7 +318,7 @@ class IncidentControllerTest {
     void uneEvaluationValideRenvoie201AvecLocation() throws Exception {
         Evaluation evaluation = new Evaluation();
         evaluation.setNote(4);
-        when(incidentService.evaluerIncident(eq(1L), any())).thenReturn(evaluation);
+        when(incidentService.evaluerIncident(eq(1L), any(), any())).thenReturn(evaluation);
 
         mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
                     { "note": 4, "commentaire": "Intervention rapide." }"""))
@@ -356,7 +358,7 @@ class IncidentControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void evaluerUnIncidentDejaEvalueRenvoie409() throws Exception {
-        when(incidentService.evaluerIncident(eq(1L), any())).thenThrow(EvaluationImpossibleException.dejaEvalue(1L));
+        when(incidentService.evaluerIncident(eq(1L), any(), any())).thenThrow(EvaluationImpossibleException.dejaEvalue(1L));
 
         mockMvc.perform(post(URL_EVALUATION).contentType(MediaType.APPLICATION_JSON).content("""
                     { "note": 4 }"""))

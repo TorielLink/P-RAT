@@ -2,6 +2,7 @@ package cpar.backend.service;
 
 import cpar.backend.dto.*;
 import cpar.backend.exception.*;
+import cpar.backend.logs.EvenementIncident;
 import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.entities.Prestataire;
@@ -9,10 +10,12 @@ import cpar.backend.model.entities.Utilisateur;
 import cpar.backend.model.enums.PrioriteIncident;
 import cpar.backend.model.enums.ProfilUtilisateur;
 import cpar.backend.model.enums.StatutIncident;
+import cpar.backend.model.enums.TypeEvenementIncident;
 import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
 import cpar.backend.repository.UtilisateurRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import cpar.backend.logs.JournalIncidentLecteur;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -38,6 +42,8 @@ public class IncidentService implements IIncidentService {
     private final UtilisateurRepository utilisateurRepository;
     private final EvaluationRepository evaluationRepository;
     private final IEquipementService equipementService;
+    private final ApplicationEventPublisher evenements;
+    private final JournalIncidentLecteur journal;
     private final Clock horloge;
 
     private static final Sort TRI_HISTORIQUE = Sort.by(Sort.Order.desc("dateResolution"), Sort.Order.desc("id"));
@@ -48,16 +54,28 @@ public class IncidentService implements IIncidentService {
                            UtilisateurRepository utilisateurRepository,
                            EvaluationRepository evaluationRepository,
                            IEquipementService equipementService,
+                           ApplicationEventPublisher evenements,
+                           JournalIncidentLecteur journal,
                            Clock horloge) {
         this.incidentRepository = incidentRepository;
         this.prestataireRepository = prestataireRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.evaluationRepository = evaluationRepository;
         this.equipementService = equipementService;
+        this.evenements = evenements;
+        this.journal = journal;
         this.horloge = horloge;
     }
 
     // ---------- Lecture : un prestataire ne voit que les incidents qui lui sont affectés ----------
+
+    @Override
+    public List<EvenementIncidentDto> obtenirJournal(Long id) {
+        if (!incidentRepository.existsById(id)) {
+            throw new IncidentIntrouvableException(id);
+        }
+        return journal.lire(id);
+    }
 
     @Override
     public IncidentDetailDto obtenirDetailIncident(Long id, String login) {
@@ -66,11 +84,6 @@ public class IncidentService implements IIncidentService {
         Evaluation evaluation = evaluationRepository.findByIncidentId(id).orElse(null);
         return IncidentDetailDto.depuis(incident, evaluation, LocalDateTime.now(horloge),
                 incident.estModifiablePar(utilisateur));
-    }
-
-    @Override
-    public Incident obtenirIncidentParId(Long id, String login) {
-        return chargerIncidentVisiblePar(id, chargerUtilisateur(login));
     }
 
     // 404 plutôt que 403 : on ne révèle pas l'existence des incidents des autres prestataires
@@ -158,7 +171,9 @@ public class IncidentService implements IIncidentService {
         incident.setStatut(StatutIncident.OUVERT);
         incident.setDateOuverture(LocalDateTime.now(horloge));
         incident.setUtilisateur(chargerUtilisateur(login));
-        return incidentRepository.save(incident);
+        Incident enregistre = incidentRepository.save(incident);
+        publier(enregistre.getId(), login, TypeEvenementIncident.DECLARATION, null, null, null);
+        return enregistre;
     }
 
     /** Admin : tous les incidents. Agent : seulement ceux qui lui sont affectés. Prestataire : refusé par SecurityConfig. */
@@ -170,9 +185,22 @@ public class IncidentService implements IIncidentService {
             throw new OperationInterditeException(
                     "Vous ne pouvez modifier que les incidents non affectés que vous avez déclarés.");
         }
+        String ancienneDescription = incident.getDescription();
+        PrioriteIncident anciennePriorite = incident.getPriorite();
+
         incident.setDescription(demande.description().trim());
         if (demande.priorite() != null) {
             incident.setPriorite(demande.priorite());
+        }
+
+        // Une ligne de journal par champ réellement modifié
+        if (!Objects.equals(ancienneDescription, incident.getDescription())) {
+            publier(id, login, TypeEvenementIncident.MODIFICATION, "description",
+                    ancienneDescription, incident.getDescription());
+        }
+        if (anciennePriorite != incident.getPriorite()) {
+            publier(id, login, TypeEvenementIncident.MODIFICATION, "priorite",
+                    nomOuNull(anciennePriorite), nomOuNull(incident.getPriorite()));
         }
         return incident;
     }
@@ -180,11 +208,19 @@ public class IncidentService implements IIncidentService {
     /** Admin seulement (SecurityConfig). Affecter ou réaffecter : l'incident passe EN_COURS. */
     @Override
     @Transactional
-    public Incident affecterPrestataire(Long id, Long prestataireId) {
+    public Incident affecterPrestataire(Long id, Long prestataireId, String login) {
         Incident incident = obtenirIncidentNonResolu(id);
         Prestataire prestataire = prestataireRepository.findById(prestataireId)
                 .orElseThrow(() -> new PrestataireIntrouvableException(prestataireId));
+        Prestataire ancien = incident.getPrestataire();
+        // Même prestataire : rien ne change, rien à journaliser
+        if (ancien != null && Objects.equals(ancien.getId(), prestataire.getId())) {
+            return incident;
+        }
         incident.affecterA(prestataire);
+        publier(id, login,
+                ancien == null ? TypeEvenementIncident.AFFECTATION : TypeEvenementIncident.REAFFECTATION,
+                "prestataire", ancien == null ? null : ancien.getNom(), prestataire.getNom());
         return incident;
     }
 
@@ -216,6 +252,17 @@ public class IncidentService implements IIncidentService {
                 .orElseThrow(() -> new UtilisateurIntrouvableException(login));
     }
 
+    // Écrit dans le fichier seulement après le commit (JournalIncidentListener)
+    private void publier(Long incidentId, String login, TypeEvenementIncident type,
+                         String champ, String ancienne, String nouvelle) {
+        evenements.publishEvent(new EvenementIncident(incidentId, login,
+                LocalDateTime.now(horloge), type, champ, ancienne, nouvelle));
+    }
+
+    private static String nomOuNull(Enum<?> valeur) {
+        return valeur == null ? null : valeur.name();
+    }
+
     @Override
     @Transactional
     public Incident resoudreIncident(Long id, String login) {
@@ -224,8 +271,11 @@ public class IncidentService implements IIncidentService {
         if (utilisateur.estPrestataire() && nEstPasAffecteA(incident, utilisateur)) {
             throw new OperationInterditeException("Cet incident n'est pas affecté à votre entreprise.");
         }
+        StatutIncident ancienStatut = incident.getStatut();
         incident.setStatut(StatutIncident.RESOLU);
         incident.setDateResolution(LocalDateTime.now(horloge));
+        publier(id, login, TypeEvenementIncident.RESOLUTION, "statut",
+                nomOuNull(ancienStatut), StatutIncident.RESOLU.name());
         return incident;
     }
 
@@ -258,7 +308,7 @@ public class IncidentService implements IIncidentService {
     /** admin seulement -> incident résolu, affecté, et une seule évaluation */
     @Override
     @Transactional
-    public Evaluation evaluerIncident(Long id, EvaluationRequest demande) {
+    public Evaluation evaluerIncident(Long id, EvaluationRequest demande, String login) {
         Incident incident = chargerIncident(id);
         incident.verifierQuIlPeutEtreEvalue();
         if (evaluationRepository.existsByIncidentId(id)) {
@@ -270,7 +320,10 @@ public class IncidentService implements IIncidentService {
         evaluation.setCommentaire(commentaireOuNull(demande.commentaire()));
         evaluation.setDateEvaluation(LocalDate.now(horloge));
         try {
-            return evaluationRepository.saveAndFlush(evaluation);
+            Evaluation enregistree = evaluationRepository.saveAndFlush(evaluation);
+            publier(id, login, TypeEvenementIncident.EVALUATION, "note",
+                    null, demande.note() == null ? null : demande.note().toString());
+            return enregistree;
         } catch (DataIntegrityViolationException doublon) {
             throw EvaluationImpossibleException.dejaEvalue(id);
         }
