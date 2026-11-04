@@ -200,6 +200,30 @@ ISP parce que ...
   composant `EasterEgg` pour les effets (clavier, son Web Audio, animation CSS).
 - Ignoré pendant la saisie dans un champ.
 
+### Sécurité renforcée
+
+- **Mots de passe** : BCrypt (`PasswordEncoder`) ; la migration V2 ne contient que des hachés ; aucun
+  mot de passe dans les logs. Les mots de passe des comptes de démonstration sont listés dans le README.
+- **Accès** : API → 401 sans session ; pages → `authGuard` vers /login. Droits du §5.6 dans
+  `SecurityConfig`, plus contrôle de la ressource dans les services (un prestataire ne voit que ses
+  incidents et sa fiche, un agent ne modifie que ses incidents non affectés).
+- **401 et 403** : corps ProblemDetail avec message en français, y compris quand c'est Spring Security
+  qui refuse. Compte inactif refusé (`disabled`).
+- **Connexion** : message unique « Identifiant ou mot de passe incorrect » ; `DaoAuthenticationProvider`
+  masque aussi l'inexistence du login (même message et même temps de réponse).
+- **CSRF** : activé : jeton dans le cookie `XSRF-TOKEN`, renvoyé automatiquement par
+  `HttpClient` d'Angular dans `X-XSRF-TOKEN`. Une modification sans jeton reçoit 403.
+- **XSS** : Angular échappe toutes les interpolations ; aucun `innerHTML` ni contournement du sanitizer.
+- **Injection SQL** : requêtes dérivées et JPQL à paramètres liés uniquement, jamais de concaténation.
+- **Secrets** : `DB_PASSWORD` et `DB_USERNAME` en variables d'environnement. L'ancien mot de passe de
+  développement reste dans l'historique Git ; il n'est utilisé nulle part ailleurs.
+- **En-têtes** : `Content-Security-Policy`, `Referrer-Policy: same-origin`, `X-Frame-Options: DENY`,
+  `X-Content-Type-Options: nosniff`, HSTS automatique en HTTPS. En développement, le front est servi par
+  `ng serve` ; en production, le serveur du front devra envoyer les mêmes en-têtes.
+- **Session** : cookie `HttpOnly`, `SameSite=Lax`, `Secure` en production (profil `prod`) ; expiration
+  après 30 minutes d'inactivité.
+- **Erreurs** : `include-message=always` retiré ; aucune trace technique dans les réponses.
+
 
 ## BILAN
 - Contribution de chacun : …
