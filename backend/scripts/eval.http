@@ -42,3 +42,9 @@ Content-Type: application/json
 
 ### Historique : la colonne note est remplie
 GET http://localhost:8080/api/incidents/historique
+
+### En admin : tous les prestataires, triés par nom, avec moyenne et nombre
+GET http://localhost:8080/api/prestataires
+
+### En admin : la fiche 3 et ses évaluations
+GET http://localhost:8080/api/prestataires/3

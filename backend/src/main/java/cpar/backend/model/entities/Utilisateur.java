@@ -45,6 +45,15 @@ public class Utilisateur {
     @JoinColumn(name = "prestataireId")
     private Prestataire prestataire;
 
+    public boolean estPrestataire() {
+        return profil == ProfilUtilisateur.PRESTATAIRE;
+    }
+
+    /** entreprise à laquelle un prestataire est rattaché, null sinon */
+    public Long prestataireRattacheId() {
+        return prestataire != null ? prestataire.getId() : null;
+    }
+
     public Prestataire getPrestataire() {
         return prestataire;
     }

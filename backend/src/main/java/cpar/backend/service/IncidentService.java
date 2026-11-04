@@ -76,7 +76,7 @@ public class IncidentService implements IIncidentService {
     // 404 plutôt que 403 : on ne révèle pas l'existence des incidents des autres prestataires
     private Incident chargerIncidentVisiblePar(Long id, Utilisateur utilisateur) {
         Incident incident = chargerIncident(id);
-        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
+        if (utilisateur.estPrestataire() && nEstPasAffecteA(incident, utilisateur)) {
             throw new IncidentIntrouvableException(id);
         }
         return incident;
@@ -85,8 +85,8 @@ public class IncidentService implements IIncidentService {
     @Override
     public List<Incident> obtenirTousIncidents(String login) {
         Utilisateur utilisateur = chargerUtilisateur(login);
-        if (estPrestataire(utilisateur)) {
-            Long prestataireId = prestataireIdDe(utilisateur);
+        if (utilisateur.estPrestataire()) {
+            Long prestataireId = utilisateur.prestataireRattacheId();
             return prestataireId == null
                     ? List.of()
                     : incidentRepository.findByPrestataireIdOrderByDateOuvertureDescIdDesc(prestataireId);
@@ -98,8 +98,8 @@ public class IncidentService implements IIncidentService {
     public List<Incident> obtenirIncidentsParEquipement(Long equipementId, String login) {
         equipementService.obtenirEquipementParId(equipementId);
         Utilisateur utilisateur = chargerUtilisateur(login);
-        if (estPrestataire(utilisateur)) {
-            Long prestataireId = prestataireIdDe(utilisateur);
+        if (utilisateur.estPrestataire()) {
+            Long prestataireId = utilisateur.prestataireRattacheId();
             return prestataireId == null
                     ? List.of()
                     : incidentRepository.findByEquipementIdAndPrestataireIdOrderByDateOuvertureDescIdDesc(equipementId, prestataireId);
@@ -110,8 +110,8 @@ public class IncidentService implements IIncidentService {
     @Override
     public List<Incident> obtenirIncidentsParStatut(StatutIncident statut, String login) {
         Utilisateur utilisateur = chargerUtilisateur(login);
-        if (estPrestataire(utilisateur)) {
-            Long prestataireId = prestataireIdDe(utilisateur);
+        if (utilisateur.estPrestataire()) {
+            Long prestataireId = utilisateur.prestataireRattacheId();
             return prestataireId == null
                     ? List.of()
                     : incidentRepository.findByStatutAndPrestataireIdOrderByDateOuvertureDescIdDesc(statut, prestataireId);
@@ -121,13 +121,13 @@ public class IncidentService implements IIncidentService {
 
     @Override
     public PageDto<HistoriqueIncidentDto> obtenirHistorique(String login, int page, int taille) {
-        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(taille, 1), TAILLE_MAX_PAGE),
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.clamp(taille, 1, TAILLE_MAX_PAGE),
                 TRI_HISTORIQUE);
         Utilisateur utilisateur = chargerUtilisateur(login);
 
         Page<Incident> resolus;
-        if (estPrestataire(utilisateur)) {
-            Long prestataireId = prestataireIdDe(utilisateur);
+        if (utilisateur.estPrestataire()) {
+            Long prestataireId = utilisateur.prestataireRattacheId();
             resolus = prestataireId == null
                     ? Page.empty(pageable)
                     : incidentRepository.findByStatutAndPrestataireId(StatutIncident.RESOLU, prestataireId, pageable);
@@ -216,16 +216,12 @@ public class IncidentService implements IIncidentService {
                 .orElseThrow(() -> new UtilisateurIntrouvableException(login));
     }
 
-    private static boolean estPrestataire(Utilisateur utilisateur) {
-        return utilisateur.getProfil() == ProfilUtilisateur.PRESTATAIRE;
-    }
-
     @Override
     @Transactional
     public Incident resoudreIncident(Long id, String login) {
         Incident incident = obtenirIncidentNonResolu(id); // 404 puis 409
         Utilisateur utilisateur = chargerUtilisateur(login);
-        if (estPrestataire(utilisateur) && nEstPasAffecteA(incident, utilisateur)) {
+        if (utilisateur.estPrestataire() && nEstPasAffecteA(incident, utilisateur)) {
             throw new OperationInterditeException("Cet incident n'est pas affecté à votre entreprise.");
         }
         incident.setStatut(StatutIncident.RESOLU);
@@ -237,8 +233,8 @@ public class IncidentService implements IIncidentService {
     public List<IncidentActifDto> obtenirIncidentsActifs(String login) {
         Utilisateur utilisateur = chargerUtilisateur(login);
         List<Incident> actifs;
-        if (estPrestataire(utilisateur)) {
-            Long prestataireId = prestataireIdDe(utilisateur);
+        if (utilisateur.estPrestataire()) {
+            Long prestataireId = utilisateur.prestataireRattacheId();
             actifs = prestataireId == null
                     ? List.of()
                     : incidentRepository.findByStatutNotAndPrestataireIdOrderByDateOuvertureAscIdAsc(
@@ -250,13 +246,9 @@ public class IncidentService implements IIncidentService {
         return actifs.stream().map(incident -> IncidentActifDto.depuis(incident, maintenant)).toList();
     }
 
-    private static Long prestataireIdDe(Utilisateur utilisateur) {
-        return utilisateur.getPrestataire() != null ? utilisateur.getPrestataire().getId() : null;
-    }
-
     // Comparaison par identifiant : évite de charger le prestataire lié au compte
     private static boolean nEstPasAffecteA(Incident incident, Utilisateur utilisateur) {
-        Long prestataireCompte = prestataireIdDe(utilisateur);
+        Long prestataireCompte = utilisateur.prestataireRattacheId();
         return prestataireCompte == null
                 || incident.getPrestataire() == null
                 || !Objects.equals(incident.getPrestataire().getId(), prestataireCompte);
