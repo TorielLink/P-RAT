@@ -118,6 +118,36 @@ export interface IncidentActif {
   prestataireNom: string | null;
 }
 
+export type TypeEvenementIncident =
+  'DECLARATION' | 'MODIFICATION' | 'AFFECTATION' | 'REAFFECTATION' | 'RESOLUTION' | 'EVALUATION';
+
+export interface EvenementIncident {
+  dateEvenement: string;
+  auteur: string | null;
+  type: TypeEvenementIncident;
+  champ: string | null;
+  ancienneValeur: string | null;
+  nouvelleValeur: string | null;
+}
+
+export const LIBELLES_EVENEMENT: Record<TypeEvenementIncident, string> = {
+  DECLARATION: 'Déclaration',
+  MODIFICATION: 'Modification',
+  AFFECTATION: 'Affectation',
+  REAFFECTATION: 'Réaffectation',
+  RESOLUTION: 'Résolution',
+  EVALUATION: 'Évaluation',
+};
+
+// Noms des champs tels qu'écrits par le backend
+export const LIBELLES_CHAMP: Record<string, string> = {
+  description: 'Description',
+  priorite: 'Priorité',
+  prestataire: 'Prestataire',
+  statut: 'Statut',
+  note: 'Note',
+};
+
 @Injectable({ providedIn: 'root' })
 export class IncidentService {
   private readonly http = inject(HttpClient);
@@ -166,6 +196,10 @@ export class IncidentService {
 
   evaluerIncident(id: number, demande: EvaluationRequest): Observable<EvaluationIncident> {
     return this.http.post<EvaluationIncident>(`${this.url}/${id}/evaluation`, demande);
+  }
+
+  obtenirJournal(id: number): Observable<EvenementIncident[]> {
+    return this.http.get<EvenementIncident[]>(`${this.url}/${id}/journal`);
   }
 
 }

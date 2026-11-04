@@ -25,6 +25,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(autorisations -> autorisations
                         .requestMatchers("/api/auth/login").permitAll()
+                        // Journal pour admin = log
+                        .requestMatchers(HttpMethod.GET, "/api/incidents/*/journal").hasRole("ADMIN")
                         // Carte du réseau que pour Admin
                         .requestMatchers(HttpMethod.GET, "/api/stations/carte").hasRole("ADMIN")
                         // Documentation OpenAPI réservée aux utilisateurs connectés

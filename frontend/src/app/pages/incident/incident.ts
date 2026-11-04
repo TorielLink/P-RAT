@@ -9,6 +9,7 @@ import {
   COMMENTAIRE_MAX,
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
+  EvenementIncident,
   Incident,
   IncidentDetail,
   IncidentService,
@@ -23,6 +24,8 @@ import {LibellePipe} from '../../shared/libelle.pipe';
 import {NiveauAttentionComponent} from '../../shared/niveau-attention';
 import {StatutIncidentComponent} from '../../shared/statut-incident';
 
+
+
 /** Page /incidents/:id : détail d'un incident. */
 @Component({
   selector: 'app-incident',
@@ -34,6 +37,7 @@ export class IncidentPage implements OnInit {
   private readonly router = inject(Router);
   private readonly incidentService = inject(IncidentService);
   protected readonly authService = inject(AuthService);
+  readonly journal = signal<EvenementIncident[]>([]);
 
   protected readonly priorites = PRIORITES_INCIDENT;
   protected readonly formaterDuree = formaterDuree;
@@ -199,6 +203,15 @@ export class IncidentPage implements OnInit {
         this.erreur.set(this.message(erreur, 'Incident introuvable.'));
       },
     });
+    if (this.authService.estAdmin()) {
+      this.incidentService.obtenirJournal(id).subscribe({
+        next: evenements => this.journal.set(evenements),
+        error: (erreur: HttpErrorResponse) => {
+          this.journal.set([]);
+          this.erreur.set(this.message(erreur, 'Impossible de charger le journal.'));
+        },
+      });
+    }
   }
 
   private message(erreur: HttpErrorResponse, parDefaut: string): string {

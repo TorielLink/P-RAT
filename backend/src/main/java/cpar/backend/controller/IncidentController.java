@@ -63,8 +63,10 @@ public class IncidentController {
 
     @PutMapping("/incidents/{id}/prestataire")
     public IncidentDto affecterPrestataire(@PathVariable Long id,
-                                           @Valid @RequestBody AffectationPrestataireFormulaire formulaire) {
-        return IncidentDto.depuis(incidentService.affecterPrestataire(id, formulaire.prestataireId()));
+                                           @Valid @RequestBody AffectationPrestataireFormulaire formulaire,
+                                           Authentication authentification) {
+        return IncidentDto.depuis(incidentService.affecterPrestataire(id, formulaire.prestataireId(),
+                authentification.getName()));
     }
 
     @DeleteMapping("/incidents/{id}")
@@ -80,8 +82,7 @@ public class IncidentController {
 
     @GetMapping("/incidents/historique")
     public PageDto<HistoriqueIncidentDto> obtenirHistorique(@RequestParam(defaultValue = "0") int page,
-                                                            @RequestParam(defaultValue = "20") int taille,
-                                                            Authentication authentification) {
+                                                            @RequestParam(defaultValue = "20") int taille, Authentication authentification) {
         return incidentService.obtenirHistorique(authentification.getName(), page, taille);
     }
 
@@ -92,9 +93,15 @@ public class IncidentController {
 
     @PostMapping("/incidents/{id}/evaluation")
     public ResponseEntity<EvaluationDto> evaluerIncident(@PathVariable Long id,
-                                                         @Valid @RequestBody EvaluationRequest demande) {
-        EvaluationDto evaluation = EvaluationDto.depuis(incidentService.evaluerIncident(id, demande));
+                                                         @Valid @RequestBody EvaluationRequest demande,
+                                                         Authentication authentification) {
+        EvaluationDto evaluation = EvaluationDto.depuis(incidentService.evaluerIncident(id, demande, authentification.getName()));
         // l'eval n'a pas d'adresse propre : elle se consulte dans le détail de l'incident
         return ResponseEntity.created(URI.create("/api/incidents/" + id)).body(evaluation);
+    }
+
+    @GetMapping("/incidents/{id}/journal")
+    public List<EvenementIncidentDto> obtenirJournal(@PathVariable Long id) {
+        return incidentService.obtenirJournal(id);
     }
 }
