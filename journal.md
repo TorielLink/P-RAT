@@ -2,9 +2,18 @@
 
 **Module :** ALTN72 — 2026-27 · **Groupe :** Antoine Roucau, Clothilde Proux · **Dépôt :** https://github.com/TorielLink/P-RAT
 
+**Application en ligne :** https://p-rat.onrender.com/
+
 ---
 
 ## 1. README
+### Version en ligne
+
+L'application est déployée sur https://p-rat.onrender.com/ (documentation de l'API : https://p-rat.onrender.com/swagger-ui.html, après connexion).
+
+> Hébergement gratuit : le serveur se met en veille après 15 minutes sans visite donc le premier chargement peut prendre environ une minute, le temps qu'il redémarre.
+
+### Installation en local
 
 **Prérequis :** Java 21+ (testé avec Java 25), Maven, MySQL 8, Node.js + npm (Angular CLI).
 
@@ -49,6 +58,12 @@ Le schéma MySQL est géré uniquement par Flyway (`ddl-auto=validate`).
 
 **Front (Angular)** — `core` (services HTTP, authentification, guards), `layout` (bandeau), `pages` (un écran par page) et `shared` (pipe des libellés et composants réutilisés).
 
+En production — le front et le back sont réunis dans une seule application :
+```
+Navigateur ──HTTPS──► Render : application Spring Boot (pages Angular + API /api)
+                                   │
+                                   └──SSL──► Aiven : MySQL (base p_rat_db)
+```
 ---
 
 ## 3. Tests
@@ -137,7 +152,7 @@ Elle permet à l'Admin de voir d'un coup d'œil où se trouvent les incidents. N
 
 Il permet de savoir qui a fait quoi, et quand, sur un incident : déclaration, modification, affectation, résolution et évaluation. `IncidentService` publie un événement, que `JournalIncidentListener` écrit **après la validation de la transaction** : rien n'est tracé si l'action échoue. Chaque incident a son propre fichier texte, que l'Admin consulte dans le détail de l'incident, du plus récent au plus ancien.
 
-- **Limites :** le chemin des fichiers dépend du dossier de lancement, et le journal n'est pas sauvegardé avec la base.
+- **Limites :** le chemin des fichiers dépend du dossier de lancement, et le journal n'est pas sauvegardé avec la base ; sur Render, il est supprimé à chaque build.
 - **Reste à faire :** stocker le journal dans une table.
 
 ### Easter egg
@@ -155,12 +170,50 @@ Tapez le Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l
 | Connexion | un message unique, « Identifiant ou mot de passe incorrect » ; les comptes inactifs sont refusés |
 | XSS / injection SQL | Angular échappe tout ; requêtes à paramètres liés uniquement |
 | Secrets | identifiants de base en variables d'environnement |
+| Transport | HTTPS sur Render ; connexion chiffrée (SSL obligatoire) entre le serveur et la base Aiven |
 | Session | cookie `HttpOnly`, `SameSite=Lax`, expiration après 30 min, `Secure` en production |
 | Erreurs | aucune trace technique dans les réponses |
 
 ---
 
-## 7. Bilan
+## 7. Déploiement
+
+### Les services choisis
+
+| Rôle | Service | Pourquoi |
+|---|---|---|
+| Application (front + back) | **Render** (Web Service Docker, offre gratuite) | déploiement automatique à chaque push sur `main`, HTTPS fourni |
+| Base de données | **Aiven** (MySQL, offre gratuite) | même SGBD qu'en local (MySQL 8), donc mêmes migrations Flyway |
+
+### Une seule application
+
+Plutôt que d'héberger le front et le back séparément, nous les réunissons dans **une seule image Docker**, construite en trois étapes (`Dockerfile` à la racine du dépôt) :
+
+1. **Front** (`node:22-alpine`) : `npm install` puis `ng build` ; les fichiers du navigateur sont mis de côté.
+2. **Back** (`maven:3.9-eclipse-temurin-21`) : les fichiers du front sont copiés dans `src/main/resources/static`, puis `mvn package` produit un seul `.jar`.
+3. **Exécution** (`eclipse-temurin:21-jre`) : l'image finale ne contient que Java et ce `.jar`.
+
+Spring sert donc à la fois les pages Angular et l'API `/api`, sur la **même adresse**. Conséquences : pas de CORS à configurer en production, et le cookie de session fonctionne exactement comme en local avec le proxy.
+
+### Configuration de production
+
+- **Profil `prod`** (`application-prod.properties`) : cookie de session `Secure`, affichage des requêtes SQL coupé.
+- **Variables d'environnement** saisies dans Render (onglet *Environment*), jamais dans Git :
+  - `DB_URL` = `jdbc:mysql://<hôte Aiven>:<port>/p_rat_db?sslMode=REQUIRED`
+  - `DB_USERNAME` = `avnadmin`
+  - `DB_PASSWORD` = mot de passe fourni par Aiven
+- **Port** : imposé par Render, lu au démarrage par Spring.
+- **Base** : nous avons créé la base `p_rat_db` dans le service Aiven ; au premier démarrage, Flyway y a créé le schéma et les données de démonstration (V1 à V7), comme en local.
+
+### Limites
+
+- Offre gratuite : mise en veille après 15 minutes sans visite, puis environ une minute de redémarrage.
+- Disque non persistant : le journal des événements (fichiers texte) est perdu à chaque redéploiement.
+- Le build Docker ignore les tests (`-DskipTests`) : ils sont lancés en local avant chaque push.
+
+---
+
+## 8. Bilan
 
 **Contribution :** le travail a été réparti à parts égales (50 / 50).
 
@@ -171,6 +224,7 @@ Tapez le Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l
 - **Git** : le dossier `.idea` et les fichiers générés causaient des conflits ; nous ne les versionnons plus.
 - **Les imports automatiques d'IntelliJ**, qui cassaient parfois le build Angular : nous relisons maintenant chaque import ajouté.
 - **Les tests de sécurité** : nous avons dû déclarer explicitement le `DaoAuthenticationProvider`.
+- **Le déploiement** : `npm ci` échouait sur Render, notre `package-lock.json`, généré sous Windows, ne contenait pas certaines dépendances optionnelles nécessaires sous Linux (`@emnapi/*`). Nous utilisons `npm install` dans le Dockerfile, qui complète le lock.
 
 **Trois points à retenir :**
 
