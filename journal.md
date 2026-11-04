@@ -1,214 +1,179 @@
-# Journal — P-RAT (ALTN72, 2026-27)
-**Groupe :** Antoine Roucau, Clothilde Proux
-## README
-- Prérequis : Java …, Maven …, MySQL, NPM
-- Initialiser la base : `db/create.sql` (ou procédure …)
-- Lancer : `mvn spring-boot:run`
-- Application déployée : https://…
-- Comptes de test : profil 1 : login / mot de passe ; profil 2 : …
-- Limites connues : …
-## ARCHITECTURE
-- Dépôt : https://…
-- Schéma : ![architecture](docs/architecture.png)
-## TESTS
-- Stratégie : …
-- Commande : `mvn verify`
-- Couvert : … | Non couvert : … (pourquoi)
-- Comptes de test : admin / demo123 ; prestataire / demo123 ; agent / demo123
-## CHOIX TECHNIQUES
-### Droits par profil : # Droits d'accès par profil
+# Journal de projet — P-RAT
 
-| N° | Fonctionnalité | Profil 1Admin | Profil 2Prestataire externe | Profil 3Agent de terrain |
-| --- | --- |------------| --- | --- |
-| F2–F3 | Consulter équipements et fiches | WL         | L | WL |
-| F4 | Déclarer un incident | WL         | WL | WL |
-| F5–F6 | Consulter / modifier un incident | WL         | WL | WL |
-| F7 | Affecter ou réaffecter un prestataire | WL         | X | X |
-| F8 | Déclarer un incident résolu | WL         | X | X |
-| F9 | Consulter l'historique | WL         | L | L |
-| F10 | Évaluer un prestataire | WL         | X | X |
-| F11 | Tableau de bord | WL         | L | L |
+**Module :** ALTN72 — 2026-27 · **Groupe :** Antoine Roucau, Clothilde Proux · **Dépôt :** https://github.com/TorielLink/P-RAT
 
-WL : Lecture et écriture &nbsp;  L : Lecture seule &nbsp; X : Aucun accès
+---
 
-- Exceptions : Nous avons choisi comme systeme de gestion d'exeception d'utiliser @ControllerAdvice pour plusieurs point majeurs :
-- La coherence de l'ecriture des exceptions
-- La séparation des responsabilités
-- Pas de duplication d'exception, centralisation sur un gestionnaire d'erreur et donc application des exceptions de facon transverse
+## 1. README
 
-- SOLID : principe(s) appliqué(s) (où, pourquoi) ; principes écartés (pourquoi)
-D'un point de vue générale nous allons utiliser : 
-SRP pour ...
-ISP pour ...
-DIP pour ...
+**Prérequis :** Java 21+ (testé avec Java 25), Maven, MySQL 8, Node.js + npm (Angular CLI).
 
-Nous n'allons pas utiliser les deux autres principe suivant :
-OCP parce que ...
-ISP parce que ...
+**Base de données :** créez simplement une base vide (`CREATE DATABASE p_rat_db;`). Au premier démarrage, Flyway crée le schéma et charge les données de démonstration (V1 à V7). Les identifiants MySQL sont lus dans `DB_USERNAME` (par défaut `root`) et `DB_PASSWORD` (obligatoire, jamais dans Git).
 
-- Requête SQL native : où ? analyse critique
-- @Transactional : où ? pourquoi ?
+| Partie | Commande | Adresse |
+|---|---|---|
+| Back | `mvn spring-boot:run` | http://localhost:8080 |
+| Front | `npm install` puis `ng serve` | http://localhost:4200 |
+| API | Swagger UI (après connexion) | http://localhost:8080/swagger-ui.html |
+
+Le proxy Angular redirige `/api` vers le port 8080. Application déployée : https://… *(profil `prod` prêt)*.
+
+**Comptes de test** (mot de passe `demo123`) :
+
+| Login | Profil | Entreprise |
+|---|---|---|
+| `admin` | Admin | — |
+| `agent`, `agent2` | Agent de terrain | — |
+| `prestataire` | Prestataire | Maintenance Démo |
+| `ascenseurs` | Prestataire | Ascenseurs Express |
+| `video` | Prestataire | Vidéo Services |
+| `escaliers` | Prestataire | Escaliers Mécaniques Services |
+| `portes` | Prestataire | Portes & Accès Sécurité |
+
+**Limites connues :** le journal des événements est stocké dans des fichiers texte plutôt qu'en base, et la protection CSRF est désactivée.
+
+---
+
+## 2. Architecture
+
+![architecture](docs/architecture.png)
+
+**Back (Spring Boot)** — une architecture en couches :
+
+- `controller` expose les endpoints REST, sans aucune règle métier ;
+- `service` porte les règles métier et les droits sur chaque ressource (une interface par service) ;
+- `model` contient les entités JPA ; les règles propres à un incident vivent dans l'entité (`estModifiablePar`, `affecterA`…) ;
+- `repository` (Spring Data JPA), `dto` (on n'expose jamais les entités), `exception`, `config` et `logs` (journal).
+
+Le schéma MySQL est géré uniquement par Flyway (`ddl-auto=validate`).
+
+**Front (Angular)** — `core` (services HTTP, authentification, guards), `layout` (bandeau), `pages` (un écran par page) et `shared` (pipe des libellés et composants réutilisés).
+
+---
+
+## 3. Tests
+
+Nous avons privilégié des **tests unitaires sans base de données** (`mvn test`, 83 tests), sur trois niveaux :
+
+- **le modèle** (JUnit) : règles de modification, d'affectation, d'évaluation et seuils RG3 ;
+- **les services** (Mockito) : règles métier, droits et ordre des contrôles (404 → 409 → 403) ;
+- **les contrôleurs** (`@WebMvcTest`, `@WithMockUser`) : codes HTTP, droits par profil, validation et format des erreurs.
+
+L'horloge est figée (`Clock.fixed`) pour pouvoir vérifier les durées et les seuils de 48 h / 72 h. Le front Angular et le journal en fichiers ont été testés à la main.
+
+---
+
+## 4. Choix techniques
+
+### Droits par profil
+
+| Fonctionnalité | Admin | Prestataire | Agent |
+|---|:---:|:---:|:---:|
+| Stations (F2–F3) | WL | X | L |
+| Équipements (F2–F3) | WL | L (ses incidents) | WL |
+| Changer l'état d'un équipement | WL | WL (ses incidents) | WL |
+| Déclarer un incident (F4) | WL | X | WL |
+| Consulter un incident (F5) | L | L (les siens) | L |
+| Modifier un incident (F6) | WL (non résolu) | X | WL (les siens, non affectés) |
+| Affecter un prestataire (F7) | WL | X | X |
+| Résoudre un incident (F8) | WL | WL (les siens) | X |
+| Historique (F9) | L | L (les siens) | L |
+| Évaluer un prestataire (F10) | WL | L (ses évaluations) | X |
+| Tableau de bord (F11) | L | L (les siens) | X |
+| Carte (alpha 4) / Journal (alpha 5) | L | X | X |
+
+*WL : lecture et écriture — L : lecture — X : aucun accès*
+
+Les droits sont vérifiés **deux fois** : `SecurityConfig` filtre par profil et par URL (403), puis les services contrôlent la ressource elle-même. Quand un prestataire demande l'incident ou l'équipement d'une autre entreprise, il reçoit un 404 plutôt qu'un 403, pour ne pas en révéler l'existence. Côté Angular, les guards ne servent qu'au confort d'affichage : la vraie protection reste sur le serveur.
+
+### Nos grands choix
+
+- **Les exceptions** sont traduites à un seul endroit (`@RestControllerAdvice` + `ProblemDetail`) : toutes les erreurs ont le même format JSON avec un message en français, et les services ignorent tout de HTTP.
+- **Les transactions** : `readOnly` par défaut sur chaque service, `@Transactional` sur chaque écriture (RG10, tout ou rien).
+- **Aucune requête SQL native** : uniquement des requêtes dérivées et du JPQL, vérifiés au démarrage et à paramètres liés.
+- **L'horloge est injectée** (`Clock`) : les dates sont toujours fixées par le serveur, et les seuils deviennent testables.
+- **La durée et le niveau d'attention sont calculés à chaque lecture**, jamais stockés, avec des seuils définis une seule fois (`SEUIL_ORANGE`, `SEUIL_ROUGE`).
+- **Des DTO en liste blanche** : le client ne peut envoyer que les champs autorisés. Par exemple, une modification (`PATCH`) ne contient que la description et la priorité.
+- **La validation est faite deux fois** : Bean Validation côté serveur (la vraie garantie), puis reprise dans Angular pour le confort.
+
+### SOLID
+
+- **SRP** : chaque classe a un rôle (le journal est découpé entre un écrivain et un lecteur).
+- **OCP** : le journal écoute des événements publiés par `IncidentService`, ce qui permet d'ajouter un écouteur sans modifier le service.
+- **ISP** : une interface par domaine.
+- **DIP** : les contrôleurs dépendent d'interfaces, et l'horloge est injectée.
+- **LSP** n'a pas été retenu : nous n'avons pas de hiérarchie d'héritage.
 
 ### Authentification
-- **Session + cookie (JSESSIONID) plutôt que JWT** : avec le proxy Angular, front et back
-  partagent la même origine ; le navigateur gère le cookie seul, la déconnexion invalide
-  la session côté serveur. Un JWT aurait demandé de gérer stockage, expiration et révocation.
-- **Hachage BCrypt** : algorithme lent et salé, recommandé par l'OWASP. Aucun mot de passe en clair
-  en base ni dans Git.
-- **API : 401 au lieu d'une redirection HTML** (`HttpStatusEntryPoint`) : le front Angular
-  décide lui-même de l'affichage.
-- **CSRF désactivé** : simplification assumée, atténuée par le cookie `SameSite=Lax`
-  par défaut des navigateurs. Amélioration possible : `csrf.spa()` (Spring Security 6.5+).
-- **Le guard Angular n'est qu'un confort d'affichage** : la restriction réelle est appliquée
-  par Spring Security (RG11).
 
-### Incidents
+Nous avons choisi une **session avec cookie** plutôt qu'un JWT : grâce au proxy Angular, le front et le back partagent la même origine, et le navigateur gère le cookie tout seul. Les mots de passe sont hachés avec **BCrypt**, et les refus (401 / 403) sont renvoyés en JSON avec un message clair. Le CSRF est désactivé, une simplification que nous assumons, atténuée par le cookie `SameSite=Lax`.
 
-- **Horloge injectée (`java.time.Clock`)** : les dates d'ouverture et de résolution sont fixées par le
-  serveur (`LocalDateTime.now(horloge)`), jamais par le client. Bean `HorlogeConfig` en production,
-  `Clock.fixed(...)` en test : les seuils RG3 (47 h / 48 h / 72 h) deviennent vérifiables.
-- **Statuts RG2 sans migration** : OUVERT = non affecté, EN_COURS = affecté (affiché « Pris en charge »),
-  RESOLU = résolu.
-- **Durée et niveau d'attention calculés à chaque lecture, jamais stockés** : `Incident.dureeOuverture`
-  (figée à la date de résolution) et `NiveauAttention.de` dans le modèle. Les seuils 48 h / 72 h sont des
-  constantes nommées définies une seule fois (`SEUIL_ORANGE`, `SEUIL_ROUGE`), réutilisées par F11.
-  Angular ne fait que mettre en forme (« 2 j 3 h »).
-- **URL de déclaration : `POST /api/equipements/{id}/incidents`** : l'incident est créé « pour un
-  équipement donné » (F4) ; l'équipement est dans l'URL, donc non modifiable par le formulaire.
-  L'endpoint reste dans `IncidentController` (`@RequestMapping("/api")`) pour regrouper toutes les
-  opérations sur les incidents, y compris dans la documentation Swagger (F12).
-- **DTO dédiés** : `DeclarationIncidentRequest` ne contient ni date, ni prestataire, ni équipement :
-  le client ne peut pas les imposer (RG1). `IncidentDetailDto` réutilise `IncidentDto` grâce à
-  `@JsonUnwrapped` (JSON plat, pas de duplication des champs).
-- **Validation en double** : Bean Validation côté serveur (`@NotBlank`, `@Size(10, 500)`), seule
-  garantie réelle ; reprise dans Angular pour le confort (pas d'appel inutile, message immédiat).
-  Les erreurs serveur sont renvoyées champ par champ et affichées sous le champ concerné.
-- **Ordre de traitement d'une requête** : Spring Security (401 / 403) → validation (400) → service (404).
-  Un prestataire est refusé avant même la lecture de ses données : il ne peut pas apprendre si un
-  équipement existe (RG11).
+### Fonctionnalités
 
-### Modification d'un incident (F6)
+- **Modifier un incident (F6)** — on peut corriger ce que le déclarant a saisi (description, priorité), mais pas ce que le serveur a fixé (équipement, dates, statut). Un incident résolu n'est plus modifiable par personne.
+- **Affecter un prestataire (F7)** — affecter et réaffecter sont la même opération ; l'incident passe alors « Pris en charge ».
+- **Résoudre un incident (F8)** — la date est fixée par le serveur, et un incident déjà résolu renvoie 409.
+- **Historique (F9)** — les incidents résolus sont paginés, et les notes sont chargées en une seule requête pour éviter le problème N+1.
+- **Évaluer un prestataire (F10)** — une note de 1 à 5 et une seule évaluation par incident (contrôle dans le service et contrainte en base). La moyenne est calculée à la volée en JPQL.
+- **Tableau de bord (F11)** — les incidents non résolus, du plus ancien au plus récent, avec leur niveau d'attention.
 
-- **Principe** : on corrige ce que le déclarant a saisi ; on ne touche pas à ce que le serveur ou un
-  autre processus a fixé.
-  - Modifiables : description (obligatoire, 10 à 500 caractères, même validation que F4 grâce aux
-    constantes de `DeclarationIncidentRequest`) et priorité (optionnelle).
-  - Non modifiables : équipement (RG1), date d'ouverture (fixée par l'horloge serveur, base de RG3),
-    statut et prestataire (F7, F8), date de résolution (F8, RG5).
-- **Droits** : Admin sur tout incident non résolu ; Agent sur ses propres incidents encore non
-  affectés (`OUVERT`) ; Prestataire jamais. Un incident résolu n'est modifiable par personne.
-  La règle est dans le modèle (`Incident.estModifiablePar`) avec un `switch` exhaustif sur le profil :
-  un nouveau profil oblige à décider de ses droits pour compiler.
-- **Déclarant** : champ `utilisateur` de l'incident, renseigné à la déclaration (F4) ; aucune migration.
-- **`PATCH /api/incidents/{id}`** plutôt que `PUT` : modification partielle des seuls champs autorisés.
-- **Champs non modifiables ignorés (et non rejetés)** : `ModificationIncidentRequest` ne contient que
-  `description` et `priorite` (liste blanche). Un champ envoyé en plus (`statut`, `prestataireId`…)
-  n'existe pas dans le DTO et ne peut jamais atteindre l'entité. Vérifié par un test (`ArgumentCaptor`).
-- **Ordre des contrôles** : incident inexistant (404) → incident résolu (409, RG5, pour tous les profils)
-  → droits (403). Le Prestataire est refusé encore plus tôt, par `SecurityConfig` (RG11).
-- **403 avec message** : `OperationInterditeException`, traduite par `GestionnaireExceptions`, plutôt que
-  `AccessDeniedException` de Spring, qui renvoie un corps vide. L'interface affiche le message précis.
-- **Indicateur `modifiable` dans le détail** : calculé par le serveur avec la même règle, il pilote le
-  bouton « Modifier ». La règle n'est pas recopiée en TypeScript (une seule source de vérité) ; le
-  serveur la réapplique si on force l'appel.
-- **Pas de `save()` dans `modifierIncident`** : l'incident est chargé dans la transaction ; Hibernate
-  détecte la modification (dirty checking) et écrit l'`UPDATE` à la fin de la méthode.
-- **Changement de droit** : le Prestataire pouvait modifier ses incidents (ancien `PUT`) ; ce droit est
-  retiré. Il ne corrige pas la déclaration, il intervient sur l'équipement (état) et sur la résolution.
-- **Journal métier (alpha n°5)** : non retenu à ce stade. S'il l'est, `modifierIncident` est le point
-  d'accroche unique pour tracer qui, quand, ancienne et nouvelle valeur.
+### Interface et données
 
-### Affectation d'un prestataire (F7)
+- Un **thème sombre** dont toutes les couleurs sont des variables CSS ; les couleurs porteuses de sens respectent le contraste WCAG AA.
+- Un **jeu de démonstration** (V7, généré par un script Python) : 15 stations, 71 équipements, 105 incidents, 49 évaluations et 7 prestataires.
 
-- **`PUT /api/incidents/{id}/prestataire`** (corps : `prestataireId`) : on remplace le prestataire de
-  l'incident ; affecter et réaffecter sont la même opération. Admin uniquement (`SecurityConfig`).
-- **Règle dans le modèle** : `Incident.affecterA` change ensemble le prestataire et le statut
-  (`EN_COURS`, RG2) ; le niveau d'attention devient « Pris en charge » (RG4).
-- **Même prestataire : sans effet** (200, rien ne change). Cohérent avec l'idempotence de `PUT` ;
-  l'interface affiche « déjà affecté à X : aucune modification » sans appeler le serveur.
-- **Prestataire inexistant : 404** (`PrestataireIntrouvableException`) : la ressource désignée n'existe
-  pas ; même exception et même message que dans le reste de l'API.
-- **Incident résolu : 409** (`IncidentDejaResoluException`, RG5). La vérification reste dans
-  `obtenirIncidentNonResolu`, commun à la modification, à l'affectation et à la résolution.
-- **Atomicité (RG10)** : tous les contrôles (incident, résolu, prestataire) ont lieu avant toute
-  modification ; `@Transactional` sur `affecterPrestataire` annule en plus toute écriture si une
-  exception survient (rollback sur `RuntimeException`).
-- **Lot alpha n°3 (aide à l'affectation)** : la recommandation proposera un prestataire, mais
-  l'affectation passera toujours par `IncidentService.affecterPrestataire`, pour ne jamais contourner
-  RG5 et RG10.
+---
 
-### Évaluation des prestataires
+## 5. Lot alpha
 
-- **`POST /api/incidents/{id}/evaluation`** (corps : `note`, `commentaire`) → `201 Created`,
-  `Location: /api/incidents/{id}` (l'évaluation se consulte dans le détail de l'incident).
-  Admin uniquement (`SecurityConfig`).
-- **Validation** : note entière obligatoire de 1 à 5 (`@NotNull`, `@Min`, `@Max`) ; une note à virgule
-  est refusée au lieu d'être tronquée (`accept-float-as-int=false`) ; commentaire facultatif, 500
-  caractères au plus. Reprise dans Angular : liste déroulante 1 à 5, compteur de caractères.
-- **RG8 dans le modèle** : `Incident.verifierQuIlPeutEtreEvalue` refuse un incident non résolu ou sans
-  prestataire (`EvaluationImpossibleException`, 409, un message précis par cas).
-- **Une seule évaluation par incident** : contrôle dans le service (`existsByIncidentId`) **et**
-  contrainte unique en base (`cleIncidentUnique`, V1). `saveAndFlush` envoie l'INSERT immédiatement :
-  si deux évaluations arrivent en même temps, la violation de contrainte est traduite en 409, pas en 500.
-- **Date de l'évaluation** : `LocalDate.now(horloge)`, fixée par le serveur.
-- **Ordre des contrôles** : 404 (incident) → 409 (non résolu) → 409 (sans prestataire) → 409 (déjà évalué).
-- **Atomicité (RG10)** : `@Transactional` ; tous les contrôles précèdent l'insertion.
-- **Note moyenne calculée à la volée** : requête JPQL d'agrégation
-  (`EvaluationRepository.calculerStatistiquesParPrestataire`, `AVG` et `COUNT` avec `GROUP BY`),
-  jamais stockée. Arrondie à une décimale à l'affichage (« 4,5 / 5 ») ; « Pas encore évalué » sinon.
-- **Où consulter les notes** : page Prestataires (moyenne et nombre d'évaluations), fiche prestataire
-  (liste des évaluations), détail de l'incident (F5) et historique (F9). Les notes de l'historique sont
-  chargées en une seule requête par page (`findByIncidentIdIn`), pour éviter le problème N+1.
-- **Droits de lecture** : Admin, tous les prestataires ; Prestataire, sa seule entreprise
-  (filtre dans `PrestataireService`, 404 sur la fiche d'un autre) ; Agent, aucun accès (403).
+### Carte du réseau (alpha n°4)
 
-### Gestion des exceptions
+Elle permet à l'Admin de voir d'un coup d'œil où se trouvent les incidents. Nous avons choisi une **grille** plutôt qu'une vraie carte : chaque station a une position (migration V6), et sa couleur reflète le niveau le plus grave de ses incidents actifs. Deux stations ne peuvent pas occuper la même case.
 
-- **`@RestControllerAdvice` + `ProblemDetail`** plutôt que `ResponseStatusException` : la traduction
-  exception → code HTTP est centralisée dans `GestionnaireExceptions` ; les services lèvent des
-  exceptions métier (`IncidentIntrouvableException`…) sans connaître HTTP ; toutes les erreurs ont le
-  même format JSON (`detail` en français, `erreurs` par champ pour les 400).
-- Correspondances : ressource introuvable → 404, conflit (référence en double, incident déjà résolu)
-  → 409, données invalides ou JSON illisible → 400.
-- Pas de gestionnaire générique pour `Exception` : il intercepterait les `AccessDeniedException`
-  et transformerait les 403 en 500.
-- **Prestataire sur l'incident d'un autre : 404 plutôt que 403**, pour ne pas révéler l'existence des
-  incidents des autres entreprises.
-- **`ResponseEntity`** uniquement quand le code ou les en-têtes diffèrent du cas standard :
-  201 + `Location` à la création, 204 à la suppression.
+- **Difficultés :** la gestion des stations sans coordonnées. Nous avons rendu la position facultative (les deux coordonnées ou aucune) et ajouté une liste « Hors carte » sous la grille.
+- **Reste à faire :** passer sur une vraie carte, placer les stations de façon cohérente avec la réalité, et éventuellement les relier entre elles par des lignes.
 
-### Transactions
+### Journal des événements (alpha n°5)
 
-- `@Transactional(readOnly = true)` sur `IncidentService` : toutes les lectures sans écriture accidentelle.
-- `@Transactional` sur `declarerIncident` (RG10) : la vérification de l'équipement et l'insertion forment
-  un tout ; si l'une échoue, rien n'est enregistré.
+Il permet de savoir qui a fait quoi, et quand, sur un incident : déclaration, modification, affectation, résolution et évaluation. `IncidentService` publie un événement, que `JournalIncidentListener` écrit **après la validation de la transaction** : rien n'est tracé si l'action échoue. Chaque incident a son propre fichier texte, que l'Admin consulte dans le détail de l'incident, du plus récent au plus ancien.
 
-### Documentation de l'API
-- Swagger UI sur http://localhost:8080/swagger-ui.html
-  (JSON OpenAPI : /v3/api-docs), généré par springdoc-openapi 3.x. Accessible après connexion
-  sur l'application.
+- **Limites :** le chemin des fichiers dépend du dossier de lancement, et le journal n'est pas sauvegardé avec la base.
+- **Reste à faire :** stocker le journal dans une table.
 
-## LOT ALPHA
-### Fonctionnalité transverse 1 : …
-- Besoin · périmètre envisagé · choix et essais · ce qui fonctionne · difficultés · reste à faire
-### Fonctionnalité transverse 2 : …
+### Easter egg
 
-### Easter egg (bonus)
-- Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l'écran au son d'un carillon.
-- Front uniquement : aucune donnée modifiée, aucun appel serveur.
-- `KonamiService` (logique pure : fenêtre glissante des 10 dernières touches) ;
-  composant `EasterEgg` pour les effets (clavier, son Web Audio, animation CSS).
-- Ignoré pendant la saisie dans un champ.
+Tapez le Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l'écran au son d'un carillon. Tout se passe côté front, sans aucun appel au serveur.
 
+---
 
-## BILAN
-- Contribution de chacun : …
-- Plus grande difficulté et comment elle a été surmontée :
-  - **Flyway et les migrations modifiées** : une migration déjà appliquée ne doit plus jamais être
-      modifiée (checksum mismatch sur V1 après une réécriture). Tout changement passe par une nouvelle
-      migration `V<n>`.
-  - **Flyway et DevTools** : une V4 créée vide pendant que le back tournait a été appliquée vide par le
-    redémarrage automatique de DevTools (checksum 0). Règle du groupe : arrêter le back avant de créer
-    ou de modifier une migration.
-- Fonctionnalités non réalisées et pourquoi : …
-- Trois points à retenir du cours et du projet : …
+## 6. Sécurité
+
+| Domaine | Mesure |
+|---|---|
+| Mots de passe | BCrypt, uniquement des hachés dans les migrations |
+| Accès | 401 sans session, droits dans `SecurityConfig` et dans les services |
+| Connexion | un message unique, « Identifiant ou mot de passe incorrect » ; les comptes inactifs sont refusés |
+| XSS / injection SQL | Angular échappe tout ; requêtes à paramètres liés uniquement |
+| Secrets | identifiants de base en variables d'environnement |
+| Session | cookie `HttpOnly`, `SameSite=Lax`, expiration après 30 min, `Secure` en production |
+| Erreurs | aucune trace technique dans les réponses |
+
+---
+
+## 7. Bilan
+
+**Contribution :** le travail a été réparti à parts égales (50 / 50).
+
+**Nos principales difficultés :**
+
+- **Les débuts avec Apache** et la mise en place de l'ensemble du site (base, back, front).
+- **Flyway** : on ne modifie jamais une migration déjà appliquée, et on arrête le back avant d'en créer une (DevTools en avait appliqué une vide).
+- **Git** : le dossier `.idea` et les fichiers générés causaient des conflits ; nous ne les versionnons plus.
+- **Les imports automatiques d'IntelliJ**, qui cassaient parfois le build Angular : nous relisons maintenant chaque import ajouté.
+- **Les tests de sécurité** : nous avons dû déclarer explicitement le `DaoAuthenticationProvider`.
+
+**Trois points à retenir :**
+
+1. **La structure MVC** est très pratique pour avancer pas à pas et toujours s'y retrouver.
+2. **La construction d'un portail API** cohérent, documenté et aux erreurs claires.
+3. **Un système d'authentification complet**, de la connexion jusqu'au contrôle de chaque ressource.
