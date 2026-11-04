@@ -1,1 +1,0 @@
-# fullstack-supervision-equipements-suivi-incidents
