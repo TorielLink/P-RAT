@@ -2,7 +2,7 @@
 FROM node:22-alpine AS front
 WORKDIR /front
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 # Toutes les routes sont en RenderMode.Client : Angular produit index.csr.html, renommé en index.html
