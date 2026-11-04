@@ -3,10 +3,12 @@ package cpar.backend.service;
 import cpar.backend.dto.DeclarationIncidentRequest;
 import cpar.backend.dto.IncidentDetailDto;
 import cpar.backend.dto.ModificationIncidentRequest;
+import cpar.backend.dto.EvaluationRequest;
 import cpar.backend.exception.EquipementIntrouvableException;
 import cpar.backend.exception.IncidentIntrouvableException;
 import cpar.backend.exception.IncidentDejaResoluException;
 import cpar.backend.exception.OperationInterditeException;
+import cpar.backend.exception.EvaluationImpossibleException;
 import cpar.backend.exception.PrestataireIntrouvableException;
 import cpar.backend.model.entities.Equipement;
 import cpar.backend.model.entities.Evaluation;
@@ -21,6 +23,7 @@ import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
 import cpar.backend.repository.UtilisateurRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -249,6 +252,58 @@ class IncidentServiceTest {
         assertThrows(PrestataireIntrouvableException.class, () -> incidentService.affecterPrestataire(1L, 99L));
         assertNull(incident.getPrestataire());
         assertEquals(StatutIncident.OUVERT, incident.getStatut());
+    }
+
+    // ---------- évaluation ----------
+
+    private Incident incidentResoluAffecte() {
+        Incident incident = incidentOuvertDepuis(Duration.ofDays(2));
+        incident.setStatut(StatutIncident.RESOLU);
+        incident.setPrestataire(entreprise(1L));
+        return incident;
+    }
+
+    @Test
+    void uneEvaluationEstDateeParLHorlogeEtUnCommentaireVideDevientNull() {
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incidentResoluAffecte()));
+        when(evaluationRepository.existsByIncidentId(1L)).thenReturn(false);
+        when(evaluationRepository.saveAndFlush(any(Evaluation.class))).thenAnswer(appel -> appel.getArgument(0));
+
+        Evaluation evaluation = incidentService.evaluerIncident(1L, new EvaluationRequest(4, "   "));
+
+        assertEquals(4, evaluation.getNote());
+        assertNull(evaluation.getCommentaire());
+        assertEquals(MAINTENANT.toLocalDate(), evaluation.getDateEvaluation());
+    }
+
+    @Test
+    void evaluerUnIncidentNonResoluEstRefuseEtRienNEstEnregistre() {
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incidentOuvertDepuis(Duration.ofHours(5))));
+
+        assertThrows(EvaluationImpossibleException.class,
+                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null)));
+        verify(evaluationRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void evaluerUnIncidentDejaEvalueEstRefuse() {
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incidentResoluAffecte()));
+        when(evaluationRepository.existsByIncidentId(1L)).thenReturn(true);
+
+        assertThrows(EvaluationImpossibleException.class,
+                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null)));
+        verify(evaluationRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void deuxEvaluationsSimultaneesSontRefuseesParLaContrainteUnique() {
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incidentResoluAffecte()));
+        when(evaluationRepository.existsByIncidentId(1L)).thenReturn(false);
+        when(evaluationRepository.saveAndFlush(any(Evaluation.class)))
+                .thenThrow(new DataIntegrityViolationException("cleIncidentUnique"));
+
+        assertThrows(EvaluationImpossibleException.class,
+                () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null)));
     }
 
     private static Incident incidentOuvertDepuis(Duration duree) {
