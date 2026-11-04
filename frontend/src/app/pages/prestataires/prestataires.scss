@@ -1,0 +1,63 @@
+// Prestataires en cartes (comme les stations)
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte-prestataire {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+  transition: border-color 0.15s;
+}
+
+.carte-prestataire:hover {
+  border-color: var(--accent-survol);
+}
+
+.nom {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.nom:hover {
+  color: var(--lien-survol);
+  text-decoration: underline;
+}
+
+.note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.etoile {
+  color: var(--jaune);
+}
+
+.discret {
+  font-size: 13px;
+  color: var(--texte-discret);
+}
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 13px;
+  border-top: 1px solid var(--bordure-douce);
+  overflow-wrap: anywhere;
+}

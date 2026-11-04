@@ -1,9 +1,5 @@
-tr.cliquable {
-  cursor: pointer;
-}
-
 /* Incidents résolus : en retrait par rapport aux incidents en cours */
 tr.resolu {
-  color: #57606a;
+  color: var(--texte-discret);
   font-style: italic;
 }

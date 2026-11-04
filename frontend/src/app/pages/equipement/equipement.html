@@ -1,80 +1,135 @@
 @if (equipement(); as eq) {
-  @if (enModification()) {
-    <h1>Modifier l'équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
-    <form [formGroup]="formulaire" (ngSubmit)="enregistrer(eq)">
-      @if (authService.peutGererEquipements()) {
-        <p>Référence : <input formControlName="reference" maxlength="8" /></p>
-        <p>Description : <input formControlName="description" maxlength="255" /></p>
-        <p>
-          Type :
-          <select formControlName="type">
-            @for (type of types; track type) {
-              <option [ngValue]="type">{{ type | libelle }}</option>
-            }
-          </select>
-        </p>
-      }
-      <p>
-        État :
-        <select formControlName="etat">
-          @for (etat of etats; track etat) {
-            <option [ngValue]="etat">{{ etat | libelle }}</option>
-          }
-        </select>
-      </p>
-      <button type="submit">Enregistrer</button>
-      <button type="button" (click)="annuler()">Annuler</button>
-    </form>
-  } @else {
-    <h1>Équipement {{ eq.reference ?? 'n°' + eq.id }}</h1>
-    <p>Type : {{ eq.type | libelle }}</p>
-    <p>Description : {{ eq.description ?? '—' }}</p>
-    <p>
-      Station :
-      @if (eq.stationId) {
-        <a [routerLink]="['/stations', eq.stationId]">{{ eq.stationNom }}</a>
-      } @else {
-        —
-      }
-    </p>
-    <p>Créé le : {{ eq.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</p>
-    <p>État : <app-etat-equipement [etat]="eq.etat" /></p>
-
-    <button type="button" (click)="modifier(eq)">Modifier</button>
-    @if (authService.peutGererEquipements()) {
-      <button type="button" class="danger" (click)="supprimer(eq)">Supprimer</button>
-    }
-
-    <h2>Incidents</h2>
-
-    @if (authService.peutDeclarerIncidents()) {
-      <a [routerLink]="['/equipements', eq.id, 'declarer-incident']">Déclarer un incident</a>
-    }
-
-    @if (incidents().length === 0) {
-      <p>Aucun incident enregistré</p>
+  <nav class="fil-ariane" aria-label="Fil d'Ariane">
+    @if (authService.estPrestataire()) {
+      <a routerLink="/incidents">Incidents</a>
     } @else {
-      <table>
-        <tr>
-          <th>Description</th>
-          <th>Ouvert le</th>
-          <th>Statut</th>
-          <th>Résolu le</th>
-        </tr>
-        @for (inc of incidents(); track inc.id) {
-          <!-- Toute la ligne ouvre le détail (F5) ; le lien permet aussi le clavier -->
-          <tr class="cliquable" [class.resolu]="inc.statut === 'RESOLU'" [routerLink]="['/incidents', inc.id]">
-            <td><a [routerLink]="['/incidents', inc.id]">{{ abreger(inc.description) }}</a></td>
-            <td>{{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td><app-statut-incident [statut]="inc.statut" /></td>
-            <td>{{ inc.dateResolution ? (inc.dateResolution | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
-          </tr>
-        }
-      </table>
+      <a routerLink="/equipements">Équipements</a>
     }
-  }
-}
+    <span aria-hidden="true">/</span>
+    <span class="mono">{{ eq.reference ?? 'n°' + eq.id }}</span>
+  </nav>
 
-@if (erreur()) {
-  <p>{{ erreur() }}</p>
+  @if (enModification()) {
+    <div class="entete-page">
+      <h1>Modifier l'équipement <span class="mono">{{ eq.reference ?? 'n°' + eq.id }}</span></h1>
+    </div>
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+    <section class="bloc">
+      <form [formGroup]="formulaire" (ngSubmit)="enregistrer(eq)">
+        <div class="champs">
+          @if (authService.peutGererEquipements()) {
+            <div>
+              <label for="reference">Référence</label>
+              <input id="reference" class="mono" formControlName="reference" maxlength="8" />
+            </div>
+            <div>
+              <label for="type">Type</label>
+              <select id="type" formControlName="type">
+                @for (type of types; track type) {
+                  <option [ngValue]="type">{{ type | libelle }}</option>
+                }
+              </select>
+            </div>
+          }
+          <div>
+            <label for="etat">État</label>
+            <select id="etat" formControlName="etat">
+              @for (etat of etats; track etat) {
+                <option [ngValue]="etat">{{ etat | libelle }}</option>
+              }
+            </select>
+          </div>
+          @if (authService.peutGererEquipements()) {
+            <div class="champ-large">
+              <label for="description">Description</label>
+              <input id="description" formControlName="description" maxlength="255" />
+            </div>
+          }
+        </div>
+        <div class="boutons-formulaire">
+          <button type="submit">Enregistrer</button>
+          <button type="button" (click)="annuler()">Annuler</button>
+        </div>
+      </form>
+    </section>
+  } @else {
+    <div class="entete-page">
+      <h1>
+        Équipement <span class="mono">{{ eq.reference ?? 'n°' + eq.id }}</span>
+        <app-etat-equipement [etat]="eq.etat" />
+      </h1>
+      <div class="actions-page">
+        <button type="button" (click)="modifier(eq)">Modifier</button>
+        @if (authService.peutGererEquipements()) {
+          <button type="button" class="danger" (click)="supprimer(eq)">Supprimer</button>
+        }
+      </div>
+    </div>
+
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <div class="disposition-detail">
+      <section class="bloc colonne-principale-bloc">
+        <div class="bloc-entete">
+          <h2>Incidents <span class="pastille mono">{{ incidents().length }}</span></h2>
+          @if (authService.peutDeclarerIncidents()) {
+            <a class="bouton-lien" [routerLink]="['/equipements', eq.id, 'declarer-incident']">Déclarer un incident</a>
+          }
+        </div>
+
+        @if (incidents().length === 0) {
+          <p class="vide">Aucun incident enregistré.</p>
+        } @else {
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Ouvert le</th>
+                <th>Statut</th>
+                <th>Résolu le</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (inc of incidents(); track inc.id) {
+                <!-- Toute la ligne ouvre le détail (F5) ; le lien permet aussi le clavier -->
+                <tr class="cliquable" [class.resolu]="inc.statut === 'RESOLU'" [routerLink]="['/incidents', inc.id]">
+                  <td><a [routerLink]="['/incidents', inc.id]">{{ abreger(inc.description) }}</a></td>
+                  <td class="mono">{{ inc.dateOuverture | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td><app-statut-incident [statut]="inc.statut" /></td>
+                  <td class="mono">{{ inc.dateResolution ? (inc.dateResolution | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <aside class="bloc colonne-laterale" aria-label="Informations">
+        <h2>Informations</h2>
+        <dl class="fiche">
+          <dt>Type</dt>
+          <dd>{{ eq.type | libelle }}</dd>
+          <dt>Description</dt>
+          <dd>{{ eq.description ?? '—' }}</dd>
+          <dt>Station</dt>
+          <dd>
+            <!-- Le prestataire n'a pas accès aux pages des stations : nom sans lien -->
+            @if (eq.stationId && !authService.estPrestataire()) {
+              <a [routerLink]="['/stations', eq.stationId]">{{ eq.stationNom }}</a>
+            } @else {
+              {{ eq.stationNom ?? '—' }}
+            }
+          </dd>
+          <dt>Créé le</dt>
+          <dd class="mono">{{ eq.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        </dl>
+      </aside>
+    </div>
+  }
+} @else if (erreur()) {
+  <p class="erreur" role="alert">{{ erreur() }}</p>
 }

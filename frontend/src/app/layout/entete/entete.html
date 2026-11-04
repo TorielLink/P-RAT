@@ -10,8 +10,10 @@
         <a routerLink="/carte" routerLinkActive="actif" ariaCurrentWhenActive="page">Carte</a>
       }
       <a routerLink="/incidents" routerLinkActive="actif" ariaCurrentWhenActive="page">Incidents</a>
-      <a routerLink="/stations" routerLinkActive="actif" ariaCurrentWhenActive="page">Stations</a>
-      <a routerLink="/equipements" routerLinkActive="actif" ariaCurrentWhenActive="page">Équipements</a>
+      @if (!authService.estPrestataire()) {
+        <a routerLink="/stations" routerLinkActive="actif" ariaCurrentWhenActive="page">Stations</a>
+        <a routerLink="/equipements" routerLinkActive="actif" ariaCurrentWhenActive="page">Équipements</a>
+      }
       @if (authService.peutVoirPrestataires()) {
         <a routerLink="/prestataires" routerLinkActive="actif" ariaCurrentWhenActive="page">
           {{ authService.estPrestataire() ? 'Mes évaluations' : 'Prestataires' }}

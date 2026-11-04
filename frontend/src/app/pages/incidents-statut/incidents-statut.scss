@@ -1,0 +1,46 @@
+// Complète ../incidents/incidents.scss : grille sur toute la largeur au lieu d'une colonne
+.retour {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--texte-discret);
+  text-decoration: none;
+}
+
+.retour:hover {
+  color: var(--lien-survol);
+}
+
+.titre-page h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compteur {
+  font-weight: 500;
+}
+
+ul.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+// Liseré de couleur du statut à gauche de chaque carte
+.grille .carte-incident {
+  background: var(--surface);
+  border-left: 3px solid var(--bordure);
+}
+
+.OUVERT .carte-incident {
+  border-left-color: var(--rouge-trait);
+}
+
+.EN_COURS .carte-incident {
+  border-left-color: var(--bleu-trait);
+}
+
+.grille .carte-incident:hover {
+  border-left-color: var(--accent-survol);
+}

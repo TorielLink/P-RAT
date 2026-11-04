@@ -1,5 +1,184 @@
-/* Incidents résolus : en retrait par rapport aux incidents en cours */
-tr.resolu {
+// En-tête : titre à gauche, action à droite
+.titre-page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.titre-page h1 {
+  margin: 0;
+}
+
+// Lien présenté comme le bouton principal
+.bouton-lien {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 16px;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+  background: var(--accent);
+  border-radius: var(--rayon);
+  transition: background 0.15s;
+}
+
+.bouton-lien:hover {
+  color: #ffffff;
+  background: var(--accent-survol);
+}
+
+// Trois colonnes ; une seule sur téléphone
+.colonnes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.colonne {
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-top: 3px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
+
+// Couleur de la colonne = couleur du statut
+.colonne.OUVERT { border-top-color: var(--rouge-trait); }
+.colonne.EN_COURS { border-top-color: var(--bleu-trait); }
+.colonne.RESOLU { border-top-color: var(--vert-trait); }
+
+.colonne h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.colonne h2 a {
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.colonne h2 a:hover {
+  color: var(--lien-survol);
+  text-decoration: underline;
+}
+
+.compteur {
+  min-width: 28px;
+  padding: 1px 8px;
+  font-size: 13px;
+  text-align: center;
+  border-radius: 999px;
+  color: var(--texte-secondaire);
+  background: var(--gris-fond);
+}
+
+.OUVERT .compteur { color: var(--rouge); background: var(--rouge-fond); }
+.EN_COURS .compteur { color: var(--bleu); background: var(--bleu-fond); }
+.RESOLU .compteur { color: var(--vert); background: var(--vert-fond); }
+
+.vide {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
   color: var(--texte-discret);
-  font-style: italic;
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon);
+}
+
+ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Carte d'un incident
+.carte-incident {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  color: var(--texte);
+  text-decoration: none;
+  background: var(--fond);
+  border: 1px solid var(--bordure-douce);
+  border-radius: var(--rayon);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.carte-incident:hover {
+  color: var(--texte);
+  background: var(--surface-survol);
+  border-color: var(--accent-survol);
+}
+
+.ligne-haut {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reference {
+  font-weight: 600;
+  color: var(--lien);
+}
+
+.numero,
+.date {
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.station {
+  color: var(--texte-secondaire);
+}
+
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.prestataire {
+  color: var(--texte-secondaire);
+}
+
+// Priorité : pastille, plus visible quand elle est haute
+.priorite {
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  color: var(--gris);
+  background: var(--gris-fond);
+}
+
+.priorite.HAUTE { color: var(--orange); background: var(--orange-fond); }
+.priorite.CRITIQUE { color: var(--rouge); background: var(--rouge-fond); }
+
+// Incidents résolus : en retrait
+.RESOLU .carte-incident {
+  opacity: 0.8;
+}
+
+.RESOLU .carte-incident:hover {
+  opacity: 1;
+}
+
+.voir-tout {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
 }

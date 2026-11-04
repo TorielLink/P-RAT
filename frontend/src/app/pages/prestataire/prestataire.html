@@ -1,40 +1,90 @@
 @if (fiche(); as prestataire) {
-  <h1>{{ prestataire.nom }}</h1>
-  <p>Contact : {{ prestataire.email ?? '—' }} · {{ prestataire.telephone ?? '—' }}</p>
-  <p>
-    Note moyenne : <strong>{{ formaterNoteMoyenne(prestataire.noteMoyenne) }}</strong>
-    @if (prestataire.nombreEvaluations > 0) {
-      ({{ prestataire.nombreEvaluations }} évaluation{{ prestataire.nombreEvaluations > 1 ? 's' : '' }})
-    }
-  </p>
+  <nav class="fil-ariane" aria-label="Fil d'Ariane">
+    <a routerLink="/prestataires">Prestataires</a>
+    <span aria-hidden="true">/</span>
+    <span>{{ prestataire.nom }}</span>
+  </nav>
 
-  <h2>Évaluations</h2>
-  @if (prestataire.evaluations.length === 0) {
-    <p>Aucune évaluation pour l'instant.</p>
-  } @else {
-    <table>
-      <tr>
-        <th>Date</th>
-        <th>Incident</th>
-        <th>Équipement</th>
-        <th>Station</th>
-        <th>Note</th>
-        <th>Commentaire</th>
-      </tr>
-      @for (evaluation of prestataire.evaluations; track evaluation.incidentId) {
-        <tr>
-          <td>{{ evaluation.dateEvaluation | date: 'dd/MM/yyyy' }}</td>
-          <td><a [routerLink]="['/incidents', evaluation.incidentId]">n°{{ evaluation.incidentId }}</a></td>
-          <td>{{ evaluation.equipementReference ?? '—' }}</td>
-          <td>{{ evaluation.stationNom ?? '—' }}</td>
-          <td>{{ evaluation.note }} / 5</td>
-          <td>{{ evaluation.commentaire ?? '—' }}</td>
-        </tr>
+  <div class="entete-page">
+    <h1>
+      {{ prestataire.nom }}
+      @if (prestataire.noteMoyenne !== null) {
+        <span class="note-moyenne">
+          <span aria-hidden="true">★</span>
+          <span class="mono">{{ formaterNoteMoyenne(prestataire.noteMoyenne) }}</span>
+        </span>
+      } @else {
+        <span class="pastille">Pas encore évalué</span>
       }
-    </table>
-  }
-}
+    </h1>
+  </div>
 
-@if (erreur()) {
+  <div class="disposition-detail">
+    <section class="bloc">
+      <div class="bloc-entete">
+        <h2>Évaluations <span class="pastille mono">{{ prestataire.nombreEvaluations }}</span></h2>
+      </div>
+
+      @if (prestataire.evaluations.length === 0) {
+        <p class="vide">Aucune évaluation pour l'instant.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Incident</th>
+              <th>Équipement</th>
+              <th>Station</th>
+              <th>Note</th>
+              <th>Commentaire</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (evaluation of prestataire.evaluations; track evaluation.incidentId) {
+              <tr>
+                <td class="mono">{{ evaluation.dateEvaluation | date: 'dd/MM/yyyy' }}</td>
+                <td><a class="mono" [routerLink]="['/incidents', evaluation.incidentId]">n°{{ evaluation.incidentId }}</a></td>
+                <td class="mono">{{ evaluation.equipementReference ?? '—' }}</td>
+                <td>{{ evaluation.stationNom ?? '—' }}</td>
+                <td>
+                  <!-- Étoiles pleines + vides ; le texte « x / 5 » reste lu par les lecteurs d'écran -->
+                  <span class="etoiles" aria-hidden="true">{{ '★★★★★'.slice(0, evaluation.note) }}<span class="etoiles-vides">{{ '★★★★★'.slice(evaluation.note) }}</span></span>
+                  <span class="mono note">{{ evaluation.note }} / 5</span>
+                </td>
+                <td class="commentaire">{{ evaluation.commentaire ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <aside class="bloc colonne-laterale" aria-label="Informations">
+      <h2>Informations</h2>
+      <dl class="fiche">
+        <dt>E-mail</dt>
+        <dd>
+          @if (prestataire.email) {
+            <a [href]="'mailto:' + prestataire.email">{{ prestataire.email }}</a>
+          } @else {
+            —
+          }
+        </dd>
+        <dt>Téléphone</dt>
+        <dd>
+          @if (prestataire.telephone) {
+            <a class="mono" [href]="'tel:' + prestataire.telephone">{{ prestataire.telephone }}</a>
+          } @else {
+            —
+          }
+        </dd>
+        <dt>Note moyenne</dt>
+        <dd class="mono">{{ formaterNoteMoyenne(prestataire.noteMoyenne) }}</dd>
+        <dt>Évaluations</dt>
+        <dd class="mono">{{ prestataire.nombreEvaluations }}</dd>
+      </dl>
+    </aside>
+  </div>
+} @else if (erreur()) {
   <p class="erreur" role="alert">{{ erreur() }}</p>
 }

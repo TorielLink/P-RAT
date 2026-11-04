@@ -1,0 +1,134 @@
+.titre-page h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compteur {
+  padding: 1px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 999px;
+  color: var(--texte-secondaire);
+  background: var(--gris-fond);
+}
+
+// Formulaire d'ajout (admin)
+.ajout {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
+
+.ajout h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.ajout form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.champ label {
+  margin-top: 8px;
+}
+
+.champ-nom {
+  flex: 1 1 240px;
+}
+
+.champ-nom input {
+  width: 100%;
+}
+
+.champ-position input {
+  width: 110px;
+}
+
+.ajout button {
+  margin: 0;
+}
+
+.aide {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+// Liste des stations en cartes
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.station {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-bloc);
+  transition: border-color 0.15s;
+}
+
+.station:hover {
+  border-color: var(--accent-survol);
+}
+
+.nom {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.nom:hover {
+  color: var(--lien-survol);
+  text-decoration: underline;
+}
+
+.bas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.position {
+  font-size: 13px;
+  color: var(--texte-secondaire);
+}
+
+.sans-position {
+  padding: 1px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  color: var(--gris);
+  background: var(--gris-fond);
+}
+
+.bas button {
+  min-height: 30px;
+  margin: 0;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.vide {
+  padding: 24px;
+  text-align: center;
+  color: var(--texte-discret);
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon-bloc);
+}
