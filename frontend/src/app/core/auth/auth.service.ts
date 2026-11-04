@@ -47,4 +47,7 @@ export class AuthService {
   readonly peutVoirTableauDeBord = computed(() =>
     ['ADMIN', 'PRESTATAIRE'].includes(this.utilisateurCourant()?.profil ?? '')
   );
+  readonly peutVoirPrestataires = computed(() =>
+    ['ADMIN', 'PRESTATAIRE'].includes(this.utilisateurCourant()?.profil ?? '')
+  );
 }

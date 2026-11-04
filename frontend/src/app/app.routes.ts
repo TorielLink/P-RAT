@@ -11,6 +11,8 @@ import { Incidents } from './pages/incidents/incidents';
 import { Historique } from './pages/historique/historique';
 import { IncidentPage } from './pages/incident/incident';
 import { Affectations } from './pages/affectations/affectations';
+import { Prestataires } from './pages/prestataires/prestataires';
+import { PrestatairePage } from './pages/prestataire/prestataire';
 import { accueilGuard, dejaConnecteGuard, profilGuard } from './core/auth/profil.guard';
 
 export const routes: Routes = [
@@ -34,6 +36,8 @@ export const routes: Routes = [
       { path: 'incidents/historique', component: Historique },
       { path: 'incidents/:id', component: IncidentPage },
       { path: 'affectations', component: Affectations, canActivate: [profilGuard('ADMIN')] },
+      { path: 'prestataires', component: Prestataires, canActivate: [profilGuard('ADMIN', 'PRESTATAIRE')] },
+      { path: 'prestataires/:id', component: PrestatairePage, canActivate: [profilGuard('ADMIN', 'PRESTATAIRE')] },
       { path: 'login', component: LoginComponent, canActivate: [dejaConnecteGuard] }
     ],
   },

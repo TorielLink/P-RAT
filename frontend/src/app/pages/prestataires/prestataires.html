@@ -1,0 +1,26 @@
+<h1>Prestataires</h1>
+
+@if (erreur()) {
+  <p class="erreur" role="alert">{{ erreur() }}</p>
+}
+
+@if (prestataires().length === 0) {
+  <p>Aucun prestataire.</p>
+} @else {
+  <table>
+    <tr>
+      <th>Nom</th>
+      <th>Contact</th>
+      <th>Note moyenne</th>
+      <th>Évaluations</th>
+    </tr>
+    @for (prestataire of prestataires(); track prestataire.id) {
+      <tr>
+        <td><a [routerLink]="['/prestataires', prestataire.id]">{{ prestataire.nom }}</a></td>
+        <td>{{ prestataire.email ?? '—' }} · {{ prestataire.telephone ?? '—' }}</td>
+        <td>{{ formaterNoteMoyenne(prestataire.noteMoyenne) }}</td>
+        <td>{{ prestataire.nombreEvaluations }}</td>
+      </tr>
+    }
+  </table>
+}
