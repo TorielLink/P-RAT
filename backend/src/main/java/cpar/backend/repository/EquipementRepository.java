@@ -17,12 +17,6 @@ public interface EquipementRepository extends JpaRepository<Equipement, Long> {
     Optional<Equipement> findByReference(String reference);
 
     @EntityGraph(attributePaths = "station")
-    List<Equipement> findAllByOrderByIdAsc();
-
-    @EntityGraph(attributePaths = "station")
-    List<Equipement> findByStationIdOrderByIdAsc(Long stationId);
-
-    @EntityGraph(attributePaths = "station")
     List<Equipement> findAllByOrderByTypeAscReferenceAscIdAsc();
 
     @EntityGraph(attributePaths = "station")

@@ -38,7 +38,12 @@
         <a class="nom" [routerLink]="['/stations', station.id]">{{ station.nom }}</a>
         <span class="bas">
           @if (station.positionX !== null && station.positionY !== null) {
-            <span class="position mono" title="Position sur la carte">({{ station.positionX }} ; {{ station.positionY }})</span>
+            @if (authService.estAdmin()) {
+              <a class="position mono lien-carte" [routerLink]="['/carte']" [queryParams]="{ station: station.id }"
+                 title="Voir sur la carte">({{ station.positionX }} ; {{ station.positionY }})</a>
+            } @else {
+              <span class="position mono" title="Position sur la carte">({{ station.positionX }} ; {{ station.positionY }})</span>
+            }
           } @else {
             <span class="sans-position">Hors carte</span>
           }

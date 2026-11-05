@@ -31,6 +31,7 @@ import {StatutIncidentComponent} from '../../shared/statut-incident';
   selector: 'app-incident',
   imports: [DatePipe, ReactiveFormsModule, RouterLink, LibellePipe, NiveauAttentionComponent, StatutIncidentComponent],
   templateUrl: './incident.html',
+  styleUrl: 'incident.scss'
 })
 export class IncidentPage implements OnInit {
   private readonly route = inject(ActivatedRoute);

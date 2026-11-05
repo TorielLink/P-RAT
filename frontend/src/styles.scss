@@ -689,3 +689,13 @@ tr.cliquable:hover td {
     transition: none !important;
   }
 }
+
+a.lien-carte {
+  color: var(--lien);
+  text-decoration: none;
+}
+
+a.lien-carte:hover {
+  color: var(--lien-survol);
+  text-decoration: underline;
+} 
