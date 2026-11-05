@@ -112,7 +112,7 @@ Les branches `main` et `dev` sont **protégées** : impossible d'y pousser direc
 
 ---
 
-## 4. Choix techniques
+## 5. Choix techniques
 
 ### Droits par profil
 
@@ -174,7 +174,7 @@ Nous avons choisi une **session avec cookie** plutôt qu'un JWT : grâce au prox
 
 ---
 
-## 5. Lot alpha
+## 6. Lot alpha
 
 ### Carte du réseau (alpha n°4)
 
@@ -196,7 +196,7 @@ Tapez le Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l
 
 ---
 
-## 6. Sécurité
+## 7. Sécurité
 
 | Domaine | Mesure |
 |---|---|
@@ -211,7 +211,7 @@ Tapez le Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l
 
 ---
 
-## 7. Déploiement
+## 8. Déploiement
 
 ### Les services choisis
 
@@ -248,7 +248,7 @@ Spring sert donc à la fois les pages Angular et l'API `/api`, sur la **même ad
 
 ---
 
-## 8. Bilan
+## 9. Bilan
 
 **Contribution :** le travail a été réparti à parts égales (50 / 50).
 
@@ -266,3 +266,22 @@ Spring sert donc à la fois les pages Angular et l'API `/api`, sur la **même ad
 1. **La structure MVC** est très pratique pour avancer pas à pas et toujours s'y retrouver.
 2. **La construction d'un portail API** cohérent, documenté et aux erreurs claires.
 3. **Un système d'authentification complet**, de la connexion jusqu'au contrôle de chaque ressource.
+
+
+## 10. Utilisation de l'IA
+
+Nous avons utilisé un assistant IA (Claude) tout au long du projet.
+
+### Usages conformes au cadre
+
+- **Jeu de données fictif** : le script Python qui génère la migration V7 (stations, équipements, incidents, évaluations) ;
+- **Analyse d'erreurs et débogage** : erreurs Flyway (checksum, migration vide), conflits de beans Spring Security en test, imports erronés d'IntelliJ, conflits de fusion Git et les échecs du build Docker ;
+- **Front Angular** : aide sur le CSS des pages, le thème et l'easter egg ;
+- **Explications et pistes** : choix entre session et JWT, ordre des contrôles (401 / 403 / 404 / 409), et revue de sécurité de notre code ;
+- **Déploiement** : choix de Render et d'Aiven, et aide à la configuration du profil ;
+- **Rédaction** : descriptions de pull requests et des tickets Github, à partir de notre code et de nos choix.
+
+### Ce que nous en retenons
+
+- L'IA nous a fait gagner beaucoup de temps sur le débogage et la configuration, là où nous aurions pu rester bloqués longtemps.
+- Le style a pu être réalisé en heure, ce qui nous a déchargé pour avancer d'autres fonctionnalités plutôt.
