@@ -1,6 +1,8 @@
 @if (authService.utilisateurCourant(); as utilisateur) {
   <header class="bandeau">
-    <a class="marque" routerLink="/">P-RAT</a>
+    <a class="marque" routerLink="/">
+      <img src="logo.svg" alt="" width="32" height="32"> P-RAT
+    </a>
 
     <nav aria-label="Navigation principale">
       @if (authService.peutVoirTableauDeBord()) {
