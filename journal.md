@@ -79,6 +79,39 @@ L'horloge est figée (`Clock.fixed`) pour pouvoir vérifier les durées et les s
 
 ---
 
+## 4. Bonnes pratiques
+
+### Organiser avant de coder
+
+Avant d'écrire la moindre ligne, nous avons découpé le sujet en **tickets GitHub (issues)** : un ticket par fonctionnalité du sujet (F1 à F12), par fonctionnalité du lot alpha qu'on voulait coder et par point transverse (sécurité, jeu de données, déploiement).
+Chaque ticket reprend les exigences et les règles de gestion qui le concernent (RG1 à RG11). Comme ça, nous savions qui travaille sur quoi et ce qu'il devait fait, et rien n'était oublié.
+
+### Une branche par ticket, une pull request par branche
+
+- Chaque ticket est développé sur **sa propre branche**, créée à partir de `dev`.
+- Une fois terminé, il est intégré par une **pull request vers `dev`**, avec une description courte : ce qui a été fait, comment le tester, ce qui reste hors périmètre.
+- `main` ne reçoit que des versions stables de `dev` ; c'est la branche déployée sur Render.
+
+### Branches protégées
+
+Les branches `main` et `dev` sont **protégées** : impossible d'y pousser directement, toute modification passe obligatoirement par une pull request. Concrètement, **chacun relit le code de l'autre** avant qu'il soit intégré. Cela nous a permis :
+
+- de repérer des erreurs avant qu'elles arrivent sur `dev` (imports erronés, droits mal placés, tests manquants) ;
+- de connaître tous les deux l'ensemble du code, et pas seulement nos propres tickets ;
+- de garder un historique lisible : chaque fonctionnalité correspond à une pull request.
+
+### Clean code
+
+- **Nommage en français, cohérent avec le sujet** (`declarerIncident`, `affecterPrestataire`, `NiveauAttentionIncident`) : le code se lit comme les règles métier.
+- **Pas de valeurs magiques** : les seuils, les tailles de champ et les messages sont des constantes nommées, définies une seule fois (`SEUIL_ORANGE`, `SEUIL_ROUGE`…).
+- **Une responsabilité par couche** : aucun calcul métier dans les contrôleurs, aucune notion HTTP dans les services, les règles propres à un incident dans l'entité.
+- **Pas de duplication** : les erreurs sont traduites à un seul endroit, les libellés sont centralisés dans un pipe Angular, les composants d'affichage sont partagés.
+- **Les tests accompagnent le code** : une règle métier ajoutée vient avec ses tests dans la même pull request.
+- **Rien de sensible ni de généré dans Git** : pas de mot de passe, pas de dossier `.idea`, pas de fichiers de journal.
+- **Pas de code mort** : chaque fonction / méthode est utilisée quelque part dans le code. 
+
+---
+
 ## 4. Choix techniques
 
 ### Droits par profil
