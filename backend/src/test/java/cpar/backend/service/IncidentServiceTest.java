@@ -1,6 +1,7 @@
 package cpar.backend.service;
 
 import cpar.backend.logs.JournalIncidentLecteur;
+import cpar.backend.model.enums.*;
 import org.springframework.context.ApplicationEventPublisher;
 import cpar.backend.dto.DeclarationIncidentRequest;
 import cpar.backend.dto.IncidentDetailDto;
@@ -17,10 +18,6 @@ import cpar.backend.model.entities.Evaluation;
 import cpar.backend.model.entities.Incident;
 import cpar.backend.model.entities.Prestataire;
 import cpar.backend.model.entities.Utilisateur;
-import cpar.backend.model.enums.NiveauAttentionIncident;
-import cpar.backend.model.enums.PrioriteIncident;
-import cpar.backend.model.enums.ProfilUtilisateur;
-import cpar.backend.model.enums.StatutIncident;
 import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
@@ -103,6 +100,41 @@ class IncidentServiceTest {
         assertEquals(Duration.ofHours(50).toMinutes(), detail.dureeOuvertureMinutes());
         assertEquals(NiveauAttentionIncident.ORANGE, detail.niveauAttention());
         assertNull(detail.evaluation());
+    }
+
+    @Test
+    void declarerUnIncidentMetLEquipementEnPanne() {
+        Equipement equipement = new Equipement();
+        when(equipementService.obtenirEquipementParId(3L)).thenReturn(equipement);
+        when(utilisateurRepository.findByLogin("agent")).thenReturn(Optional.of(compte(ProfilUtilisateur.AGENT, null)));
+        when(incidentRepository.save(any(Incident.class))).thenAnswer(appel -> appel.getArgument(0));
+
+        incidentService.declarerIncident(3L, new DeclarationIncidentRequest("La caméra ne répond plus", null), "agent");
+
+        assertEquals(EtatsEquipement.EN_PANNE, equipement.getEtat());
+    }
+
+    @Test
+    void affecterUnPrestataireMetLEquipementEnMaintenance() {
+        Incident incident = incidentOuvertDepuis(Duration.ofHours(5));
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
+        when(prestataireRepository.findById(1L)).thenReturn(Optional.of(entreprise(1L)));
+
+        incidentService.affecterPrestataire(1L, 1L, "admin");
+
+        assertEquals(EtatsEquipement.EN_MAINTENANCE, incident.getEquipement().getEtat());
+    }
+
+    @Test
+    void resoudreUnIncidentRemetLEquipementEnService() {
+        Incident incident = incidentOuvertDepuis(Duration.ofHours(5));
+        incident.getEquipement().setEtat(EtatsEquipement.EN_MAINTENANCE);
+        when(incidentRepository.findWithDetailsById(1L)).thenReturn(Optional.of(incident));
+        when(utilisateurRepository.findByLogin("admin")).thenReturn(Optional.of(compte(ProfilUtilisateur.ADMIN, null)));
+
+        incidentService.resoudreIncident(1L, "admin");
+
+        assertEquals(EtatsEquipement.EN_SERVICE, incident.getEquipement().getEtat());
     }
 
     @Test
@@ -309,6 +341,7 @@ class IncidentServiceTest {
         assertThrows(EvaluationImpossibleException.class,
                 () -> incidentService.evaluerIncident(1L, new EvaluationRequest(4, null), "admin"));
     }
+
 
     private static Incident incidentOuvertDepuis(Duration duree) {
         Incident incident = new Incident();
