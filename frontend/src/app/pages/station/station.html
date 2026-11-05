@@ -37,7 +37,12 @@
       <h1>
         {{ st.nom }}
         @if (st.positionX !== null && st.positionY !== null) {
-          <span class="pastille mono" title="Position sur la carte">({{ st.positionX }} ; {{ st.positionY }})</span>
+          @if (authService.estAdmin()) {
+            <a class="pastille mono lien-carte" [routerLink]="['/carte']" [queryParams]="{ station: st.id }"
+               title="Voir sur la carte">({{ st.positionX }} ; {{ st.positionY }})</a>
+          } @else {
+            <span class="pastille mono" title="Position sur la carte">({{ st.positionX }} ; {{ st.positionY }})</span>
+          }
         } @else {
           <span class="pastille">Hors carte</span>
         }

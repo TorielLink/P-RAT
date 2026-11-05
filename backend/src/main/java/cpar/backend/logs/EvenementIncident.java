@@ -15,11 +15,6 @@ public record EvenementIncident(
 
     static final String SEPARATEUR = "|";
 
-    public static EvenementIncident simple(Long incidentId, String auteurLogin,
-                                           LocalDateTime date, TypeEvenementIncident type) {
-        return new EvenementIncident(incidentId, auteurLogin, date, type, null, null, null);
-    }
-
     // Une ligne du fichier : date|auteur|type|champ|ancienne|nouvelle
     public String versLigne() {
         return String.join(SEPARATEUR,

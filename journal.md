@@ -104,7 +104,7 @@ Les droits sont vérifiés **deux fois** : `SecurityConfig` filtre par profil et
 ### Nos grands choix
 
 - **Les exceptions** sont traduites à un seul endroit (`@RestControllerAdvice` + `ProblemDetail`) : toutes les erreurs ont le même format JSON avec un message en français, et les services ignorent tout de HTTP.
-- **Les transactions** : `readOnly` par défaut sur chaque service, `@Transactional` sur chaque écriture (RG10, tout ou rien).
+- **Les transactions** : `readOnly` par défaut pour optimisation Spring sur chaque service, `@Transactional` sur chaque écriture (RG10, tout ou rien).
 - **Aucune requête SQL native** : uniquement des requêtes dérivées et du JPQL, vérifiés au démarrage et à paramètres liés.
 - **L'horloge est injectée** (`Clock`) : les dates sont toujours fixées par le serveur, et les seuils deviennent testables.
 - **La durée et le niveau d'attention sont calculés à chaque lecture**, jamais stockés, avec des seuils définis une seule fois (`SEUIL_ORANGE`, `SEUIL_ROUGE`).
