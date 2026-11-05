@@ -79,7 +79,40 @@ L'horloge est figée (`Clock.fixed`) pour pouvoir vérifier les durées et les s
 
 ---
 
-## 4. Choix techniques
+## 4. Bonnes pratiques
+
+### Organiser avant de coder
+
+Avant d'écrire la moindre ligne, nous avons découpé le sujet en **tickets GitHub (issues)** : un ticket par fonctionnalité du sujet (F1 à F12), par fonctionnalité du lot alpha qu'on voulait coder et par point transverse (sécurité, jeu de données, déploiement).
+Chaque ticket reprend les exigences et les règles de gestion qui le concernent (RG1 à RG11). Comme ça, nous savions qui travaille sur quoi et ce qu'il devait fait, et rien n'était oublié.
+
+### Une branche par ticket, une pull request par branche
+
+- Chaque ticket est développé sur **sa propre branche**, créée à partir de `dev`.
+- Une fois terminé, il est intégré par une **pull request vers `dev`**, avec une description courte : ce qui a été fait, comment le tester, ce qui reste hors périmètre.
+- `main` ne reçoit que des versions stables de `dev` ; c'est la branche déployée sur Render.
+
+### Branches protégées
+
+Les branches `main` et `dev` sont **protégées** : impossible d'y pousser directement, toute modification passe obligatoirement par une pull request. Concrètement, **chacun relit le code de l'autre** avant qu'il soit intégré. Cela nous a permis :
+
+- de repérer des erreurs avant qu'elles arrivent sur `dev` (imports erronés, droits mal placés, tests manquants) ;
+- de connaître tous les deux l'ensemble du code, et pas seulement nos propres tickets ;
+- de garder un historique lisible : chaque fonctionnalité correspond à une pull request.
+
+### Clean code
+
+- **Nommage en français, cohérent avec le sujet** (`declarerIncident`, `affecterPrestataire`, `NiveauAttentionIncident`) : le code se lit comme les règles métier.
+- **Pas de valeurs magiques** : les seuils, les tailles de champ et les messages sont des constantes nommées, définies une seule fois (`SEUIL_ORANGE`, `SEUIL_ROUGE`…).
+- **Une responsabilité par couche** : aucun calcul métier dans les contrôleurs, aucune notion HTTP dans les services, les règles propres à un incident dans l'entité.
+- **Pas de duplication** : les erreurs sont traduites à un seul endroit, les libellés sont centralisés dans un pipe Angular, les composants d'affichage sont partagés.
+- **Les tests accompagnent le code** : une règle métier ajoutée vient avec ses tests dans la même pull request.
+- **Rien de sensible ni de généré dans Git** : pas de mot de passe, pas de dossier `.idea`, pas de fichiers de journal.
+- **Pas de code mort** : chaque fonction / méthode est utilisée quelque part dans le code. 
+
+---
+
+## 5. Choix techniques
 
 ### Droits par profil
 
@@ -141,7 +174,7 @@ Nous avons choisi une **session avec cookie** plutôt qu'un JWT : grâce au prox
 
 ---
 
-## 5. Lot alpha
+## 6. Lot alpha
 
 ### Carte du réseau (alpha n°4)
 
@@ -163,7 +196,7 @@ Tapez le Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l
 
 ---
 
-## 6. Sécurité
+## 7. Sécurité
 
 | Domaine | Mesure |
 |---|---|
@@ -178,7 +211,7 @@ Tapez le Konami code (↑ ↑ ↓ ↓ ← → ← → B A) : une rame traverse l
 
 ---
 
-## 7. Déploiement
+## 8. Déploiement
 
 ### Les services choisis
 
@@ -215,7 +248,7 @@ Spring sert donc à la fois les pages Angular et l'API `/api`, sur la **même ad
 
 ---
 
-## 8. Bilan
+## 9. Bilan
 
 **Contribution :** le travail a été réparti à parts égales (50 / 50).
 
@@ -233,3 +266,22 @@ Spring sert donc à la fois les pages Angular et l'API `/api`, sur la **même ad
 1. **La structure MVC** est très pratique pour avancer pas à pas et toujours s'y retrouver.
 2. **La construction d'un portail API** cohérent, documenté et aux erreurs claires.
 3. **Un système d'authentification complet**, de la connexion jusqu'au contrôle de chaque ressource.
+
+
+## 10. Utilisation de l'IA
+
+Nous avons utilisé un assistant IA (Claude) tout au long du projet.
+
+### Usages conformes au cadre
+
+- **Jeu de données fictif** : le script Python qui génère la migration V7 (stations, équipements, incidents, évaluations) ;
+- **Analyse d'erreurs et débogage** : erreurs Flyway (checksum, migration vide), conflits de beans Spring Security en test, imports erronés d'IntelliJ, conflits de fusion Git et les échecs du build Docker ;
+- **Front Angular** : aide sur le CSS des pages, le thème et l'easter egg ;
+- **Explications et pistes** : choix entre session et JWT, ordre des contrôles (401 / 403 / 404 / 409), et revue de sécurité de notre code ;
+- **Déploiement** : choix de Render et d'Aiven, et aide à la configuration du profil ;
+- **Rédaction** : descriptions de pull requests et des tickets Github, à partir de notre code et de nos choix.
+
+### Ce que nous en retenons
+
+- L'IA nous a fait gagner beaucoup de temps sur le débogage et la configuration, là où nous aurions pu rester bloqués longtemps.
+- Le style a pu être réalisé en heure, ce qui nous a déchargé pour avancer d'autres fonctionnalités plutôt.
