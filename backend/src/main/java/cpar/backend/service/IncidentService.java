@@ -3,14 +3,8 @@ package cpar.backend.service;
 import cpar.backend.dto.*;
 import cpar.backend.exception.*;
 import cpar.backend.logs.EvenementIncident;
-import cpar.backend.model.entities.Evaluation;
-import cpar.backend.model.entities.Incident;
-import cpar.backend.model.entities.Prestataire;
-import cpar.backend.model.entities.Utilisateur;
-import cpar.backend.model.enums.PrioriteIncident;
-import cpar.backend.model.enums.ProfilUtilisateur;
-import cpar.backend.model.enums.StatutIncident;
-import cpar.backend.model.enums.TypeEvenementIncident;
+import cpar.backend.model.entities.*;
+import cpar.backend.model.enums.*;
 import cpar.backend.repository.EvaluationRepository;
 import cpar.backend.repository.IncidentRepository;
 import cpar.backend.repository.PrestataireRepository;
@@ -164,8 +158,11 @@ public class IncidentService implements IIncidentService {
     @Override
     @Transactional
     public Incident declarerIncident(Long equipementId, DeclarationIncidentRequest demande, String login) {
+        Equipement equipement = equipementService.obtenirEquipementParId(equipementId);
+        equipement.setEtat(EtatsEquipement.EN_PANNE);
+
         Incident incident = new Incident();
-        incident.setEquipement(equipementService.obtenirEquipementParId(equipementId));
+        incident.setEquipement(equipement);
         incident.setDescription(demande.description().trim());
         incident.setPriorite(demande.priorite() != null ? demande.priorite() : PrioriteIncident.MOYENNE);
         incident.setStatut(StatutIncident.OUVERT);
@@ -217,7 +214,10 @@ public class IncidentService implements IIncidentService {
         if (ancien != null && Objects.equals(ancien.getId(), prestataire.getId())) {
             return incident;
         }
+
         incident.affecterA(prestataire);
+        incident.getEquipement().setEtat(EtatsEquipement.EN_MAINTENANCE);
+
         publier(id, login,
                 ancien == null ? TypeEvenementIncident.AFFECTATION : TypeEvenementIncident.REAFFECTATION,
                 "prestataire", ancien == null ? null : ancien.getNom(), prestataire.getNom());
@@ -274,6 +274,7 @@ public class IncidentService implements IIncidentService {
         StatutIncident ancienStatut = incident.getStatut();
         incident.setStatut(StatutIncident.RESOLU);
         incident.setDateResolution(LocalDateTime.now(horloge));
+        incident.getEquipement().setEtat(EtatsEquipement.EN_SERVICE);
         publier(id, login, TypeEvenementIncident.RESOLUTION, "statut",
                 nomOuNull(ancienStatut), StatutIncident.RESOLU.name());
         return incident;

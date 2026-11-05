@@ -40,6 +40,7 @@ Le proxy Angular redirige `/api` vers le port 8080. Application déployée : htt
 | `portes` | Prestataire | Portes & Accès Sécurité |
 
 **Limites connues :** le journal des événements est stocké dans des fichiers texte plutôt qu'en base, et la protection CSRF est désactivée.
+Aussi, quand un équipement a plusieurs incidents en même temps, son état est fixé par la dernière opération effectuée. Par exemple, résoudre l'un de ses incidents le remet « En service » même si un autre incident est encore ouvert.
 
 ---
 
@@ -110,6 +111,7 @@ Les droits sont vérifiés **deux fois** : `SecurityConfig` filtre par profil et
 - **La durée et le niveau d'attention sont calculés à chaque lecture**, jamais stockés, avec des seuils définis une seule fois (`SEUIL_ORANGE`, `SEUIL_ROUGE`).
 - **Des DTO en liste blanche** : le client ne peut envoyer que les champs autorisés. Par exemple, une modification (`PATCH`) ne contient que la description et la priorité.
 - **La validation est faite deux fois** : Bean Validation côté serveur (la vraie garantie), puis reprise dans Angular pour le confort.
+- **L'état de l'équipement suit ses incidents** : déclarer un incident le met « En panne », affecter un prestataire le met « En maintenance », résoudre l'incident le remet « En service ». Le changement se fait dans la même transaction que l'opération sur l'incident (RG10).
 
 ### SOLID
 
