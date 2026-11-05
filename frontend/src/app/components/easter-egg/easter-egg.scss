@@ -10,18 +10,22 @@
 
 .annonce {
   width: fit-content;
-  margin: 0 auto 0.75rem;
+  margin: 0 auto 3rem; /* place pour le drapeau qui dépasse du toit */
   padding: 0.5rem 1.25rem;
+  border: 1px solid var(--accent);
   border-radius: 999px;
-  background: #1f2a44;
-  color: #ffffff;
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.4);
+  color: var(--texte);
+  font-family: var(--police);
   font-weight: 600;
   text-align: center;
 
   small {
     display: block;
+    margin-top: 0.125rem;
+    color: var(--texte-discret);
     font-weight: 400;
-    opacity: 0.85;
   }
 }
 
@@ -62,4 +66,93 @@
   to {
     transform: translateX(100vw);
   }
+}
+
+/* ---------- Vandalisme pirate (ajouts à la suite du train d'origine) ---------- */
+
+/* Caisse plus sombre : la peinture ressort mieux */
+.voiture {
+  background-color: var(--gris-fond);
+}
+
+/* Une tache de peinture : position, taille et couleur viennent du composant (tirées au hasard) */
+.tache {
+  position: absolute;
+  width: var(--taille);
+  height: var(--taille);
+  transform: translate(-50%, -50%);
+  border-radius: 50% 45% 55% 48%; /* pas tout à fait ronde */
+  background: var(--couleur);
+  pointer-events: none;
+
+  /* Deux gouttes projetées autour de la tache */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -35%;
+    width: 30%;
+    height: 30%;
+    border-radius: 50%;
+    background: inherit;
+    box-shadow: calc(var(--taille) * -1.15) calc(var(--taille) * 0.85) 0 -1px var(--couleur);
+  }
+
+  /* Coulure vers le bas (une tache sur deux environ) */
+  &.coulure::after {
+    content: '';
+    position: absolute;
+    top: 60%;
+    left: 42%;
+    width: 3px;
+    height: calc(var(--taille) * 0.8);
+    border-radius: 0 0 3px 3px;
+    background: inherit;
+  }
+}
+
+/* Autocollant du logo, collé de travers */
+.autocollant {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translateX(-50%) rotate(-14deg);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #ffffff, 1px 2px 3px rgb(0 0 0 / 0.5); /* bord blanc d'un sticker */
+}
+
+/* Drapeau pirate à l'arrière de la voiture de tête : il flotte vers l'arrière, dans le vent */
+.drapeau {
+  position: absolute;
+  bottom: 100%;
+  left: 40px;
+  width: 2px;
+  height: 34px;
+  background: #8b949e; /* le mât */
+
+  img {
+    position: absolute;
+    top: 0;
+    right: 2px; /* le tissu part vers la gauche, à l'opposé du sens de marche */
+    width: 30px;
+    height: 20px;
+    padding: 2px 7px;
+    background: var(--fond-menu); /* le tissu noir du drapeau */
+    box-shadow: 0 0 0 1px var(--texte-discret); /* liseré : le noir se détache du fond sombre */
+    transform-origin: right center;
+  }
+}
+
+/* Le drapeau ne flotte pas si l'utilisateur a demandé moins d'animations */
+@media (prefers-reduced-motion: no-preference) {
+  .drapeau img {
+    animation: flotter 0.6s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes flotter {
+  from { transform: skewY(6deg) scaleX(0.94); }
+  to { transform: skewY(-5deg) scaleX(1); }
 }

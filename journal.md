@@ -279,7 +279,9 @@ Nous avons utilisé un assistant IA (Claude) tout au long du projet.
 - **Front Angular** : aide sur le CSS des pages, le thème et l'easter egg ;
 - **Explications et pistes** : choix entre session et JWT, ordre des contrôles (401 / 403 / 404 / 409), et revue de sécurité de notre code ;
 - **Déploiement** : choix de Render et d'Aiven, et aide à la configuration du profil ;
-- **Rédaction** : descriptions de pull requests et des tickets Github, à partir de notre code et de nos choix.
+- **Rédaction** : descriptions de pull requests et des tickets Github, à partir de notre code et de nos choix ;
+- **Logo** : le logo de l'application (un rat pirate devant deux rails croisés, qui reprend le triple sens de P-RAT : pirate, anagramme de RATP et le rat) a été dessiné par l'IA en SVG, à partir de notre idée et des couleurs de notre thème ;
+- **Easter egg, train vandalisé** : l'IA a écrit le code front qui décore la rame : le logo en autocollant, le drapeau pirate qui flotte et des taches de peinture tirées au hasard aux couleurs du thème (CSS et TypeScript du composant).
 
 ### Ce que nous en retenons
 

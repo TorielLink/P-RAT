@@ -5,9 +5,24 @@
       <small>Le prestataire de maintenance est attendu en station Châtelet.</small>
     </p>
     <div class="rame" aria-hidden="true">
-      <div class="voiture"></div>
-      <div class="voiture"></div>
-      <div class="voiture"></div>
+      @for (taches of peinture(); track $index; let i = $index) {
+        <div class="voiture">
+          @for (tache of taches; track $index) {
+            <span class="tache"
+                  [class.coulure]="tache.coulure"
+                  [style.left.%]="tache.gauche"
+                  [style.top.%]="tache.haut"
+                  [style.--taille]="tache.taille + 'px'"
+                  [style.--couleur]="'var(' + tache.couleur + ')'"></span>
+          }
+          @if (i === 1) {
+            <img class="autocollant" src="logo.svg" alt="">
+          }
+          @if (i === 2) {
+            <span class="drapeau"><img src="logo.svg" alt=""></span>
+          }
+        </div>
+      }
     </div>
   </div>
 }

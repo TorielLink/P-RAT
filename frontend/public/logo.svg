@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="P-RAT">
+  <title>P-RAT</title>
+  <circle cx="128" cy="128" r="122" fill="#161b22" stroke="#8957e5" stroke-width="8"/>
+  <!-- Rails croisés, comme les tibias d'un drapeau pirate -->
+  <g transform="rotate(30 128 160)">
+      <g stroke="#8b949e" stroke-width="5" stroke-linecap="round">
+        <line x1="62" y1="146" x2="62" y2="174"/><line x1="84" y1="146" x2="84" y2="174"/>
+        <line x1="172" y1="146" x2="172" y2="174"/><line x1="194" y1="146" x2="194" y2="174"/>
+      </g>
+      <g stroke="#c9d1d9" stroke-width="6" stroke-linecap="round">
+        <line x1="48" y1="152" x2="208" y2="152"/><line x1="48" y1="168" x2="208" y2="168"/>
+      </g></g>
+  <g transform="rotate(-30 128 160)">
+      <g stroke="#8b949e" stroke-width="5" stroke-linecap="round">
+        <line x1="62" y1="146" x2="62" y2="174"/><line x1="84" y1="146" x2="84" y2="174"/>
+        <line x1="172" y1="146" x2="172" y2="174"/><line x1="194" y1="146" x2="194" y2="174"/>
+      </g>
+      <g stroke="#c9d1d9" stroke-width="6" stroke-linecap="round">
+        <line x1="48" y1="152" x2="208" y2="152"/><line x1="48" y1="168" x2="208" y2="168"/>
+      </g></g>
+  <g transform="translate(0 12)">
+  <!-- Oreilles -->
+  <circle cx="84" cy="92" r="24" fill="#8b949e"/><circle cx="84" cy="92" r="13" fill="#e8a6b8"/>
+  <circle cx="172" cy="92" r="24" fill="#8b949e"/><circle cx="172" cy="92" r="13" fill="#e8a6b8"/>
+  <!-- Tête -->
+  <path d="M90 110 C90 82 166 82 166 110 C166 138 144 160 128 172 C112 160 90 138 90 110 Z" fill="#a3acb7"/>
+  <!-- Bandeau de pirate -->
+  <path d="M92 96 L164 124" stroke="#0d1117" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="146" cy="116" rx="13" ry="11" fill="#0d1117"/>
+  <!-- Œil -->
+  <circle cx="110" cy="116" r="7.5" fill="#0d1117"/><circle cx="112.5" cy="113.5" r="2.4" fill="#fff"/>
+  <!-- Nez et moustaches -->
+  <circle cx="128" cy="167" r="6.5" fill="#e8a6b8"/>
+  <g stroke="#e6edf3" stroke-width="2.5" stroke-linecap="round">
+    <line x1="119" y1="160" x2="94" y2="152"/><line x1="119" y1="165" x2="96" y2="168"/>
+    <line x1="137" y1="160" x2="162" y2="152"/><line x1="137" y1="165" x2="160" y2="168"/>
+  </g>
+  <!-- Tricorne -->
+  <path d="M86 84 C98 64 112 70 128 52 C144 70 158 64 170 84 C150 78 106 78 86 84 Z" fill="#2b1f4a" stroke="#a371f7" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M96 80 C116 75 140 75 160 80" stroke="#a371f7" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+  
+</svg>
